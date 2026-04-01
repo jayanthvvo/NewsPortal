@@ -33,19 +33,17 @@ The system is fully decoupled, utilizing the Spring Cloud ecosystem for dynamic 
 
 ### Inter-Service Communication
 * **Synchronous:** Strict data consumption between MVC layers is handled via **OpenFeign** clients, routed natively through the Eureka Service Registry.
-* **Asynchronous (Event-Driven):** Non-blocking operations, such as dispatching breaking news alerts when an article is published, are handled via message brokers.
+
 
 ### Centralized Dependency Management
 A parent `pom.xml` utilizes a `dependencyManagement` block (Spring Boot BOM) to strictly isolate and control dependency versions across all microservices.
 
 ### Logging Strategy
 * **Implementation:** Lombok's `@Slf4j` annotation is used across all classes.
-* **Routing:** Each service utilizes `logback-spring.xml` to route logs to both a `ConsoleAppender` and a `RollingFileAppender` for robust file-based tracking.
 
 ---
 
 ## 🛡️ Quality Assurance & CI/CD
 To guarantee enterprise-grade stability, this project enforces strict quality gates:
 * **Testing Layer:** Unit testing for all controllers, services, and repositories using **JUnit 5** and **Mockito**.
-* **Code Coverage:** **Jacoco** is integrated into the build lifecycle. Builds will fail if test coverage drops below the mandatory threshold.
 * **Static Code Analysis:** **SonarQube** integration ensures exactly zero high-severity vulnerabilities, bugs, or code smells.
