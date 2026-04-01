@@ -1,16 +1,18 @@
 # NewsPortal Microservices Architecture
 
 ## Overview
-NewsPortal is a high-availability, distributed news platform built using a Spring Cloud Microservices architecture. Designed for rapid content delivery and robust security, it features an event-driven backend and a responsive Single Page Application (SPA) dashboard for interactive analytics.
+**Candidate:** JAYANTH V  
+**Project:** NewsPortal  
+**Description:** A digital news platform designed for publishing articles, managing categories, assigning editor roles, dispatching breaking news alerts, and facilitating user comments. It is built using a Spring Cloud Microservices architecture to ensure high availability, rapid content delivery, and robust security.
 
 ## 🏗️ High-Level Architecture
-The system is entirely decoupled, with each microservice exposing Swagger-documented REST APIs and maintaining strict database isolation.
+The system is fully decoupled, utilizing the Spring Cloud ecosystem for dynamic routing, centralized configuration, and service discovery.
 
 ### Core Infrastructure
-* **Frontend:** React (or Angular) SPA featuring interactive admin dashboards (Recharts/Chart.js).
-* **API Gateway:** Spring Cloud Gateway for centralized traffic routing and JWT enforcement.
-* **Service Discovery:** Netflix Eureka for dynamic service registration and client-side load balancing.
-* **Message Broker:** RabbitMQ / Apache Kafka for asynchronous, event-driven communication.
+* **Frontend:** Single Page Application (SPA) dashboard for user and editor interaction (Planned).
+* **API Gateway:** Spring Cloud Gateway for centralized traffic routing and JWT security enforcement.
+* **Service Discovery:** Netflix Eureka for dynamic microservice registration and load balancing.
+* **Config Server:** Centralized configuration management for all backend services.
 
 ---
 
@@ -18,21 +20,20 @@ The system is entirely decoupled, with each microservice exposing Swagger-docume
 
 | Service | Database | Description & Responsibilities |
 | :--- | :--- | :--- |
-| **Auth Service** | `auth-db` | **Security Sentinel.** Handles login, registration, and generates JWTs. |
-| **User Service** | `user-db` | Manages user profiles, editor roles, and author configurations (CRUD). |
-| **Article Service** | `article-db` | **Core Engine.** Handles drafting, reviewing, and publishing news workflows. |
-| **Category Service** | `category-db` | Manages news taxonomies, tags, and topic hierarchies. |
-| **Comment Service** | `comment-db` | Manages user engagement on articles and moderation workflows. |
-| **Alert Service** | `alert-db` | Dispatches breaking news push notifications via asynchronous message queues. |
-| **Analytics Service** | `analytics-db` | Aggregates read counts, comment volumes, and trends for interactive charts. |
+| **Auth Service** | `news_auth_db` | **Security Sentinel.** Handles login, registration, and generates JWTs. |
+| **User Service** | `news_user_db` | Manages user profiles, editor roles, and author configurations. |
+| **Article Service** | `news_article_db` | **Core Engine.** Handles drafting, reviewing, and publishing news articles. |
+| **Category Service** | `news_category_db` | Manages news taxonomies, tags, and topic hierarchies. |
+| **Comment Service** | `news_comment_db` | Manages user discussions and moderation workflows on published articles. |
+| **Alert Service** | `news_alert_db` | Dispatches breaking news push notifications via event-driven messaging. |
 
 ---
 
 ## ⚙️ Key Design Implementations
 
 ### Inter-Service Communication
-* **Synchronous:** Strict data consumption between MVC layers is handled via **OpenFeign** clients (routed natively through the Eureka Service Registry).
-* **Asynchronous (Event-Driven):** When an article is published, the Article Service updates its database and simultaneously fires an `ArticlePublishedEvent` to the message broker. The **Alert Service** and **Analytics Service** consume this event to trigger push notifications and update reporting dashboards without blocking the publishing workflow.
+* **Synchronous:** Strict data consumption between MVC layers is handled via **OpenFeign** clients, routed natively through the Eureka Service Registry.
+* **Asynchronous (Event-Driven):** Non-blocking operations, such as dispatching breaking news alerts when an article is published, are handled via message brokers.
 
 ### Centralized Dependency Management
 A parent `pom.xml` utilizes a `dependencyManagement` block (Spring Boot BOM) to strictly isolate and control dependency versions across all microservices.
@@ -44,8 +45,7 @@ A parent `pom.xml` utilizes a `dependencyManagement` block (Spring Boot BOM) to 
 ---
 
 ## 🛡️ Quality Assurance & CI/CD
-
 To guarantee enterprise-grade stability, this project enforces strict quality gates:
 * **Testing Layer:** Unit testing for all controllers, services, and repositories using **JUnit 5** and **Mockito**.
-* **Code Coverage:** **Jacoco** is integrated into the build lifecycle. Builds will fail if test coverage drops below the mandatory 80% threshold (targeting 100%).
+* **Code Coverage:** **Jacoco** is integrated into the build lifecycle. Builds will fail if test coverage drops below the mandatory threshold.
 * **Static Code Analysis:** **SonarQube** integration ensures exactly zero high-severity vulnerabilities, bugs, or code smells.
