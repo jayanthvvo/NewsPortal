@@ -1,0 +1,17 @@
+### Java/Maven ###
+target/
+*.jar
+*.war
+*.class
+
+### Eclipse ###
+.metadata
+bin/
+.settings/
+.project
+.classpath
+.sts4-cache/
+
+### Mac/Windows Junk ###
+.DS_Store
+Thumbs.db
