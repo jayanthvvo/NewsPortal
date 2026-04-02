@@ -20,11 +20,11 @@ public class SecurityConfig {
 		return new BCryptPasswordEncoder();
 	}
 	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration authconfig) {
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration authconfig) throws Exception {
 		return authconfig.getAuthenticationManager();
 	}
-	
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
 
 		http.csrf(csrf -> csrf.disable())
 		.sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
