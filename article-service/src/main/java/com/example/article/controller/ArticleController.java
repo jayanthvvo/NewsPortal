@@ -27,6 +27,7 @@ public class ArticleController {
     public ResponseEntity<Article> create(@RequestBody Article article,Authentication authentication){
     	String username=authentication.getName();
     	article.setAuthorUsername(username);
+    	article.setCreatedAt(java.time.LocalDateTime.now());
     	Article savedArticle=articleRepository.save(article);
     	return ResponseEntity.ok(savedArticle);
     }
