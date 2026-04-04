@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ public class ArticleController {
     @Autowired
 	private ArticleRepository articleRepository;
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Article> create(@RequestBody Article article,Authentication authentication){
     	String username=authentication.getName();
     	article.setAuthorUsername(username);
@@ -44,6 +46,7 @@ public class ArticleController {
     }
     
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteArticle(@PathVariable Long id){
     	if(articleRepository.existsById(id)) {
     		articleRepository.deleteById(id);
