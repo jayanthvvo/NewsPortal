@@ -21,7 +21,7 @@ public class CategoryController {
     @PreAuthorize("hasRole('ADMIN')") 
     public ResponseEntity<?> createCategory(@RequestBody Category category) {
         
-        // Prevent duplicate categories like creating "Technology" twice
+       
         if (categoryRepository.existsByName(category.getName())) {
             return ResponseEntity.badRequest().body("Error: Category already exists!");
         }
