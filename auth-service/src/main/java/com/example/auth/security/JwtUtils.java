@@ -48,6 +48,16 @@ public class JwtUtils {
 				.getBody()
 				.getSubject();
 	}
+	
+	
+	public String extractUsername(String token) {
+	    return Jwts.parserBuilder()
+	            .setSigningKey(getSigningKey()) 
+	            .build()
+	            .parseClaimsJws(token)
+	            .getBody()
+	            .getSubject();
+	}
 	public boolean validateToken(String Token) {
 		try {
 			Jwts.parserBuilder()

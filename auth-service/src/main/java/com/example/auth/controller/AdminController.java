@@ -18,7 +18,7 @@ import com.example.auth.repository.UserRepository;
 
 @RestController
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class AdminController {
     @Autowired
 	private UserRepository userRepository;
