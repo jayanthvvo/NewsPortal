@@ -19,6 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
+	public enum UserStatus {PENDING,REJECTED,APPROVED};
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
@@ -31,5 +32,8 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role =Role.ROLE_USER;
+    private Role role ;
+    
+    @Enumerated(EnumType.STRING)
+    private UserStatus status=UserStatus.PENDING;
 }

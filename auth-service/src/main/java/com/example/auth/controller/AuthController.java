@@ -36,7 +36,7 @@ public class AuthController {
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			// TODO: handle exception
-			return ResponseEntity.status(401).body("Invalid username or password");
+			return ResponseEntity.status(401).body(e.getMessage());
 		}
 	}
 	
