@@ -24,5 +24,13 @@ public class GlobalExceptionHandler {
 		});
 		
 		return new ResponseEntity<>(errors,HttpStatus.BAD_REQUEST);
+
+	} 
+	@ExceptionHandler(RuntimeException.class)
+	public ResponseEntity<String> handleruntimeexception(RuntimeException ex){
+     return new  ResponseEntity<>(ex.getMessage(),HttpStatus.BAD_REQUEST);
+
 	}
 }
+
+

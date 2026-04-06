@@ -29,10 +29,10 @@ public class AuthService {
 	
 	public String registerUser(RegisterRequest request) {
 		if(userRepository.existsByUsername(request.getUsername())) {
-			return "Error: Username is already taken!";
+			throw new RuntimeException("Username is already taken!");
 		}
 		if(userRepository.existsByEmail(request.getEmail())) {
-			return "Error: Email is already in use!";
+			throw new RuntimeException("Email is already in use!");
 		}
 		Role role = Role.valueOf(request.getRolerequest());
 	    

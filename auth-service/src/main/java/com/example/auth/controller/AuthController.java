@@ -24,9 +24,6 @@ public class AuthController {
 	@PostMapping("/register")
 	public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request){
 		String result=authService.registerUser(request);
-		if(result.contains("Error")) {
-			return ResponseEntity.badRequest().body(result);
-		}
 		return ResponseEntity.ok(result);
 	}
 	@PostMapping("/login")
