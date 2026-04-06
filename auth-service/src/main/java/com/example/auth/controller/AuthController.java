@@ -12,6 +12,7 @@ import com.example.auth.dto.LoginRequest;
 import com.example.auth.dto.RegisterRequest;
 import com.example.auth.service.AuthService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -21,7 +22,7 @@ public class AuthController {
     @Autowired
 	private AuthService authService;
 	@PostMapping("/register")
-	public ResponseEntity<?> register(@RequestBody RegisterRequest request){
+	public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request){
 		String result=authService.registerUser(request);
 		if(result.contains("Error")) {
 			return ResponseEntity.badRequest().body(result);
