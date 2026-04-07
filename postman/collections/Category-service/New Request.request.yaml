@@ -9,9 +9,9 @@ body:
   type: json
   content: "{\r
 
-    \    \"name\": \"Technology\",\r
+    \    \"name\": \"Sport\",\r
 
-    \    \"description\": \"All news related to software, hardware, and AI.\"\r
+    \    \"description\": \"sports\"\r
 
     }"
 order: 2000

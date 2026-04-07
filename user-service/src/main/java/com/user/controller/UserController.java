@@ -3,6 +3,7 @@ package com.user.controller;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -35,11 +36,19 @@ public class UserController {
         
         String tokenUsername = authentication.getName();
         
-        UserProfile profile = userProfileRepository.findByUsername(tokenUsername)
-                                .orElse(new UserProfile());
+       
+        Optional<UserProfile> profileOptional = userProfileRepository.findByUsername(tokenUsername);
 
-      
-        profile.setUsername(tokenUsername);
+        
+        if (profileOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Error: User profile for '" + tokenUsername + "' not found. Cannot update.");
+        }
+
+       
+        UserProfile profile = profileOptional.get();
+        
+       
         profile.setFirstName(updatedProfile.getFirstName());
         profile.setLastName(updatedProfile.getLastName());
         profile.setBio(updatedProfile.getBio());

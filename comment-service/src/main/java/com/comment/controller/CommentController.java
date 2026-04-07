@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,12 +39,8 @@ public class CommentController {
         if (comment.getArticleId() == null) {
             return ResponseEntity.badRequest().body("Error: Article ID is required.");
         }
-
-        try {
-            
+       try {
             Articledto article = articleClient.getArticleById(comment.getArticleId());
-            
-            
             if (!"PUBLISHED".equals(article.getStatus())) {
                 return ResponseEntity.badRequest().body("Error: You can only comment on published articles.");
             }
@@ -67,4 +64,15 @@ public class CommentController {
 		return ResponseEntity.ok(comments);
 		
 	}
+	@DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<String> deleteComment(@PathVariable Long id) {
+        
+        if (commentRepository.existsById(id)) {
+            commentRepository.deleteById(id);
+            return ResponseEntity.ok("Comment deleted successfully");
+        }
+        
+        return ResponseEntity.badRequest().body("Error: Comment not found.");
+    }
 }
