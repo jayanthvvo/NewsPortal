@@ -1,10 +1,10 @@
 $kind: http-request
 name: New Request
-url: http://localhost:8080/articles/5/status?status=PUBLISHED
-method: POST
+url: http://localhost:8080/articles/search?keyword=News
+method: GET
 headers:
   Authorization: Bearer
     eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU1NDkyNDcsImV4cCI6MTc3NTYzNTY0N30.IhByp_HYT13xUcpU6i9W8GWaIOuiW2iDzKG_G_lit1g
 queryParams:
-  status: PUBLISHED
-order: 5000
+  keyword: News
+order: 7000

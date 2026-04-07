@@ -1,0 +1,17 @@
+$kind: http-request
+name: New Request
+url: http://localhost:8080/categories/create
+method: POST
+headers:
+  Authorization: Bearer
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU1NjM3MjgsImV4cCI6MTc3NTY1MDEyOH0.amB5sfCmKBPjWY10qwYdZvK1DVBmTpmiYWtUB4lm9Bw
+body:
+  type: json
+  content: "{\r
+
+    \    \"name\": \"Technology\",\r
+
+    \    \"description\": \"All news related to software, hardware, and AI.\"\r
+
+    }"
+order: 2000
