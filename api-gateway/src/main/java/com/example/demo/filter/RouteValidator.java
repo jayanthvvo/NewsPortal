@@ -13,7 +13,9 @@ public class RouteValidator {
  
 	public static final List<String> openApiEndPoints=List.of("/auth/register",
             "/auth/login",
-            "/eureka");
+            "/eureka",
+            "/articles/all", "/articles/search", "/articles/filter"
+			);
 	
 	public Predicate<ServerHttpRequest> isSecured(){
 		return request->openApiEndPoints.stream()

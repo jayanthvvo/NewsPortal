@@ -27,7 +27,7 @@ public class AuthService {
 	private UserRepository userRepository;
 	@Autowired
 	private AuthenticationManager authenticationManager;
-	@Autowired
+	
 	
 	
 	public String registerUser(RegisterRequest request) {

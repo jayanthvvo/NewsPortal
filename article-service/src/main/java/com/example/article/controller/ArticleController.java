@@ -86,6 +86,21 @@ public class ArticleController {
             return ResponseEntity.notFound().build();
         }
     }
+    @GetMapping("/search")
+    public ResponseEntity<List<Article>> searchArticles(@RequestParam String keyword) {
+        List<Article> results = articleService.searchPublishedArticles(keyword);
+        return ResponseEntity.ok(results);
+    }
+
+    
+    @GetMapping("/filter")
+    public ResponseEntity<List<Article>> filterArticles(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String author) {
+        
+        List<Article> results = articleService.filterPublishedArticles(categoryId, author);
+        return ResponseEntity.ok(results);
+    }
     
     
 }

@@ -88,4 +88,12 @@ public class ArticleService {
         return articleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Article not found"));
     }
+    public List<Article> searchPublishedArticles(String keyword) {
+        return articleRepository.findByTitleContainingIgnoreCaseAndStatus(keyword, ArticleStatus.PUBLISHED);
+    }
+
+   
+    public List<Article> filterPublishedArticles(Long categoryId, String authorUsername) {
+        return articleRepository.filterArticles(categoryId, authorUsername, ArticleStatus.PUBLISHED);
+    }
 }
