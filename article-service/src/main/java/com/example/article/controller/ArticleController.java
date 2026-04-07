@@ -77,7 +77,15 @@ public class ArticleController {
         return ResponseEntity.ok(updatedArticle);
     }
     
-    
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getArticleById(@PathVariable Long id) {
+        try {
+            Article article = articleService.getArticleById(id);
+            return ResponseEntity.ok(article);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
     
     
 }

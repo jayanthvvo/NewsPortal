@@ -16,6 +16,7 @@ public class Comment {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
 	@Column(nullable = false)
 	private Long articleId;
 	@Column(nullable = false,length = 1000)
@@ -24,6 +25,8 @@ public class Comment {
 	private String authorUsername;
 
     private LocalDateTime createdAt;
+    
+    
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
