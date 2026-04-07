@@ -40,7 +40,13 @@ public class Article {
 	}
 	protected void oncreate() {
 		createdAt=LocalDateTime.now();
+		
 	}
+	@Column(nullable = false)
+    private Long categoryId;
+
+    public Long getCategoryId() { return categoryId; }
+    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
 	public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

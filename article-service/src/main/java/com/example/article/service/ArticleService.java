@@ -1,22 +1,42 @@
 package com.example.article.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.article.client.CategoryClient;
 import com.example.article.model.Article;
 import com.example.article.model.ArticleStatus;
 import com.example.article.repository.ArticleRepository;
+
+import feign.FeignException;
 
 @Service
 public class ArticleService {
 
     @Autowired
     private ArticleRepository articleRepository;
+    @Autowired
+    private CategoryClient categoryClient;
 
     public Article createArticle(Article article, String authorUsername) {
+    	
+    	if (article.getCategoryId()==null) {
+			throw new RuntimeException("Article must be assigned to some category");
+		}
+    	try {
+    		categoryClient.getCategoryById(article.getCategoryId());
+    	}catch (FeignException.NotFound e) {
+    		throw new RuntimeException("Invalid Category ID: Category does not exist.");
+        } catch (Exception e) {
+            throw new RuntimeException("Could not verify category. Category Service might be down.");
+        }
+    	
+    	
         article.setAuthorUsername(authorUsername);
+        article.setCreatedAt(LocalDateTime.now());
         if (article.getStatus() == null) {
             article.setStatus(ArticleStatus.DRAFT);
         }

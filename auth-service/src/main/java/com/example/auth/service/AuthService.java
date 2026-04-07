@@ -16,6 +16,7 @@ import com.example.auth.model.User.UserStatus;
 import com.example.auth.repository.UserRepository;
 import com.example.auth.security.JwtUtils;
 
+
 @Service
 public class AuthService {
     @Autowired
@@ -26,6 +27,8 @@ public class AuthService {
 	private UserRepository userRepository;
 	@Autowired
 	private AuthenticationManager authenticationManager;
+	@Autowired
+	
 	
 	public String registerUser(RegisterRequest request) {
 		if(userRepository.existsByUsername(request.getUsername())) {

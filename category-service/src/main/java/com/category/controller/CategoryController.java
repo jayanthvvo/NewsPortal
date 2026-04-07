@@ -1,6 +1,7 @@
 package com.category.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class CategoryController {
     private CategoryRepository categoryRepository;
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')") 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") 
     public ResponseEntity<?> createCategory(@RequestBody Category category) {
         
        
@@ -34,5 +35,16 @@ public class CategoryController {
     public ResponseEntity<List<Category>> getAllCategories() {
         List<Category> categories = categoryRepository.findAll();
         return ResponseEntity.ok(categories);
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getCategoryById(@PathVariable Long id) {
+        Optional<Category> category = categoryRepository.findById(id);
+        
+        if(category.isPresent()) {
+            return ResponseEntity.ok(category.get());
+        }
+        
+        return ResponseEntity.notFound().build(); 
     }
 }

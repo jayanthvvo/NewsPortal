@@ -1,0 +1,8 @@
+$kind: http-request
+name: New Request
+url: http://localhost:8080/articles/my-drafts
+method: GET
+headers:
+  Authorization: Bearer
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9FRElUT1IiLCJzdWIiOiJqYXlhbnRoX2VkaXRvciIsImlhdCI6MTc3NTU0OTA1NCwiZXhwIjoxNzc1NjM1NDU0fQ.qRX_vT_lYuBMSJMh0IFpcQk2oMt4P5qihtvEj4BTzac
+order: 1123
