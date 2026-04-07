@@ -35,6 +35,7 @@ public class AdminController {
     	if(userOptional.isPresent()) {
     		User user=userOptional.get();
     		user.setStatus(UserStatus.APPROVED);
+    		
     		userRepository.save(user);
     		return ResponseEntity.ok("User " + user.getUsername() + " has been approved as " + user.getRole());
     	}

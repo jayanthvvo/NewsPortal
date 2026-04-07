@@ -41,7 +41,7 @@ public class AuthService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword())); // Encrypting the password
-        user.setRole(Role.ROLE_USER);
+        user.setRole(role);
         if(role==Role.ROLE_USER) {
         	user.setStatus(UserStatus.APPROVED);
         }else {

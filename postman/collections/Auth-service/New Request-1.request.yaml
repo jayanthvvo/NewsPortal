@@ -1,0 +1,18 @@
+$kind: http-request
+name: New Request
+url: http://localhost:8080/auth/register
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"username\": \"jayanth_editor\",\r
+
+    \    \"email\": \"jane@newsportal.com\",\r
+
+    \    \"password\": \"123456\",\r
+
+    \    \"rolerequest\": \"ROLE_EDITOR\"\r
+
+    }"
+order: 1000
