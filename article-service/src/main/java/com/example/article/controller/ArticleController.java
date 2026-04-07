@@ -1,7 +1,5 @@
 package com.example.article.controller;
 
-
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,44 +12,72 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.article.model.Article;
-import com.example.article.repository.ArticleRepository;
+import com.example.article.model.ArticleStatus;
+import com.example.article.service.ArticleService; 
 
 @RestController
 @RequestMapping("/articles")
 public class ArticleController {
+    
     @Autowired
-	private ArticleRepository articleRepository;
+    private ArticleService articleService; 
+
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Article> create(@RequestBody Article article,Authentication authentication){
-    	String username=authentication.getName();
-    	article.setAuthorUsername(username);
-    	article.setCreatedAt(java.time.LocalDateTime.now());
-    	Article savedArticle=articleRepository.save(article);
-    	return ResponseEntity.ok(savedArticle);
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')") 
+    public ResponseEntity<Article> create(@RequestBody Article article, Authentication authentication){
+        String username = authentication.getName();
+        Article savedArticle = articleService.createArticle(article, username);
+       return ResponseEntity.ok(savedArticle);
     }
     
-    @GetMapping("/all")
-    public ResponseEntity<List<Article>> getAllArticle(){
-    	List<Article> articles=articleRepository.findAll();
-    	return ResponseEntity.ok(articles);
-    }
     @GetMapping("/author/{username}")
     public ResponseEntity<List<Article>> getArticleByAuthor(@PathVariable String username){
-    	List<Article> articlesByAuthor=articleRepository.findByAuthorUsername(username);
+        List<Article> articlesByAuthor = articleService.getArticlesByAuthor(username);
         return ResponseEntity.ok(articlesByAuthor);
     }
     
+    
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") 
     public ResponseEntity<String> deleteArticle(@PathVariable Long id){
-    	if(articleRepository.existsById(id)) {
-    		articleRepository.deleteById(id);
-    		return ResponseEntity.ok("Deleted Succesfully");
-    	}
-    	return ResponseEntity.badRequest().body("Error: Article not found!");
+        boolean isDeleted = articleService.deleteArticle(id);
+        
+        if(isDeleted) {
+            return ResponseEntity.ok("Deleted Successfully");
+        }
+        return ResponseEntity.badRequest().body("Error: Article not found!");
     }
+    @GetMapping("/all")
+    public ResponseEntity<List<Article>> getAllPublishedArticles(){
+        return ResponseEntity.ok(articleService.getPublishedArticles());
+    }
+    
+    @GetMapping("/my-drafts")
+    @PreAuthorize("hasAnyAuthority('ROLE_EDITOR')")
+    public ResponseEntity<List<Article>> getMyDrafts(Authentication authentication){
+        String username = authentication.getName();
+        return ResponseEntity.ok(articleService.getDraftsForAuthor(username));
+    }
+    @GetMapping("/pending-review")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<List<Article>> getPendingReviews(){
+        return ResponseEntity.ok(articleService.getArticlesPendingReview());
+    }
+    
+    @PostMapping("/{id}/status")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')")
+    public ResponseEntity<Article> updateStatus(@PathVariable Long id, @RequestParam String status) {
+       
+        ArticleStatus newStatus = ArticleStatus.valueOf(status.toUpperCase());
+        Article updatedArticle = articleService.updateArticle(id, newStatus);
+        return ResponseEntity.ok(updatedArticle);
+    }
+    
+    
+    
+    
 }

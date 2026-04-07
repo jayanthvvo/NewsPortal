@@ -28,7 +28,7 @@ public class AdminController {
     	List<User> pendingrequests=userRepository.findByStatus(UserStatus.PENDING);
     	return ResponseEntity.ok(pendingrequests);
     }
-    @PostMapping("/approve/{userID}")
+    @PostMapping("/approve/{userId}")
     public ResponseEntity<String> approveUser(@PathVariable Long userId){
     	Optional<User> userOptional=userRepository.findById(userId);
     	
