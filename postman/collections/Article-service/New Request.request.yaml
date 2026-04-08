@@ -4,14 +4,17 @@ url: http://localhost:8080/articles/create
 method: POST
 headers:
   Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9FRElUT1IiLCJzdWIiOiJqYXlhbnRoX2VkaXRvciIsImlhdCI6MTc3NTU0OTA1NCwiZXhwIjoxNzc1NjM1NDU0fQ.qRX_vT_lYuBMSJMh0IFpcQk2oMt4P5qihtvEj4BTzac
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9FRElUT1IiLCJzdWIiOiJqYXlhbnRoX2VkaXRvciIsImlhdCI6MTc3NTU2NDMxMSwiZXhwIjoxNzc1NjUwNzExfQ.kKliujXVF41R4RnI_LJf7XH0IQZJSaIV2BoICuPoQFw
 body:
   type: json
   content: "{\r
 
-    \    \"title\": \"Breaking News: Spring Boot is Awesome\",\r
+    \    \"title\": \"Spring Boot Microservices are taking ovgjdjer\",\r
 
-    \    \"content\": \"Microservices make scaling incredibly efficient...\"\r
+    \    \"content\": \"A deep dive into Eureka, API Gateways, and
+    Feryjryjign...\",\r
+
+    \    \"categoryId\": 1\r
 
     }"
 order: 2000

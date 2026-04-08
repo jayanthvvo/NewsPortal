@@ -1,0 +1,21 @@
+$kind: http-request
+name: New Request
+url: http://localhost:8080/users/profile
+method: POST
+headers:
+  Authorization: Bearer
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU1Njg2OTksImV4cCI6MTc3NTY1NTA5OX0.HF5zAgeJo9boLy8AXawlGLTbbnJOutG9wsCuqMWfJZ4
+body:
+  type: json
+  content: "{\r
+
+    \  \"firstName\": \"Jayanth admin\",\r
+
+    \  \"lastName\": \"admin\",\r
+
+    \  \"bio\": \"Tech enthusiast and avid reader.\",\r
+
+    \  \"avatarUrl\": \"https://example.com/avatars/johndoe.png\"\r
+
+    }"
+order: 2000

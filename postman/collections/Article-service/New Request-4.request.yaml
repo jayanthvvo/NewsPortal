@@ -1,6 +1,6 @@
 $kind: http-request
 name: New Request
-url: http://localhost:8080/articles/5/status?status=PUBLISHED
+url: http://localhost:8080/articles/7/status?status=PUBLISHED
 method: POST
 headers:
   Authorization: Bearer
