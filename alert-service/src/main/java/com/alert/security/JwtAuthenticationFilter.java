@@ -46,6 +46,8 @@ private	JwtUtils jwtUtils;
 				
 			} catch (Exception e) {
 				// TODO: handle exception
+				System.out.println("JWT REJECTED: " + e.getMessage());
+				e.printStackTrace();
 			}
 			
 		}
