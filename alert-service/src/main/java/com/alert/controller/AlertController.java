@@ -26,15 +26,13 @@ public class AlertController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<String> sendBreakingNewsEmail(@RequestBody Alert alert, @RequestParam List<String> userEmails) {
         
-        // 1. Save to DB for In-App notification
-        alert.setCreatedAt(LocalDateTime.now());
-        alert.setRead(false);
-        alertRepository.save(alert);
-
-        
         for (String email : userEmails) {
             emailService.sendBreakingNews(email, "Breaking News Alert", alert.getMessage());
         }
+        
+        alert.setCreatedAt(LocalDateTime.now());
+        alert.setRead(false);
+        alertRepository.save(alert);
 
         return ResponseEntity.ok("Breaking news sent via email successfully.");
     }
