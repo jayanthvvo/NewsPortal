@@ -37,7 +37,8 @@ private	JwtUtils jwtUtils;
 				String role=claims.get("role",String.class);
 				
 				if(Username!=null && role!=null) {
-					List<GrantedAuthority> authorities=Collections.singletonList(new SimpleGrantedAuthority(role));
+					String formattedRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+					List<GrantedAuthority> authorities=Collections.singletonList(new SimpleGrantedAuthority(formattedRole));
 					
 					UsernamePasswordAuthenticationToken auth=new UsernamePasswordAuthenticationToken(Username,null, authorities);
 					SecurityContextHolder.getContext().setAuthentication(auth);
