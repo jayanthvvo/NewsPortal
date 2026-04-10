@@ -3,6 +3,8 @@ package com.alert.controller;
 import com.alert.model.Alert;
 import com.alert.repository.AlertRepository;
 import com.alert.service.EmailService;
+import com.alert.client.UserClient;
+import com.alert.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,20 +22,35 @@ public class AlertController {
 
     @Autowired
     private EmailService emailService;
-
     
+    @Autowired
+    private UserClient userClient; 
+
     @PostMapping("/breaking-news")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<String> sendBreakingNewsEmail(@RequestBody Alert alert, @RequestParam List<String> userEmails) {
+    public ResponseEntity<String> sendBreakingNewsEmail(@RequestBody Alert alertRequest) {
         
-        for (String email : userEmails) {
-            emailService.sendBreakingNews(email, "Breaking News Alert", alert.getMessage());
+       
+        List<UserDto> allUsers = userClient.getAllUsers();
+        
+       
+        for (UserDto user : allUsers) {
+            
+           
+            if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                emailService.sendBreakingNews(user.getEmail(), "Breaking News Alert", alertRequest.getMessage());
+            }
+            
+           
+            Alert userAlert = new Alert();
+            userAlert.setTargetUsername(user.getUsername());
+            userAlert.setMessage(alertRequest.getMessage());
+            userAlert.setCreatedAt(LocalDateTime.now());
+            userAlert.setRead(false);
+            
+            alertRepository.save(userAlert);
         }
-        
-        alert.setCreatedAt(LocalDateTime.now());
-        alert.setRead(false);
-        alertRepository.save(alert);
 
-        return ResponseEntity.ok("Breaking news sent via email successfully.");
+        return ResponseEntity.ok("Breaking news sent to " + allUsers.size() + " users successfully.");
     }
 }

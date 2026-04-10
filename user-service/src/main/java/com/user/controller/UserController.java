@@ -1,5 +1,6 @@
 package com.user.controller;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,12 @@ public class UserController {
     private UserProfileRepository userProfileRepository;
 
   
+    @GetMapping("/all")
+    public ResponseEntity<List<UserProfile>> getAllUsers() {
+        List<UserProfile> users = userProfileRepository.findAll();
+        return ResponseEntity.ok(users);
+    }
+    
     @GetMapping("/{username}")
     public ResponseEntity<?> getProfile(@PathVariable String username) {
         Optional<UserProfile> profile = userProfileRepository.findByUsername(username);
