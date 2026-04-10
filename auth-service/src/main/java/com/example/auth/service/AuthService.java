@@ -67,6 +67,7 @@ public class AuthService {
         if (user.getStatus() == UserStatus.APPROVED) {
             Map<String, String> profileRequest = new HashMap<>();
             profileRequest.put("username", user.getUsername());
+            profileRequest.put("email", user.getEmail());
             
             try {
                 userClient.createUserProfile(profileRequest);

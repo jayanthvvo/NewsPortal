@@ -68,16 +68,15 @@ public class UserController {
     @PostMapping("/create")
     public ResponseEntity<?> createInitialProfile(@RequestBody Map<String, String> request) {
         String username = request.get("username");
+        String email = request.get("email"); // Extract email
         
-        // Check if it already exists to avoid duplicates
         if (userProfileRepository.findByUsername(username).isPresent()) {
             return ResponseEntity.badRequest().body("Profile already exists");
         }
 
         UserProfile newProfile = new UserProfile();
         newProfile.setUsername(username);
-        // Note: The rest of the fields (firstName, lastName, etc.) remain null 
-        // until the user updates them later via your existing updateProfile endpoint.
+        newProfile.setEmail(email); // Save the email to the database
 
         userProfileRepository.save(newProfile);
         return ResponseEntity.ok("Profile created successfully");

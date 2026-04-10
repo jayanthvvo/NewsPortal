@@ -1,0 +1,5 @@
+$kind: http-request
+name: New Request
+url: http://localhost:8085/users/all
+method: GET
+order: 2404727847925944
