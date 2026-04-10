@@ -1,6 +1,7 @@
 package com.user.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,5 +64,22 @@ public class UserController {
 
         UserProfile savedProfile = userProfileRepository.save(profile);
         return ResponseEntity.ok(savedProfile);
+    }
+    @PostMapping("/create")
+    public ResponseEntity<?> createInitialProfile(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        
+        // Check if it already exists to avoid duplicates
+        if (userProfileRepository.findByUsername(username).isPresent()) {
+            return ResponseEntity.badRequest().body("Profile already exists");
+        }
+
+        UserProfile newProfile = new UserProfile();
+        newProfile.setUsername(username);
+        // Note: The rest of the fields (firstName, lastName, etc.) remain null 
+        // until the user updates them later via your existing updateProfile endpoint.
+
+        userProfileRepository.save(newProfile);
+        return ResponseEntity.ok("Profile created successfully");
     }
 }

@@ -1,20 +1,15 @@
 $kind: http-request
 name: New Request
-url: http://localhost:8086/alerts/breaking-news?userEmails=brutalspidy06@gmail.com
+url: http://localhost:8086/alerts/breaking-news
 method: POST
 headers:
   Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU3MjE5MjYsImV4cCI6MTc3NTgwODMyNn0.31A4EkhTnUH1RKpJLf6gkP57LAEbfNksx3x7jw0O824
-queryParams:
-  userEmails: brutalspidy06@gmail.com
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU4MTk0MTAsImV4cCI6MTc3NTkwNTgxMH0.K4M3JD9TLKdQJ5hYm2MkXojIZrXqJh-gkiwEkNbW20A
 body:
   type: json
   content: "{\r
 
-    \    \"targetUsername\": \"all_users\",\r
-
-    \    \"message\": \"URGENT: Major breaking news update. Please check the
-    portal for more details.\"\r
+    \    \"message\": \"egu unte\"\r
 
     }"
 order: 1775720107479
