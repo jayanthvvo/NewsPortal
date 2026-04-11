@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.auth.client.UserClient; // Import the Feign Client
+import com.example.auth.client.UserClient;
 import com.example.auth.model.User;
 import com.example.auth.model.User.UserStatus;
 import com.example.auth.repository.UserRepository;
@@ -28,7 +28,7 @@ public class AdminController {
     private UserRepository userRepository;
     
     @Autowired
-    private UserClient userClient; // Inject the Feign Client
+    private UserClient userClient; 
 
     @GetMapping("/pending-requests")
     public ResponseEntity<List<User>> getPendingRequest(){
@@ -43,26 +43,26 @@ public class AdminController {
         if(userOptional.isPresent()) {
             User user = userOptional.get();
             
-            // Only attempt creation if they aren't already approved
             if (user.getStatus() != UserStatus.APPROVED) {
-                user.setStatus(UserStatus.APPROVED);
                 
-                // --- NEW: Synchronously create the profile in User Service ---
+                // 1. Attempt to create the profile in User Service FIRST
                 Map<String, String> profileRequest = new HashMap<>();
                 profileRequest.put("username", user.getUsername());
-                profileRequest.put("email", user.getEmail()); // Pass email so breaking news works
+                profileRequest.put("email", user.getEmail()); 
                 
                 try {
                     userClient.createUserProfile(profileRequest);
                 } catch (Exception e) {
-                    // Log the error. 
-                    System.err.println("Failed to create profile in user-service for user " + user.getUsername() + ": " + e.getMessage());
-                    // Optionally, you could return an error response here to abort the approval if the user-service is down.
-                    // return ResponseEntity.status(500).body("Error creating profile in User Service. Approval aborted.");
+                    // 2. If it fails, ABORT and send the error back to Postman
+                    e.printStackTrace();
+                    return ResponseEntity.status(500).body("Approval aborted! Failed to connect to user-service: " + e.getMessage());
                 }
                 
+                // 3. Only if Feign call succeeds, change status and save to DB
+                user.setStatus(UserStatus.APPROVED);
                 userRepository.save(user);
-                return ResponseEntity.ok("User " + user.getUsername() + " has been approved as " + user.getRole() + " and profile created.");
+                
+                return ResponseEntity.ok("User " + user.getUsername() + " has been approved and profile created.");
             } else {
                 return ResponseEntity.badRequest().body("User is already approved.");
             }
