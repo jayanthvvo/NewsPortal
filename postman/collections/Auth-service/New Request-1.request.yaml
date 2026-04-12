@@ -6,13 +6,13 @@ body:
   type: json
   content: "{\r
 
-    \    \"username\": \"brutal\",\r
+    \    \"username\": \"jayanth-edi1\",\r
 
-    \    \"email\": \"brutalspidy06@gmail.com\",\r
+    \    \"email\": \"venkateshav870@gmail.com1\",\r
 
     \    \"password\": \"123456\",\r
 
-    \    \"rolerequest\": \"ROLE_USER\"\r
+    \    \"rolerequest\": \"ROLE_EDITOR\"\r
 
     }"
 order: 1000

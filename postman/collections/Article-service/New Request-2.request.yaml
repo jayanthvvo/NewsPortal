@@ -1,10 +1,10 @@
 $kind: http-request
 name: New Request
-url: http://localhost:8080/articles/7/status?status=REVIEW
+url: http://localhost:8080/articles/8/status?status=REVIEW
 method: POST
 headers:
   Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9FRElUT1IiLCJzdWIiOiJqYXlhbnRoX2VkaXRvciIsImlhdCI6MTc3NTU0OTA1NCwiZXhwIjoxNzc1NjM1NDU0fQ.qRX_vT_lYuBMSJMh0IFpcQk2oMt4P5qihtvEj4BTzac
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9FRElUT1IiLCJzdWIiOiJqYXlhbnRoLWVkaSIsImlhdCI6MTc3NTg5MDEwOSwiZXhwIjoxNzc1OTc2NTA5fQ.3_W0JhvnSTYNN29lFvC_RIKyOMlHgzwle95HxaTVYAM
 queryParams:
   status: REVIEW
 order: 3000

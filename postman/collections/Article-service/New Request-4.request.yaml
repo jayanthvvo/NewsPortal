@@ -4,7 +4,7 @@ url: http://localhost:8080/articles/7/status?status=PUBLISHED
 method: POST
 headers:
   Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU1NDkyNDcsImV4cCI6MTc3NTYzNTY0N30.IhByp_HYT13xUcpU6i9W8GWaIOuiW2iDzKG_G_lit1g
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU4OTAyMzMsImV4cCI6MTc3NTk3NjYzM30.UTGVQgSVIkZRZcjEhTtpa8gzrCr-SiIKoDD_-XcQg00
 queryParams:
   status: PUBLISHED
 order: 5000

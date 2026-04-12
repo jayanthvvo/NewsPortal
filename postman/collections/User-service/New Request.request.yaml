@@ -1,21 +1,21 @@
 $kind: http-request
 name: New Request
-url: http://localhost:8080/users/profile
+url: http://localhost:8085/users/profile
 method: POST
 headers:
   Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU1Njg2OTksImV4cCI6MTc3NTY1NTA5OX0.HF5zAgeJo9boLy8AXawlGLTbbnJOutG9wsCuqMWfJZ4
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9FRElUT1IiLCJzdWIiOiJqYXlhbnRoLWVkaSIsImlhdCI6MTc3NTg4OTQ2MSwiZXhwIjoxNzc1OTc1ODYxfQ.jzxwcmYJAx7XhwcG5IsRyjl4XObpXDp-E9qQT2K1RNg
 body:
   type: json
   content: "{\r
 
-    \  \"firstName\": \"Jayanth admin\",\r
+    \    \"firstName\": \"Jayanth\",\r
 
-    \  \"lastName\": \"admin\",\r
+    \    \"lastName\": \"V\",\r
 
-    \  \"bio\": \"Tech enthusiast and avid reader.\",\r
+    \    \"bio\": \"I am a news editor and tech enthusiast.\",\r
 
-    \  \"avatarUrl\": \"https://example.com/avatars/johndoe.png\"\r
+    \    \"avatarUrl\": \"https://example.com/images/jayanth.jpg\"\r
 
     }"
 order: 2000

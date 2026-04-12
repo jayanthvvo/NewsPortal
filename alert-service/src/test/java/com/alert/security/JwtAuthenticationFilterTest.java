@@ -75,7 +75,7 @@ public class JwtAuthenticationFilterTest {
         when(request.getHeader("Authorization")).thenReturn("Bearer mock-valid-token");
         when(jwtUtils.getClaims("mock-valid-token")).thenReturn(claims);
         when(claims.getSubject()).thenReturn("testuser");
-        when(claims.get("role", String.class)).thenReturn("USER"); // No prefix
+        when(claims.get("role", String.class)).thenReturn("USER"); 
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 

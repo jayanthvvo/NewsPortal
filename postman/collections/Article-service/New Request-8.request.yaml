@@ -1,11 +1,13 @@
 $kind: http-request
 name: New Request
-url: http://localhost:8080/articles/filter?categoryId=1&author=jayanth_editor
+url: http://localhost:8080/articles/filter?categoryId=1&author=jayanth-edi
 method: GET
 headers:
-  Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU1NDkyNDcsImV4cCI6MTc3NTYzNTY0N30.IhByp_HYT13xUcpU6i9W8GWaIOuiW2iDzKG_G_lit1g
+  - key: Authorization
+    value: Bearer
+      eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU4OTAyMzMsImV4cCI6MTc3NTk3NjYzM30.UTGVQgSVIkZRZcjEhTtpa8gzrCr-SiIKoDD_-XcQg00
+    disabled: true
 queryParams:
   categoryId: "1"
-  author: jayanth_editor
+  author: jayanth-edi
 order: 8299

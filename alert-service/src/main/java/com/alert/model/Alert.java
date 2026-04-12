@@ -18,7 +18,7 @@ public class Alert {
     @Column(nullable = false)
     private String message;
 
-    // Has the user clicked/read this alert yet?
+   
     @Column(nullable = false)
     private boolean isRead = false;
 

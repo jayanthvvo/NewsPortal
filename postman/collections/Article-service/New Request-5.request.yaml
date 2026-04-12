@@ -3,6 +3,8 @@ name: New Request
 url: http://localhost:8080/articles/all
 method: GET
 headers:
-  Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU2MzY4MDMsImV4cCI6MTc3NTcyMzIwM30.pPUZ728rZVYyDQZ1dEOXlwvaLpUXiRHKRdFGNCwcWpo
+  - key: Authorization
+    value: Bearer
+      eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU4OTAyMzMsImV4cCI6MTc3NTk3NjYzM30.UTGVQgSVIkZRZcjEhTtpa8gzrCr-SiIKoDD_-XcQg00
+    disabled: true
 order: 6000

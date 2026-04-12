@@ -4,7 +4,7 @@ url: http://localhost:8080/categories/all
 method: GET
 headers:
   Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU1NjM3MjgsImV4cCI6MTc3NTY1MDEyOH0.amB5sfCmKBPjWY10qwYdZvK1DVBmTpmiYWtUB4lm9Bw
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU4OTAyMzMsImV4cCI6MTc3NTk3NjYzM30.UTGVQgSVIkZRZcjEhTtpa8gzrCr-SiIKoDD_-XcQg00
 body:
   type: json
   content: "{\r

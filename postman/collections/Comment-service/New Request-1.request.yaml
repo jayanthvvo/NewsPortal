@@ -1,8 +1,8 @@
 $kind: http-request
 name: New Request
-url: http://localhost:8080/comments/article/7
+url: http://localhost:8080/comments/article/8
 method: GET
 headers:
   Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9VU0VSIiwic3ViIjoiamF5YW50aF91c2VyIiwiaWF0IjoxNzc1NTY4NTU1LCJleHAiOjE3NzU2NTQ5NTV9.e_PyeztTRswBu4Vjnow36f_FcQ7XQJuiMpI2Ig2NEGQ
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU4OTAyMzMsImV4cCI6MTc3NTk3NjYzM30.UTGVQgSVIkZRZcjEhTtpa8gzrCr-SiIKoDD_-XcQg00
 order: 2000
