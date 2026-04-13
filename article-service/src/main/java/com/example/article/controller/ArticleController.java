@@ -1,5 +1,6 @@
 package com.example.article.controller;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ public class ArticleController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')") 
-    public ResponseEntity<Article> create(@RequestBody Article article, Authentication authentication){
+    public ResponseEntity<Article> create(@Valid @RequestBody Article article, Authentication authentication){
         String username = authentication.getName();
         Article savedArticle = articleService.createArticle(article, username);
        return ResponseEntity.ok(savedArticle);

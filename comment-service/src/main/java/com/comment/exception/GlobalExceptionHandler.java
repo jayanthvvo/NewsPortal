@@ -1,8 +1,6 @@
-package com.example.article.exception;
+package com.comment.exception; 
 
-import java.util.HashMap;
-import java.util.Map;
-
+import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -10,12 +8,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import feign.FeignException;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
@@ -25,23 +24,21 @@ public class GlobalExceptionHandler {
         });
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
-	
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
-   
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<String> handleFeignException(FeignException ex) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body("Error communicating with downstream services.");
+                .body("Service temporarily unavailable. Error communicating with downstream services.");
     }
 
-   
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGlobalException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("An unexpected internal error occurred: " + ex.getMessage());
+                .body("An unexpected internal server error occurred. Please try again later.");
     }
 }

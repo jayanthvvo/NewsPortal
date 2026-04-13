@@ -1,4 +1,4 @@
-package com.example.article.exception;
+package com.category.exception; // <-- Change this to match your service's package
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,12 +10,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import feign.FeignException;
+
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler(MethodArgumentNotValidException.class)
+  
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
@@ -25,23 +26,17 @@ public class GlobalExceptionHandler {
         });
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
-	
+
+    
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
-   
-    @ExceptionHandler(FeignException.class)
-    public ResponseEntity<String> handleFeignException(FeignException ex) {
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body("Error communicating with downstream services.");
-    }
-
-   
+    
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGlobalException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("An unexpected internal error occurred: " + ex.getMessage());
+                .body("An unexpected internal server error occurred. Please try again later.");
     }
 }

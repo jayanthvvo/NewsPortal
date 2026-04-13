@@ -8,6 +8,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "comments")
@@ -17,17 +20,19 @@ public class Comment {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
+	@NotNull(message = "Article ID is required")
 	@Column(nullable = false)
 	private Long articleId;
-	@Column(nullable = false,length = 1000)
+	
+	@NotBlank(message = "Comment content cannot be empty")
+	@Size(max = 1000, message = "Comment content cannot exceed 1000 characters")
+	@Column(nullable = false, length = 1000)
 	private String content;
 	
 	private String authorUsername;
 
     private LocalDateTime createdAt;
     
-    
-
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -42,5 +47,4 @@ public class Comment {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-	
 }

@@ -20,6 +20,7 @@ import com.comment.client.ArticleClient;
 import com.comment.model.Articledto;
 import com.comment.model.Comment;
 import com.comment.repository.CommentRepository;
+import jakarta.validation.Valid;
 
 import feign.FeignException;
 
@@ -30,15 +31,13 @@ public class CommentController {
 	@Autowired
 	private CommentRepository commentRepository;
 	@Autowired
-    private ArticleClient articleClient; // Inject your new Feign Client
+    private ArticleClient articleClient; 
 
     @PostMapping("/create")
     @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_EDITOR', 'ROLE_ADMIN')")
-    public ResponseEntity<?> createComment(@RequestBody Comment comment, Authentication authentication) {
+    public ResponseEntity<?> createComment(@Valid@RequestBody Comment comment, Authentication authentication) {
         
-        if (comment.getArticleId() == null) {
-            return ResponseEntity.badRequest().body("Error: Article ID is required.");
-        }
+       
        try {
             Articledto article = articleClient.getArticleById(comment.getArticleId());
             if (!"PUBLISHED".equals(article.getStatus())) {

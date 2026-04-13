@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.category.model.Category;
 import com.category.repository.CategoryRepository;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/categories")
@@ -20,7 +21,7 @@ public class CategoryController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')") 
-    public ResponseEntity<?> createCategory(@RequestBody Category category) {
+    public ResponseEntity<?> createCategory(@Valid @RequestBody Category category) {
         
        
         if (categoryRepository.existsByName(category.getName())) {
