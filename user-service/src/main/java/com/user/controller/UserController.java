@@ -68,7 +68,7 @@ public class UserController {
     @PostMapping("/create")
     public ResponseEntity<?> createInitialProfile(@RequestBody Map<String, String> request) {
         String username = request.get("username");
-        String email = request.get("email"); // Extract email
+        String email = request.get("email"); 
         
         if (userProfileRepository.findByUsername(username).isPresent()) {
             return ResponseEntity.badRequest().body("Profile already exists");
@@ -76,7 +76,7 @@ public class UserController {
 
         UserProfile newProfile = new UserProfile();
         newProfile.setUsername(username);
-        newProfile.setEmail(email); // Save the email to the database
+        newProfile.setEmail(email); 
 
         userProfileRepository.save(newProfile);
         return ResponseEntity.ok("Profile created successfully");

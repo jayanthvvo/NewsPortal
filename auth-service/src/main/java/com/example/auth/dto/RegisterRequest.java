@@ -2,6 +2,7 @@ package com.example.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -10,6 +11,7 @@ public class RegisterRequest {
     
     @NotBlank(message = "Username is required")
     @Size(min = 3, message = "Username must be at least 3 characters")
+    @Pattern(regexp = "^[a-zA-Z\\s]+$", message = "Username must contain only letters (no numbers or special characters)")
     private String username;
     
     @NotBlank(message = "Email is required")

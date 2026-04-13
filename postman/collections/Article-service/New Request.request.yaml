@@ -4,7 +4,7 @@ url: http://localhost:8080/articles/create
 method: POST
 headers:
   Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9FRElUT1IiLCJzdWIiOiJqYXlhbnRoLWVkaSIsImlhdCI6MTc3NTg5MDEwOSwiZXhwIjoxNzc1OTc2NTA5fQ.3_W0JhvnSTYNN29lFvC_RIKyOMlHgzwle95HxaTVYAM
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzYwNTU5MjcsImV4cCI6MTc3NjE0MjMyN30.i6VjJD1rynQ28DY4tSe5hHNEy7kjsS1jbosCcJYSMqM
 body:
   type: json
   content: "{\r
@@ -14,7 +14,7 @@ body:
     \    \"content\": \"A deep dive into Eureka, API Gateways, and
     Feryjryjign...\",\r
 
-    \    \"categoryId\": 1\r
+    \    \"categoryId\": 3\r
 
     }"
 order: 2000

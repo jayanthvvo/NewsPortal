@@ -4,7 +4,7 @@ url: http://localhost:8085/users/profile
 method: POST
 headers:
   Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9FRElUT1IiLCJzdWIiOiJqYXlhbnRoLWVkaSIsImlhdCI6MTc3NTg4OTQ2MSwiZXhwIjoxNzc1OTc1ODYxfQ.jzxwcmYJAx7XhwcG5IsRyjl4XObpXDp-E9qQT2K1RNg
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9FRElUT1IiLCJzdWIiOiJqYXlhbnRoLWVkaSIsImlhdCI6MTc3NjA2NDI1MywiZXhwIjoxNzc2MTUwNjUzfQ.mR5LfdpP4RNqhm4U718klcudvLRxZEVY1tWChdyiIk4
 body:
   type: json
   content: "{\r

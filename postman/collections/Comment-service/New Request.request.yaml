@@ -4,14 +4,14 @@ url: http://localhost:8080/comments/create
 method: POST
 headers:
   Authorization: Bearer
-    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU4OTAyMzMsImV4cCI6MTc3NTk3NjYzM30.UTGVQgSVIkZRZcjEhTtpa8gzrCr-SiIKoDD_-XcQg00
+    eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzYwNTU5MjcsImV4cCI6MTc3NjE0MjMyN30.i6VjJD1rynQ28DY4tSe5hHNEy7kjsS1jbosCcJYSMqM
 body:
   type: json
   content: "{\r
 
-    \  \"articleId\": 7,\r
+    \  \"articleId\": 8,\r
 
-    \  \"content\": \"This is a very insightful article. Thanks for sharing!\"\r
+    \  \"content\": \"\"\r
 
     }"
 order: 1000
