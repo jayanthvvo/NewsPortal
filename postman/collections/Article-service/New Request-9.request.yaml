@@ -1,0 +1,13 @@
+$kind: http-request
+name: New Request
+url: http://localhost:8080/articles/filter?categoryId=1&author=jayanth-edi
+method: GET
+headers:
+  - key: Authorization
+    value: Bearer
+      eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpheWFudGh2dm8iLCJpYXQiOjE3NzU4OTAyMzMsImV4cCI6MTc3NTk3NjYzM30.UTGVQgSVIkZRZcjEhTtpa8gzrCr-SiIKoDD_-XcQg00
+    disabled: true
+queryParams:
+  categoryId: "1"
+  author: jayanth-edi
+order: 9373
