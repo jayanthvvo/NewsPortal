@@ -24,12 +24,12 @@ const ArticlesDashboard: React.FC = () => {
 
         const fetchArticles = async () => {
             try {
-                const response = await api.get('/articles');
+                const response = await api.get('/articles/all');
                 setArticles(response.data);
             } catch (error) {
                 console.error("Failed to load articles", error);
-                authService.logout();
-                navigate('/login');
+                // authService.logout();
+                // navigate('/login');
             } finally {
                 setLoading(false);
             }
