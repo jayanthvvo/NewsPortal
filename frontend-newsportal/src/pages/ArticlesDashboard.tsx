@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axiosConfig';
+import api from '../api/axiosConfig.ts';
 import { authService } from '../services/authService';
 
 interface Article {
