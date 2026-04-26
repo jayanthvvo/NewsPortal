@@ -1,19 +1,22 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login.tsx';
+import Login from './pages/Login';
+import Register from './pages/Register'; // <-- Import the new page
 import ArticlesDashboard from './pages/ArticlesDashboard'; 
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* If someone just goes to localhost:5173, send them to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         
-        {/* The Login Page */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} /> {/* <-- Add this route */}
         
-        {/* The Articles Dashboard Page */}
         <Route path="/articles" element={<ArticlesDashboard />} />
+        
+        {/* Placeholders for the other roles we will build later */}
+        <Route path="/admin" element={<h2>Admin Console</h2>} />
+        <Route path="/author" element={<h2>Author Workspace</h2>} />
       </Routes>
     </Router>
   );
