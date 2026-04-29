@@ -15,6 +15,17 @@ export const articleService = {
         const response = await api.get('/articles/pending-review');
         return response.data;
     },
+    // --- READER ENDPOINTS ---
+    // Fetch all PUBLISHED articles for the main news feed
+    // Fetch a single article by its ID
+    getArticleById: async (id: number): Promise<Article> => {
+        const response = await api.get(`/articles/${id}`);
+        return response.data;
+    },
+    getAllPublishedArticles: async (): Promise<Article[]> => {
+        const response = await api.get('/articles/all');
+        return response.data;
+    },
     updateArticleStatus: async (id: number, status: string): Promise<Article> => {
         const response = await api.post(`/articles/${id}/status`, null, { params: { status } });
         return response.data;
@@ -42,4 +53,5 @@ export const articleService = {
         const response = await api.post(`/articles/${id}/status`, null, { params: { status: 'REVIEW' } });
         return response.data;
     }
+    
 };

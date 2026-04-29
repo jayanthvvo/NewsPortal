@@ -4,6 +4,7 @@ import Register from './pages/Register';
 import ArticlesDashboard from './pages/ArticlesDashboard'; 
 import AdminDashboard from './pages/AdminDashboard'; // <-- Added import
 import AuthorWorkspace from './pages/AuthorWorkspace';
+import FullArticle from './pages/FullArticle';
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         
         <Route path="/articles" element={<ArticlesDashboard />} />
-        
+        <Route path="/article/:id" element={<FullArticle />} />  {/* <-- ADD THIS */}
         {/* Updated Admin Route */}
         <Route path="/admin" element={<AdminDashboard />} />
         
