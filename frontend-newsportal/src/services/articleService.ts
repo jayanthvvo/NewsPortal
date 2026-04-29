@@ -1,46 +1,45 @@
 import api from '../api/axiosConfig';
 
 export interface Article {
-    id: number;
+    id?: number;
     title: string;
     content: string;
     author: string;
+    categoryId: number; 
     status: string;
 }
 
 export const articleService = {
-    // 1. Fetch articles waiting for Admin approval
+    // --- ADMIN ENDPOINTS ---
     getPendingReviews: async (): Promise<Article[]> => {
-        try {
-            const response = await api.get('/articles/pending-review');
-            return response.data;
-        } catch (error) {
-            console.error("Failed to fetch pending articles:", error);
-            throw error;
-        }
+        const response = await api.get('/articles/pending-review');
+        return response.data;
     },
-
-    // 2. Change the status (e.g., to PUBLISHED or back to DRAFT)
     updateArticleStatus: async (id: number, status: string): Promise<Article> => {
-        try {
-            // Your Java backend expects @RequestParam String status
-            const response = await api.post(`/articles/${id}/status`, null, {
-                params: { status }
-            });
-            return response.data;
-        } catch (error) {
-            console.error(`Failed to update article status to ${status}:`, error);
-            throw error;
-        }
+        const response = await api.post(`/articles/${id}/status`, null, { params: { status } });
+        return response.data;
+    },
+    deleteArticle: async (id: number): Promise<void> => {
+        await api.delete(`/articles/delete/${id}`);
     },
 
-    // 3. Completely delete an article
-    deleteArticle: async (id: number): Promise<void> => {
-        try {
-            await api.delete(`/articles/delete/${id}`);
-        } catch (error) {
-            console.error("Failed to delete article:", error);
-            throw error;
-        }
+    // --- AUTHOR ENDPOINTS ---
+    // Create a brand new article (Default status is usually DRAFT)
+    createArticle: async (articleData: { title: string; content: string; categoryId: number }): Promise<Article> => {
+        const response = await api.post('/articles/create', articleData);
+        return response.data;
+    },
+    
+    // Get all articles written by the currently logged-in author
+    getMyArticles: async (): Promise<Article[]> => {
+        // If your Java backend figures out the author via the JWT token:
+        const response = await api.get('/articles/my-articles'); 
+        return response.data;
+    },
+
+    // Submit an existing draft to the Admin for review
+    submitForReview: async (id: number): Promise<Article> => {
+        const response = await api.post(`/articles/${id}/status`, null, { params: { status: 'REVIEW' } });
+        return response.data;
     }
 };

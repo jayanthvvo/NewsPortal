@@ -20,7 +20,7 @@ const Login: React.FC = () => {
             // Redirect based on role
             const userRole = response.role;
             if (userRole === 'ROLE_ADMIN') navigate('/admin');
-            else if (userRole === 'ROLE_AUTHOR') navigate('/author');
+            else if (userRole === 'ROLE_EDITOR') navigate('/author'); // Make sure ROLE_EDITOR is here!
             else navigate('/articles');
             
         } catch (err) {

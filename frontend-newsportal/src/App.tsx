@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ArticlesDashboard from './pages/ArticlesDashboard'; 
 import AdminDashboard from './pages/AdminDashboard'; // <-- Added import
+import AuthorWorkspace from './pages/AuthorWorkspace';
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         
         {/* Placeholder for the author we will build later */}
-        <Route path="/author" element={<h2>Author Workspace</h2>} />
+        <Route path="/author" element={<AuthorWorkspace />} />
       </Routes>
     </Router>
   );
