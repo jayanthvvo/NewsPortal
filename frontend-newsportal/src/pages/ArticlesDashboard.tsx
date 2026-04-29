@@ -63,7 +63,9 @@ const ArticlesDashboard: React.FC = () => {
                 </div>
                 
                 <div style={{ display: 'flex', gap: '20px', alignItems: 'center', fontFamily: 'sans-serif' }}>
-                    <span style={{ color: '#ccc' }}>Welcome, reader!</span>
+                    <button onClick={() => navigate('/profile')} style={{ padding: '8px 16px', backgroundColor: '#0056b3', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                        My Profile
+                    </button>
                     <button onClick={handleLogout} style={{ padding: '8px 16px', backgroundColor: 'transparent', color: 'white', border: '1px solid white', borderRadius: '4px', cursor: 'pointer', transition: '0.2s' }}>
                         Sign Out
                     </button>

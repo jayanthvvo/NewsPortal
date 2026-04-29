@@ -5,6 +5,7 @@ import ArticlesDashboard from './pages/ArticlesDashboard';
 import AdminDashboard from './pages/AdminDashboard'; // <-- Added import
 import AuthorWorkspace from './pages/AuthorWorkspace';
 import FullArticle from './pages/FullArticle';
+import UserProfilePage from './pages/UserProfilePage';
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
         <Route path="/article/:id" element={<FullArticle />} />  {/* <-- ADD THIS */}
         {/* Updated Admin Route */}
         <Route path="/admin" element={<AdminDashboard />} />
-        
+        <Route path="/profile" element={<UserProfilePage />} />
         {/* Placeholder for the author we will build later */}
         <Route path="/author" element={<AuthorWorkspace />} />
       </Routes>

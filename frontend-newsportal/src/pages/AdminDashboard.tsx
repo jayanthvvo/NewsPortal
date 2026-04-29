@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { adminService, type User } from '../services/adminService';
 import { categoryService, type Category } from '../services/categoryService';
 import { articleService, type Article } from '../services/articleService';
+import { alertService } from '../services/alertService';
 import { authService } from '../services/authService';
 
 const AdminDashboard: React.FC = () => {
@@ -22,22 +23,24 @@ const AdminDashboard: React.FC = () => {
     // Tab 3 State (Articles)
     const [pendingArticles, setPendingArticles] = useState<Article[]>([]);
 
+    // Tab 4 State (Alerts)
+    const [alertMessage, setAlertMessage] = useState('');
+    const [sendingAlert, setSendingAlert] = useState(false);
+
     useEffect(() => {
-        // SECURITY CHECK
         const role = authService.getRole();
         if (!authService.isAuthenticated() || role !== 'ROLE_ADMIN') {
             navigate('/login');
             return;
         }
         
-        // Load data based on which tab is clicked
         if (activeTab === 'approvals') fetchPendingUsers();
         else if (activeTab === 'categories') fetchCategories();
         else if (activeTab === 'articles') fetchPendingArticles();
         
     }, [activeTab, navigate]);
 
-    // --- TAB 1 FUNCTIONS ---
+    // --- TAB 1: APPROVALS ---
     const fetchPendingUsers = async () => {
         try {
             setLoading(true);
@@ -60,7 +63,7 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
-    // --- TAB 2 FUNCTIONS ---
+    // --- TAB 2: CATEGORIES ---
     const fetchCategories = async () => {
         try {
             const data = await categoryService.getAllCategories();
@@ -79,11 +82,11 @@ const AdminDashboard: React.FC = () => {
             fetchCategories(); 
             alert("Category created successfully!");
         } catch (error) {
-            alert("Failed to create category. Check Java backend logs.");
+            alert("Failed to create category.");
         }
     };
 
-    // --- TAB 3 FUNCTIONS ---
+    // --- TAB 3: ARTICLES ---
     const fetchPendingArticles = async () => {
         try {
             setLoading(true);
@@ -117,7 +120,7 @@ const AdminDashboard: React.FC = () => {
     };
 
     const handleDeleteArticle = async (id: number) => {
-        if (!window.confirm("CRITICAL: Are you sure you want to completely delete this article? This cannot be undone.")) return;
+        if (!window.confirm("CRITICAL: Permanently delete this article?")) return;
         try {
             await articleService.deleteArticle(id);
             fetchPendingArticles();
@@ -126,7 +129,24 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
-    // --- SHARED FUNCTIONS ---
+    // --- TAB 4: ALERTS ---
+    const handleSendAlert = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!window.confirm("WARNING: This will send an email to EVERY registered user in the database. Proceed?")) return;
+        
+        setSendingAlert(true);
+        try {
+            const responseMsg = await alertService.sendBreakingNews(alertMessage);
+            alert(`Success! ${responseMsg}`);
+            setAlertMessage('');
+        } catch (error) {
+            alert("Failed to send breaking news. Ensure your alert-service is running and SMTP is configured.");
+        } finally {
+            setSendingAlert(false);
+        }
+    };
+
+    // --- SHARED ---
     const handleLogout = () => {
         authService.logout();
         navigate('/login');
@@ -139,31 +159,36 @@ const AdminDashboard: React.FC = () => {
             <div style={{ width: '250px', backgroundColor: '#343a40', color: 'white', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ padding: '20px', borderBottom: '1px solid #4b545c' }}>
                     <h2 style={{ margin: 0, fontSize: '20px' }}>Admin Console</h2>
-                    <small style={{ color: '#adb5bd' }}>Logged in as {authService.getRole()}</small>
+                    <small style={{ color: '#adb5bd' }}>Logged in as Admin</small>
                 </div>
                 
                 <nav style={{ flex: 1, padding: '20px 0' }}>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                         <li>
                             <button onClick={() => setActiveTab('approvals')} style={{ width: '100%', padding: '15px 20px', textAlign: 'left', background: activeTab === 'approvals' ? '#007bff' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
-                                👤 Pending Approvals {users.length > 0 && activeTab !== 'approvals' && <span style={{ background: 'red', borderRadius: '50%', padding: '2px 8px', fontSize: '12px', marginLeft: '10px' }}>!</span>}
+                                👤 Approvals {users.length > 0 && activeTab !== 'approvals' && <span style={{ background: 'red', borderRadius: '50%', padding: '2px 8px', fontSize: '12px', marginLeft: '10px' }}>!</span>}
                             </button>
                         </li>
                         <li>
                             <button onClick={() => setActiveTab('categories')} style={{ width: '100%', padding: '15px 20px', textAlign: 'left', background: activeTab === 'categories' ? '#007bff' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
-                                📁 Manage Categories
+                                📁 Categories
                             </button>
                         </li>
                         <li>
                             <button onClick={() => setActiveTab('articles')} style={{ width: '100%', padding: '15px 20px', textAlign: 'left', background: activeTab === 'articles' ? '#007bff' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
-                                📰 Content Oversight
+                                📰 Article Reviews
+                            </button>
+                        </li>
+                        <li>
+                            <button onClick={() => setActiveTab('alerts')} style={{ width: '100%', padding: '15px 20px', textAlign: 'left', background: activeTab === 'alerts' ? '#dc3545' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
+                                🚨 Breaking News Alert
                             </button>
                         </li>
                     </ul>
                 </nav>
                 
                 <div style={{ padding: '20px' }}>
-                    <button onClick={handleLogout} style={{ width: '100%', padding: '10px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                    <button onClick={handleLogout} style={{ width: '100%', padding: '10px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
                         Logout
                     </button>
                 </div>
@@ -174,7 +199,6 @@ const AdminDashboard: React.FC = () => {
                 
                 {/* TAB 1: PENDING APPROVALS */}
                 {activeTab === 'approvals' && (
-                    /* ... (Your existing Approvals Code is untouched) ... */
                     <div>
                         <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px' }}>Review Account Requests</h2>
                         {loading ? <p>Loading users...</p> : users.length === 0 ? (
@@ -196,16 +220,8 @@ const AdminDashboard: React.FC = () => {
                                         <tr key={user.id} style={{ borderBottom: '1px solid #eee' }}>
                                             <td style={{ padding: '15px', fontWeight: 'bold' }}>{user.username}</td>
                                             <td style={{ padding: '15px' }}>{user.email}</td>
-                                            <td style={{ padding: '15px' }}>
-                                                <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: user.role === 'ROLE_ADMIN' ? '#f8d7da' : '#fff3cd', fontSize: '12px' }}>
-                                                    {user.role}
-                                                </span>
-                                            </td>
-                                            <td style={{ padding: '15px' }}>
-                                                <button onClick={() => handleApprove(user.id, user.username)} style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                                    ✓ Approve
-                                                </button>
-                                            </td>
+                                            <td style={{ padding: '15px' }}><span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: '#fff3cd', fontSize: '12px' }}>{user.role}</span></td>
+                                            <td style={{ padding: '15px' }}><button onClick={() => handleApprove(user.id, user.username)} style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>✓ Approve</button></td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -216,10 +232,8 @@ const AdminDashboard: React.FC = () => {
 
                 {/* TAB 2: MANAGE CATEGORIES */}
                 {activeTab === 'categories' && (
-                    /* ... (Your existing Categories Code is untouched) ... */
                     <div>
                         <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px' }}>Manage News Categories</h2>
-                        
                         <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
                             <div style={{ flex: 1, backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', height: 'fit-content' }}>
                                 <h3 style={{ marginTop: 0 }}>Create New Category</h3>
@@ -230,34 +244,20 @@ const AdminDashboard: React.FC = () => {
                                     </div>
                                     <div>
                                         <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#555' }}>Description</label>
-                                        <textarea value={newCategoryDesc} onChange={(e) => setNewCategoryDesc(e.target.value)} required style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '80px', boxSizing: 'border-box', fontFamily: 'inherit' }} placeholder="All tech related news..." />
+                                        <textarea value={newCategoryDesc} onChange={(e) => setNewCategoryDesc(e.target.value)} required style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '80px', boxSizing: 'border-box', fontFamily: 'inherit' }} />
                                     </div>
-                                    <button type="submit" style={{ padding: '12px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                        + Add Category
-                                    </button>
+                                    <button type="submit" style={{ padding: '12px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Add Category</button>
                                 </form>
                             </div>
 
                             <div style={{ flex: 2, backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                                 <h3 style={{ marginTop: 0 }}>Existing Categories</h3>
-                                {categories.length === 0 ? (
-                                    <p style={{ color: '#666' }}>No categories found in the database.</p>
-                                ) : (
+                                {categories.length === 0 ? <p style={{ color: '#666' }}>No categories found in the database.</p> : (
                                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                        <thead>
-                                            <tr style={{ backgroundColor: '#f8f9fa', textAlign: 'left' }}>
-                                                <th style={{ padding: '12px', borderBottom: '2px solid #dee2e6' }}>ID</th>
-                                                <th style={{ padding: '12px', borderBottom: '2px solid #dee2e6' }}>Name</th>
-                                                <th style={{ padding: '12px', borderBottom: '2px solid #dee2e6' }}>Description</th>
-                                            </tr>
-                                        </thead>
+                                        <thead><tr style={{ backgroundColor: '#f8f9fa', textAlign: 'left' }}><th style={{ padding: '12px', borderBottom: '2px solid #dee2e6' }}>Name</th><th style={{ padding: '12px', borderBottom: '2px solid #dee2e6' }}>Description</th></tr></thead>
                                         <tbody>
                                             {categories.map((category) => (
-                                                <tr key={category.id} style={{ borderBottom: '1px solid #eee' }}>
-                                                    <td style={{ padding: '12px', color: '#666' }}>{category.id}</td>
-                                                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{category.name}</td>
-                                                    <td style={{ padding: '12px', color: '#444' }}>{category.description}</td>
-                                                </tr>
+                                                <tr key={category.id} style={{ borderBottom: '1px solid #eee' }}><td style={{ padding: '12px', fontWeight: 'bold' }}>{category.name}</td><td style={{ padding: '12px', color: '#444' }}>{category.description}</td></tr>
                                             ))}
                                         </tbody>
                                     </table>
@@ -267,50 +267,63 @@ const AdminDashboard: React.FC = () => {
                     </div>
                 )}
 
-                {/* NEW TAB 3: CONTENT OVERSIGHT */}
+                {/* TAB 3: CONTENT OVERSIGHT */}
                 {activeTab === 'articles' && (
                     <div>
                         <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px' }}>Article Publishing Queue</h2>
-                        <p style={{ color: '#666', marginBottom: '20px' }}>Review articles submitted by your authors. You must approve them before they go live on the public dashboard.</p>
-                        
                         {loading ? <p>Loading pending articles...</p> : pendingArticles.length === 0 ? (
-                            <div style={{ backgroundColor: '#d4edda', color: '#155724', padding: '15px', borderRadius: '5px', marginTop: '20px' }}>
-                                ✅ Inbox Zero! There are no articles currently waiting for review.
-                            </div>
+                            <div style={{ backgroundColor: '#d4edda', color: '#155724', padding: '15px', borderRadius: '5px', marginTop: '20px' }}>✅ Inbox Zero! There are no articles currently waiting for review.</div>
                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>
                                 {pendingArticles.map((article) => (
                                     <div key={article.id} style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', borderLeft: '5px solid #ffc107' }}>
                                         <div style={{ padding: '20px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                                                <div>
-                                                    <h3 style={{ margin: '0 0 5px 0', color: '#333' }}>{article.title}</h3>
-                                                    <small style={{ color: '#666' }}>Written by <strong>{article.author}</strong> | Status: <span style={{ color: '#d39e00', fontWeight: 'bold' }}>{article.status}</span></small>
-                                                </div>
-                                            </div>
-                                            
-                                            {/* We slice the content so huge articles don't break the layout */}
-                                            <p style={{ color: '#444', backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '4px', fontStyle: 'italic', margin: '15px 0' }}>
-                                                {article.content.length > 200 ? article.content.substring(0, 200) + "..." : article.content}
-                                            </p>
-                                            
+                                            <h3 style={{ margin: '0 0 5px 0', color: '#333' }}>{article.title}</h3>
+                                            <small style={{ color: '#666' }}>Written by <strong>{article.author}</strong> | Status: <span style={{ color: '#d39e00', fontWeight: 'bold' }}>{article.status}</span></small>
+                                            <p style={{ color: '#444', backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '4px', fontStyle: 'italic', margin: '15px 0' }}>{article.content.length > 200 ? article.content.substring(0, 200) + "..." : article.content}</p>
                                             <div style={{ display: 'flex', gap: '10px', marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-                                                <button onClick={() => handlePublishArticle(article.id)} style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                                    ✓ Publish to Front Page
-                                                </button>
-                                                <button onClick={() => handleRejectArticle(article.id)} style={{ padding: '8px 16px', backgroundColor: '#ffc107', color: '#212529', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                                    ↩ Send Back to Author (Draft)
-                                                </button>
-                                                <div style={{ flex: 1 }}></div> {/* Spacer */}
-                                                <button onClick={() => handleDeleteArticle(article.id)} style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                                                    🗑 Delete Permanently
-                                                </button>
+                                                <button onClick={() => handlePublishArticle(article.id!)} style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>✓ Publish</button>
+                                                <button onClick={() => handleRejectArticle(article.id!)} style={{ padding: '8px 16px', backgroundColor: '#ffc107', color: '#212529', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>↩ Reject (Draft)</button>
+                                                <div style={{ flex: 1 }}></div>
+                                                <button onClick={() => handleDeleteArticle(article.id!)} style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>🗑 Delete</button>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* TAB 4: BREAKING NEWS ALERTS */}
+                {activeTab === 'alerts' && (
+                    <div>
+                        <h2 style={{ borderBottom: '2px solid #dc3545', paddingBottom: '10px', color: '#dc3545' }}>Emergency Alert System</h2>
+                        <p style={{ color: '#666', marginBottom: '20px' }}>Use this console to send an immediate Breaking News email blast to every registered reader in the database.</p>
+                        
+                        <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '2px solid #f5c6cb' }}>
+                            <form onSubmit={handleSendAlert} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', color: '#721c24' }}>Breaking News Message</label>
+                                    <textarea 
+                                        value={alertMessage} 
+                                        onChange={(e) => setAlertMessage(e.target.value)} 
+                                        required 
+                                        placeholder="Type the emergency alert or breaking news here..." 
+                                        style={{ width: '100%', padding: '15px', border: '1px solid #dc3545', borderRadius: '4px', minHeight: '150px', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: '16px' }} 
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <button 
+                                        type="submit" 
+                                        disabled={sendingAlert} 
+                                        style={{ padding: '12px 24px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: sendingAlert ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '16px' }}
+                                    >
+                                        {sendingAlert ? '🚨 Broadcasting Alert to all Users...' : '🚨 Broadcast Breaking News'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 )}
 
