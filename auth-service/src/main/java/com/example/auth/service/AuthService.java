@@ -117,7 +117,7 @@ public class AuthService {
         // Call the Alert Service via RestTemplate
         try {
             // Note: If you don't use Eureka, change this to "http://localhost:808X/alerts/send-email"
-            String alertServiceUrl = "http://ALERT-SERVICE/alerts/send-email"; 
+        	String alertServiceUrl = "http://localhost:8086/alerts/send-email"; 
             
             ResponseEntity<String> response = restTemplate.postForEntity(
                 alertServiceUrl, 
