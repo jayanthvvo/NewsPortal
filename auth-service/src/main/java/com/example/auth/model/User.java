@@ -1,5 +1,7 @@
 package com.example.auth.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.annotation.Generated;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,4 +38,7 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     private UserStatus status=UserStatus.PENDING;
+    
+    private String otp;
+    private LocalDateTime otpExpiry;
 }

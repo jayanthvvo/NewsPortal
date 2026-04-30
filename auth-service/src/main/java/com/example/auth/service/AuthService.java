@@ -1,13 +1,16 @@
 package com.example.auth.service;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.example.auth.client.UserClient;
 import com.example.auth.dto.JwtResponse;
@@ -32,6 +35,8 @@ public class AuthService {
     private AuthenticationManager authenticationManager;
     @Autowired
     private UserClient userClient; 
+    @Autowired
+    private RestTemplate restTemplate;
 
     public String registerUser(RegisterRequest request) {
         if(userRepository.existsByUsername(request.getUsername())) {
@@ -88,5 +93,62 @@ public class AuthService {
         String Token=jwtUtils.generateToken(user.getUsername(), user.getRole().name());
         
         return new JwtResponse(Token, user.getUsername(), user.getRole().name());
+    }
+
+    
+    public void generateAndSendOtp(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User with this email not found"));
+            
+        // Generate a 6-digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        
+       
+        user.setOtp(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
+        userRepository.save(user);
+        
+        // Prepare the email payload (Keys must match what AlertController expects)
+        Map<String, String> emailRequest = new HashMap<>();
+        emailRequest.put("to", email); 
+        emailRequest.put("subject", "Password Reset Request");
+        emailRequest.put("message", "Your 6-digit OTP to reset your password is: " + otp + ". This code expires in 10 minutes.");
+
+        // Call the Alert Service via RestTemplate
+        try {
+            // Note: If you don't use Eureka, change this to "http://localhost:808X/alerts/send-email"
+            String alertServiceUrl = "http://ALERT-SERVICE/alerts/send-email"; 
+            
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                alertServiceUrl, 
+                emailRequest, 
+                String.class
+            );
+            System.out.println("Successfully told Alert Service to send email. Response: " + response.getBody());
+            
+        } catch (Exception e) {
+            System.err.println("Failed to reach Alert Service: " + e.getMessage());
+        }
+
+        // Keep this for testing in your console just in case the email fails to deliver!
+        System.out.println("DEBUG - OTP for " + email + " is " + otp); 
+    }
+
+    public void resetPassword(String email, String otp, String newPassword) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+            
+        if (user.getOtp() == null || !user.getOtp().equals(otp)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("OTP has expired. Please request a new one.");
+        }
+        
+        // Update password and clear the OTP
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setOtp(null);
+        user.setOtpExpiry(null);
+        userRepository.save(user);
     }
 }

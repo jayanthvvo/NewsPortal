@@ -1,5 +1,7 @@
 package com.example.auth.controller;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,5 +38,24 @@ public class AuthController {
 			return ResponseEntity.status(401).body(e.getMessage());
 		}
 	}
-	
+	@PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        try {
+            authService.generateAndSendOtp(request.get("email"));
+            // Return JSON so React handles it cleanly
+            return ResponseEntity.ok(Map.of("message", "OTP sent to email"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        try {
+            authService.resetPassword(request.get("email"), request.get("otp"), request.get("newPassword"));
+            return ResponseEntity.ok(Map.of("message", "Password successfully reset"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
