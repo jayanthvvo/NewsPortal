@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/alerts")
@@ -52,5 +53,22 @@ public class AlertController {
         }
 
         return ResponseEntity.ok("Breaking news sent to " + allUsers.size() + " users successfully.");
+    }
+    
+    
+    @PostMapping("/send-email")
+    public ResponseEntity<String> sendSingleEmail(@RequestBody Map<String, String> request) {
+        try {
+            String to = request.get("to");
+            String subject = request.get("subject");
+            String message = request.get("message");
+            
+            // Calls your existing EmailService to send the actual email
+            emailService.sendEmail(to, subject, message); 
+            
+            return ResponseEntity.ok("Email sent successfully to " + to);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to send email: " + e.getMessage());
+        }
     }
 }
