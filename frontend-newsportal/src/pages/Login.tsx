@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 
+
 const Login: React.FC = () => {
     const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
@@ -50,6 +51,14 @@ const Login: React.FC = () => {
                         <label style={{ display: 'block', marginBottom: '5px', color: '#555', fontSize: '14px' }}>Password</label>
                         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required 
                             style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', boxSizing: 'border-box' }} />
+                    <div className="flex justify-end mt-1">
+    <Link 
+      to="/forgot-password" 
+      className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+    >
+      Forgot Password?
+    </Link>
+  </div>
                     </div>
                     
                     <button type="submit" disabled={loading} style={{ marginTop: '10px', padding: '12px', backgroundColor: '#0056b3', color: 'white', border: 'none', borderRadius: '5px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '16px', fontWeight: 'bold' }}>

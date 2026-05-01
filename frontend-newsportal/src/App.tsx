@@ -6,6 +6,7 @@ import AdminDashboard from './pages/AdminDashboard'; // <-- Added import
 import AuthorWorkspace from './pages/AuthorWorkspace';
 import FullArticle from './pages/FullArticle';
 import UserProfilePage from './pages/UserProfilePage';
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/profile" element={<UserProfilePage />} />
         {/* Placeholder for the author we will build later */}
         <Route path="/author" element={<AuthorWorkspace />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
       </Routes>
     </Router>
   );
