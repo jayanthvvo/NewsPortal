@@ -1,0 +1,12 @@
+$kind: http-request
+name: New Request
+url: http://localhost:8080/auth/forgot-password
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"email\": \"venkateshav870@gmail.com\"\r
+
+    }"
+order: 3949898517971508

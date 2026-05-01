@@ -2,6 +2,9 @@ package com.example.article.model;
 
 import java.time.LocalDateTime;
 
+// 1. ADD THIS IMPORT
+import com.fasterxml.jackson.annotation.JsonProperty; 
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,6 +34,8 @@ public class Article {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
     
+    // 2. ADD THIS ANNOTATION
+    @JsonProperty("author") 
     private String authorUsername;
     
     private LocalDateTime createdAt;

@@ -102,6 +102,13 @@ public class ArticleController {
         List<Article> results = articleService.filterPublishedArticles(categoryId, author);
         return ResponseEntity.ok(results);
     }
-    
+    @GetMapping("/my-articles")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR', 'ROLE_AUTHOR')")
+    public ResponseEntity<List<Article>> getMyArticles(Authentication authentication) {
+        String username = authentication.getName();
+        // Assuming your ArticleService has this method already, based on the other endpoints
+        List<Article> myArticles = articleService.getArticlesByAuthor(username);
+        return ResponseEntity.ok(myArticles);
+    }
     
 }
