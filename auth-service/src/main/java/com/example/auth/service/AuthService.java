@@ -116,9 +116,7 @@ public class AuthService {
 
         // Call the Alert Service via RestTemplate
         try {
-            // Note: If you don't use Eureka, change this to "http://localhost:808X/alerts/send-email"
-        	String alertServiceUrl = "http://localhost:8086/alerts/send-email"; 
-            
+            String alertServiceUrl = "http://alert-service/alerts/send-email"; 
             ResponseEntity<String> response = restTemplate.postForEntity(
                 alertServiceUrl, 
                 emailRequest, 
@@ -128,10 +126,9 @@ public class AuthService {
             
         } catch (Exception e) {
             System.err.println("Failed to reach Alert Service: " + e.getMessage());
+            // Throw the error so the controller returns a 400 Bad Request
+            throw new RuntimeException("Failed to send OTP email. Please try again later."); 
         }
-
-        // Keep this for testing in your console just in case the email fails to deliver!
-        System.out.println("DEBUG - OTP for " + email + " is " + otp); 
     }
 
     public void resetPassword(String email, String otp, String newPassword) {
