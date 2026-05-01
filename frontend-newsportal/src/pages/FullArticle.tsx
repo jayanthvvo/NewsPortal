@@ -55,50 +55,69 @@ const FullArticle: React.FC = () => {
         }
     };
 
-    if (loading) return <div style={{ textAlign: 'center', padding: '50px', fontSize: '20px' }}>Loading Story...</div>;
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)]">
+                <div className="text-xl animate-pulse font-sans">Loading Story...</div>
+            </div>
+        );
+    }
+    
     if (!article) return null;
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#fdfdfd', fontFamily: "'Georgia', serif", paddingBottom: '50px' }}>
+        <div className="min-h-screen bg-[var(--bg)] pb-16 font-sans">
             
             {/* Minimal Header */}
-            <header style={{ padding: '20px 40px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0, fontFamily: 'sans-serif', color: '#1a1a1a', cursor: 'pointer' }} onClick={() => navigate('/articles')}>
+            <header className="px-6 py-5 md:px-10 border-b border-[var(--border)] flex justify-between items-center sticky top-0 bg-[var(--bg)] z-10 shadow-sm">
+                <h2 
+                    className="m-0 text-lg font-semibold text-[var(--text-h)] cursor-pointer hover:text-[var(--accent)] transition-colors" 
+                    onClick={() => navigate('/articles')}
+                >
                     ← Back to News Feed
                 </h2>
-                <div style={{ fontFamily: 'sans-serif', fontSize: '14px', color: '#666' }}>Logged in as {authService.getRole()}</div>
+                <div className="text-sm text-[var(--text)] font-medium">
+                    Logged in as <span className="text-[var(--accent)]">{authService.getRole()}</span>
+                </div>
             </header>
 
-            <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
+            <main className="max-w-3xl mx-auto mt-10 px-6 md:px-0">
                 
                 {/* ARTICLE CONTENT */}
                 <article>
-                    <h1 style={{ fontSize: '42px', lineHeight: '1.2', color: '#111', marginBottom: '20px' }}>{article.title}</h1>
-                    <div style={{ fontSize: '16px', color: '#555', borderBottom: '2px solid #111', paddingBottom: '20px', marginBottom: '30px', fontStyle: 'italic' }}>
-                        Written by <strong>{article.author}</strong> | Status: {article.status}
+                    <h1 className="text-4xl md:text-5xl font-bold leading-tight text-[var(--text-h)] mb-6 font-serif">
+                        {article.title}
+                    </h1>
+                    <div className="text-base text-[var(--text)] border-b-2 border-[var(--border)] pb-5 mb-8 italic">
+                        Written by <strong className="text-[var(--text-h)]">{article.author}</strong> | Status: <span className="uppercase tracking-wide text-xs font-bold px-2 py-1 bg-[var(--code-bg)] rounded border border-[var(--border)] ml-1 not-italic">{article.status}</span>
                     </div>
                     
-                    <div style={{ fontSize: '20px', lineHeight: '1.8', color: '#333', whiteSpace: 'pre-wrap' }}>
+                    <div className="text-lg md:text-xl leading-relaxed text-[var(--text-h)] whitespace-pre-wrap font-serif">
                         {article.content}
                     </div>
                 </article>
 
                 {/* COMMENTS SECTION */}
-                <section style={{ marginTop: '60px', borderTop: '1px solid #ddd', paddingTop: '40px', fontFamily: 'sans-serif' }}>
-                    <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>Discussion ({comments.length})</h3>
+                <section className="mt-16 border-t border-[var(--border)] pt-10 font-sans">
+                    <h3 className="text-2xl font-bold mb-6 text-[var(--text-h)]">
+                        Discussion ({comments.length})
+                    </h3>
 
                     {/* Post a comment form */}
-                    <div style={{ backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                        <form onSubmit={handlePostComment} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div className="bg-[var(--code-bg)] p-6 rounded-xl mb-10 border border-[var(--border)] shadow-sm">
+                        <form onSubmit={handlePostComment} className="flex flex-col gap-4">
                             <textarea 
                                 value={newComment} 
                                 onChange={(e) => setNewComment(e.target.value)} 
                                 placeholder="Share your thoughts on this story..." 
                                 required
-                                style={{ width: '100%', padding: '15px', borderRadius: '4px', border: '1px solid #ccc', minHeight: '100px', fontSize: '16px', boxSizing: 'border-box', fontFamily: 'inherit' }} 
+                                className="w-full p-4 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-h)] min-h-[120px] text-base focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all resize-y" 
                             />
-                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                <button type="submit" style={{ padding: '10px 24px', backgroundColor: '#0056b3', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>
+                            <div className="flex justify-end">
+                                <button 
+                                    type="submit" 
+                                    className="px-6 py-2.5 bg-[var(--accent)] text-white font-bold rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                                >
                                     Post Comment
                                 </button>
                             </div>
@@ -106,18 +125,20 @@ const FullArticle: React.FC = () => {
                     </div>
 
                     {/* List of comments */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div className="flex flex-col gap-5">
                         {comments.length === 0 ? (
-                            <p style={{ color: '#666', fontStyle: 'italic' }}>No comments yet. Be the first to start the conversation!</p>
+                            <p className="text-[var(--text)] italic text-center py-8">
+                                No comments yet. Be the first to start the conversation!
+                            </p>
                         ) : (
                             comments.map((comment, index) => (
-                                <div key={index} style={{ padding: '20px', border: '1px solid #eee', borderRadius: '8px', backgroundColor: 'white' }}>
+                                <div key={index} className="p-6 border border-[var(--border)] rounded-xl bg-[var(--bg)] shadow-sm hover:border-[var(--accent-border)] transition-colors">
                                     {/* Displays the authorUsername generated by Java */}
-                                    <div style={{ fontWeight: 'bold', color: '#0056b3', marginBottom: '8px' }}>
+                                    <div className="font-bold text-[var(--accent)] mb-3 text-lg">
                                         {comment.authorUsername || 'Anonymous'}
                                     </div>
                                     {/* Displays the actual content */}
-                                    <div style={{ color: '#444', lineHeight: '1.5' }}>
+                                    <div className="text-[var(--text-h)] leading-relaxed text-base">
                                         {comment.content}
                                     </div>
                                 </div>

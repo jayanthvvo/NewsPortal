@@ -104,66 +104,95 @@ const AuthorWorkspace: React.FC = () => {
     };
 
     // --- HELPER TO COLOR CODE STATUS ---
-    const getStatusStyle = (status: string) => {
+    const getStatusClasses = (status: string) => {
         switch(status) {
-            case 'PUBLISHED': return { bg: '#d4edda', color: '#155724' };
-            case 'REVIEW': return { bg: '#fff3cd', color: '#856404' };
-            case 'REJECTED': return { bg: '#f8d7da', color: '#721c24' };
-            default: return { bg: '#e2e3e5', color: '#383d41' }; // DRAFT
+            case 'PUBLISHED': return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800';
+            case 'REVIEW': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
+            case 'REJECTED': return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border-red-200 dark:border-red-800';
+            default: return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'; // DRAFT
         }
     };
 
     return (
-        <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#f4f7f6' }}>
+        <div className="flex h-screen font-sans bg-[var(--bg)] text-[var(--text)]">
             
             {/* SIDEBAR NAVIGATION */}
-            <div style={{ width: '250px', backgroundColor: '#2c3e50', color: 'white', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ padding: '20px', borderBottom: '1px solid #34495e' }}>
-                    <h2 style={{ margin: 0, fontSize: '20px' }}>Author Workspace</h2>
-                    <small style={{ color: '#adb5bd' }}>Journalist Desk</small>
+            <div className="w-64 bg-[var(--code-bg)] border-r border-[var(--border)] flex flex-col shrink-0">
+                <div className="p-6 border-b border-[var(--border)]">
+                    <h2 className="text-xl font-bold text-[var(--text-h)] m-0">Author Workspace</h2>
+                    <span className="text-sm font-medium opacity-70">Journalist Desk</span>
                 </div>
                 
-                <nav style={{ flex: 1, padding: '20px 0' }}>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <nav className="flex-1 py-6 px-4">
+                    <ul className="flex flex-col gap-2">
                         <li>
-                            <button onClick={() => setActiveTab('write')} style={{ width: '100%', padding: '15px 20px', textAlign: 'left', background: activeTab === 'write' ? '#18bc9c' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
+                            <button 
+                                onClick={() => setActiveTab('write')} 
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
+                                    activeTab === 'write' 
+                                    ? 'bg-[var(--accent)] text-white shadow-md' 
+                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                }`}
+                            >
                                 ✍️ Write New Article
                             </button>
                         </li>
                         <li>
-                            <button onClick={() => setActiveTab('manage')} style={{ width: '100%', padding: '15px 20px', textAlign: 'left', background: activeTab === 'manage' ? '#18bc9c' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
+                            <button 
+                                onClick={() => setActiveTab('manage')} 
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
+                                    activeTab === 'manage' 
+                                    ? 'bg-[var(--accent)] text-white shadow-md' 
+                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                }`}
+                            >
                                 🗂️ My Content
                             </button>
                         </li>
                     </ul>
                 </nav>
                 
-                <div style={{ padding: '20px' }}>
-                    <button onClick={handleLogout} style={{ width: '100%', padding: '10px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                <div className="p-6 border-t border-[var(--border)]">
+                    <button 
+                        onClick={handleLogout} 
+                        className="w-full p-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors shadow-sm"
+                    >
                         Logout
                     </button>
                 </div>
             </div>
 
             {/* MAIN CONTENT AREA */}
-            <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+            <div className="flex-1 p-10 overflow-y-auto">
                 
                 {/* TAB 1: WRITE ARTICLE */}
                 {activeTab === 'write' && (
-                    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-                        <h2 style={{ borderBottom: '2px solid #18bc9c', paddingBottom: '10px' }}>Compose News Story</h2>
+                    <div className="max-w-4xl mx-auto">
+                        <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Compose News Story</h2>
                         
-                        <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '20px' }}>
-                            <form onSubmit={handleSaveDraft} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div className="bg-[var(--code-bg)] border border-[var(--border)] p-8 rounded-xl shadow-[var(--shadow)]">
+                            <form onSubmit={handleSaveDraft} className="flex flex-col gap-6">
                                 
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#333' }}>Headline</label>
-                                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '18px', boxSizing: 'border-box' }} placeholder="Breaking News..." />
+                                    <label className="block mb-2 font-semibold text-[var(--text-h)]">Headline</label>
+                                    <input 
+                                        type="text" 
+                                        value={title} 
+                                        onChange={(e) => setTitle(e.target.value)} 
+                                        required 
+                                        className="w-full p-3 bg-[var(--bg)] text-[var(--text-h)] border border-[var(--border)] rounded-lg text-lg focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all" 
+                                        placeholder="Breaking News..." 
+                                    />
                                 </div>
 
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#333' }}>News Category</label>
-                                    <select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))} required style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '16px', boxSizing: 'border-box', backgroundColor: 'white' }}>
+                                    <label className="block mb-2 font-semibold text-[var(--text-h)]">News Category</label>
+                                    <select 
+                                        value={categoryId} 
+                                        onChange={(e) => setCategoryId(Number(e.target.value))} 
+                                        required 
+                                        className="w-full p-3 bg-[var(--bg)] text-[var(--text-h)] border border-[var(--border)] rounded-lg text-base focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all cursor-pointer"
+                                    >
                                         <option value="" disabled>Select a Category...</option>
                                         {categories.map(cat => (
                                             <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -172,12 +201,22 @@ const AuthorWorkspace: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#333' }}>Article Content</label>
-                                    <textarea value={content} onChange={(e) => setContent(e.target.value)} required style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '300px', fontSize: '16px', boxSizing: 'border-box', fontFamily: 'inherit' }} placeholder="Write your full story here..." />
+                                    <label className="block mb-2 font-semibold text-[var(--text-h)]">Article Content</label>
+                                    <textarea 
+                                        value={content} 
+                                        onChange={(e) => setContent(e.target.value)} 
+                                        required 
+                                        className="w-full p-4 bg-[var(--bg)] text-[var(--text-h)] border border-[var(--border)] rounded-lg min-h-[350px] text-base font-sans focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all resize-y" 
+                                        placeholder="Write your full story here..." 
+                                    />
                                 </div>
 
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-                                    <button type="submit" disabled={loading} style={{ padding: '12px 24px', backgroundColor: '#18bc9c', color: 'white', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '16px', fontWeight: 'bold' }}>
+                                <div className="flex justify-end pt-6 border-t border-[var(--border)]">
+                                    <button 
+                                        type="submit" 
+                                        disabled={loading} 
+                                        className="py-3 px-6 bg-[var(--accent)] hover:opacity-90 disabled:opacity-50 text-white font-bold rounded-lg shadow-md transition-all cursor-pointer"
+                                    >
                                         {loading ? 'Saving...' : '💾 Save as Draft'}
                                     </button>
                                 </div>
@@ -188,49 +227,53 @@ const AuthorWorkspace: React.FC = () => {
 
                 {/* TAB 2: MY ARTICLES */}
                 {activeTab === 'manage' && (
-                    <div>
-                        <h2 style={{ borderBottom: '2px solid #18bc9c', paddingBottom: '10px' }}>My Content Portfolio</h2>
+                    <div className="max-w-5xl mx-auto">
+                        <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">My Content Portfolio</h2>
                         
-                        {loading ? <p>Loading your articles...</p> : myArticles.length === 0 ? (
-                            <div style={{ backgroundColor: '#e9ecef', color: '#383d41', padding: '15px', borderRadius: '5px', marginTop: '20px' }}>
+                        {loading ? (
+                            <div className="p-8 text-center animate-pulse text-[var(--text)]">Loading your articles...</div>
+                        ) : myArticles.length === 0 ? (
+                            <div className="p-6 bg-[var(--code-bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] text-center shadow-sm">
                                 You haven't written any articles yet! Go to the "Write New Article" tab to start your first story.
                             </div>
                         ) : (
-                            <table style={{ width: '100%', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '20px', borderCollapse: 'collapse' }}>
-                                <thead style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                                    <tr style={{ textAlign: 'left' }}>
-                                        <th style={{ padding: '15px' }}>ID</th>
-                                        <th style={{ padding: '15px' }}>Headline</th>
-                                        <th style={{ padding: '15px' }}>Status</th>
-                                        <th style={{ padding: '15px', textAlign: 'right' }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {myArticles.map((article) => {
-                                        const statusStyle = getStatusStyle(article.status);
-                                        return (
-                                            <tr key={article.id} style={{ borderBottom: '1px solid #eee' }}>
-                                                <td style={{ padding: '15px', color: '#666' }}>#{article.id}</td>
-                                                <td style={{ padding: '15px', fontWeight: 'bold' }}>{article.title}</td>
-                                                <td style={{ padding: '15px' }}>
-                                                    <span style={{ padding: '6px 10px', borderRadius: '4px', backgroundColor: statusStyle.bg, color: statusStyle.color, fontSize: '12px', fontWeight: 'bold' }}>
+                            <div className="overflow-x-auto bg-[var(--code-bg)] border border-[var(--border)] rounded-xl shadow-[var(--shadow)]">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-[var(--bg)] border-b border-[var(--border)]">
+                                        <tr>
+                                            <th className="p-4 font-bold text-[var(--text-h)]">ID</th>
+                                            <th className="p-4 font-bold text-[var(--text-h)]">Headline</th>
+                                            <th className="p-4 font-bold text-[var(--text-h)]">Status</th>
+                                            <th className="p-4 font-bold text-[var(--text-h)] text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[var(--border)]">
+                                        {myArticles.map((article) => (
+                                            <tr key={article.id} className="hover:bg-[var(--bg)] transition-colors">
+                                                <td className="p-4 text-sm opacity-70">#{article.id}</td>
+                                                <td className="p-4 font-semibold text-[var(--text-h)]">{article.title}</td>
+                                                <td className="p-4">
+                                                    <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full border ${getStatusClasses(article.status)}`}>
                                                         {article.status}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '15px', textAlign: 'right' }}>
+                                                <td className="p-4 text-right">
                                                     {article.status === 'DRAFT' || article.status === 'REJECTED' ? (
-                                                        <button onClick={() => handleSubmitForReview(article.id!)} style={{ padding: '8px 16px', backgroundColor: '#f39c12', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                                        <button 
+                                                            onClick={() => handleSubmitForReview(article.id!)} 
+                                                            className="py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
+                                                        >
                                                             📤 Submit for Review
                                                         </button>
                                                     ) : (
-                                                        <span style={{ color: '#aaa', fontSize: '14px', fontStyle: 'italic' }}>Locked (Pending/Published)</span>
+                                                        <span className="text-sm italic opacity-50">Locked (Pending/Published)</span>
                                                     )}
                                                 </td>
                                             </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         )}
                     </div>
                 )}

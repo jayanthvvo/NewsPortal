@@ -53,72 +53,84 @@ const ArticlesDashboard: React.FC = () => {
     };
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa', fontFamily: "'Georgia', serif" }}>
+        <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] font-serif">
             
             {/* TOP NAVBAR */}
-            <header style={{ backgroundColor: '#1a1a1a', color: 'white', padding: '15px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-                    <h1 style={{ margin: 0, fontSize: '28px', letterSpacing: '1px' }}>The Daily Chronicle</h1>
-                    <span style={{ color: '#aaa', fontSize: '14px', fontFamily: 'sans-serif' }}>Your trusted news source</span>
+            <header className="sticky top-0 z-10 bg-[var(--code-bg)] border-b border-[var(--border)] px-6 py-4 md:px-10 flex justify-between items-center shadow-sm">
+                <div className="flex items-baseline gap-3">
+                    <h1 className="m-0 text-2xl md:text-3xl tracking-wide font-bold text-[var(--text-h)]">The Daily Chronicle</h1>
+                    <span className="hidden sm:inline text-sm font-sans opacity-70">Your trusted news source</span>
                 </div>
                 
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'center', fontFamily: 'sans-serif' }}>
-                    <button onClick={() => navigate('/profile')} style={{ padding: '8px 16px', backgroundColor: '#0056b3', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <div className="flex gap-4 items-center font-sans">
+                    <button 
+                        onClick={() => navigate('/profile')} 
+                        className="px-4 py-2 bg-[var(--accent)] text-white font-bold rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+                    >
                         My Profile
                     </button>
-                    <button onClick={handleLogout} style={{ padding: '8px 16px', backgroundColor: 'transparent', color: 'white', border: '1px solid white', borderRadius: '4px', cursor: 'pointer', transition: '0.2s' }}>
+                    <button 
+                        onClick={handleLogout} 
+                        className="px-4 py-2 bg-transparent text-[var(--text-h)] border border-[var(--border)] rounded-lg hover:bg-[var(--accent-bg)] transition-colors"
+                    >
                         Sign Out
                     </button>
                 </div>
             </header>
 
             {/* MAIN NEWS FEED */}
-            <main style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px' }}>
-                <h2 style={{ borderBottom: '3px solid #1a1a1a', paddingBottom: '10px', marginBottom: '30px', fontSize: '32px' }}>Latest Headlines</h2>
+            <main className="max-w-6xl mx-auto my-10 px-6">
+                <h2 className="border-b-2 border-[var(--accent)] pb-3 mb-8 text-3xl font-bold text-[var(--text-h)]">
+                    Latest Headlines
+                </h2>
 
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: '50px', fontSize: '20px', color: '#666' }}>
+                    <div className="text-center py-16 text-xl text-[var(--text)] animate-pulse font-sans">
                         Loading today's stories...
                     </div>
                 ) : articles.length === 0 ? (
-                    <div style={{ backgroundColor: 'white', padding: '40px', textAlign: 'center', borderRadius: '8px', border: '1px solid #ddd' }}>
-                        <h3 style={{ margin: 0, color: '#555' }}>No stories published yet.</h3>
-                        <p style={{ color: '#888' }}>Our journalists are currently out in the field. Check back later!</p>
+                    <div className="bg-[var(--code-bg)] p-10 text-center rounded-xl border border-[var(--border)] shadow-sm">
+                        <h3 className="m-0 mb-2 text-xl font-bold text-[var(--text-h)]">No stories published yet.</h3>
+                        <p className="text-[var(--text)]">Our journalists are currently out in the field. Check back later!</p>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '30px' }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         
                         {/* MAP THROUGH EVERY ARTICLE */}
                         {articles.map((article) => (
-                            <article key={article.id} style={{ backgroundColor: 'white', borderRadius: '4px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderTop: '4px solid #0056b3', display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ padding: '25px', flex: 1 }}>
+                            <article 
+                                key={article.id} 
+                                className="bg-[var(--bg)] rounded-xl overflow-hidden shadow-[var(--shadow)] border border-[var(--border)] border-t-4 border-t-[var(--accent)] flex flex-col hover:shadow-lg transition-shadow"
+                            >
+                                <div className="p-6 flex-1 flex flex-col">
                                     
                                     {/* CATEGORY TAG */}
-                                    <div style={{ color: '#0056b3', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', fontFamily: 'sans-serif' }}>
+                                    <div className="text-[var(--accent)] text-xs font-bold uppercase tracking-widest mb-3 font-sans">
                                         {getCategoryName(article.categoryId)}
                                     </div>
                                     
                                     {/* HEADLINE */}
-                                    <h3 style={{ margin: '0 0 15px 0', fontSize: '24px', lineHeight: '1.3', color: '#222' }}>
+                                    <h3 className="m-0 mb-4 text-2xl leading-snug text-[var(--text-h)] font-bold">
                                         {article.title}
                                     </h3>
                                     
                                     {/* AUTHOR */}
-                                    <div style={{ fontSize: '14px', color: '#666', marginBottom: '15px', fontStyle: 'italic' }}>
-                                        By {article.author}
+                                    <div className="text-sm text-[var(--text)] mb-4 italic">
+                                        By <span className="font-semibold">{article.author}</span>
                                     </div>
                                     
                                     {/* EXCERPT (Cut off at 150 characters) */}
-                                    <p style={{ color: '#444', lineHeight: '1.6', fontSize: '16px', margin: 0 }}>
+                                    <p className="text-[var(--text-h)] leading-relaxed text-base m-0">
                                         {article.content.length > 150 ? article.content.substring(0, 150) + "..." : article.content}
                                     </p>
                                 </div>
                                 
-                                {/* READ MORE BUTTON (Currently just an alert, will link to full page soon!) */}
-                                <div style={{ padding: '15px 25px', backgroundColor: '#f8f9fa', borderTop: '1px solid #eee', textAlign: 'right' }}>
+                                {/* READ MORE BUTTON */}
+                                <div className="p-4 bg-[var(--code-bg)] border-t border-[var(--border)] text-right mt-auto">
                                     <button 
                                         onClick={() => navigate(`/article/${article.id}`)}
-                                        style={{ background: 'none', border: 'none', color: '#0056b3', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'sans-serif', fontSize: '14px' }}>
+                                        className="bg-transparent border-none text-[var(--accent)] font-bold cursor-pointer font-sans text-sm hover:underline"
+                                    >
                                         Read Full Story →
                                     </button>
                                 </div>

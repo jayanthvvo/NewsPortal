@@ -153,114 +153,196 @@ const AdminDashboard: React.FC = () => {
     };
 
     return (
-        <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#f4f7f6' }}>
+        <div className="flex h-screen font-sans bg-[var(--bg)] text-[var(--text)]">
             
             {/* SIDEBAR NAVIGATION */}
-            <div style={{ width: '250px', backgroundColor: '#343a40', color: 'white', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ padding: '20px', borderBottom: '1px solid #4b545c' }}>
-                    <h2 style={{ margin: 0, fontSize: '20px' }}>Admin Console</h2>
-                    <small style={{ color: '#adb5bd' }}>Logged in as Admin</small>
+            <div className="w-64 bg-[var(--code-bg)] border-r border-[var(--border)] flex flex-col shrink-0">
+                <div className="p-6 border-b border-[var(--border)]">
+                    <h2 className="text-xl font-bold text-[var(--text-h)] m-0">Admin Console</h2>
+                    <span className="text-sm font-medium opacity-70">System Oversight</span>
                 </div>
                 
-                <nav style={{ flex: 1, padding: '20px 0' }}>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <nav className="flex-1 py-6 px-4">
+                    <ul className="flex flex-col gap-2">
                         <li>
-                            <button onClick={() => setActiveTab('approvals')} style={{ width: '100%', padding: '15px 20px', textAlign: 'left', background: activeTab === 'approvals' ? '#007bff' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
-                                👤 Approvals {users.length > 0 && activeTab !== 'approvals' && <span style={{ background: 'red', borderRadius: '50%', padding: '2px 8px', fontSize: '12px', marginLeft: '10px' }}>!</span>}
+                            <button 
+                                onClick={() => setActiveTab('approvals')} 
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors flex justify-between items-center ${
+                                    activeTab === 'approvals' 
+                                    ? 'bg-[var(--accent)] text-white shadow-md' 
+                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                }`}
+                            >
+                                <span>👤 Approvals</span>
+                                {users.length > 0 && activeTab !== 'approvals' && (
+                                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">!</span>
+                                )}
                             </button>
                         </li>
                         <li>
-                            <button onClick={() => setActiveTab('categories')} style={{ width: '100%', padding: '15px 20px', textAlign: 'left', background: activeTab === 'categories' ? '#007bff' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
+                            <button 
+                                onClick={() => setActiveTab('categories')} 
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
+                                    activeTab === 'categories' 
+                                    ? 'bg-[var(--accent)] text-white shadow-md' 
+                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                }`}
+                            >
                                 📁 Categories
                             </button>
                         </li>
                         <li>
-                            <button onClick={() => setActiveTab('articles')} style={{ width: '100%', padding: '15px 20px', textAlign: 'left', background: activeTab === 'articles' ? '#007bff' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
+                            <button 
+                                onClick={() => setActiveTab('articles')} 
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
+                                    activeTab === 'articles' 
+                                    ? 'bg-[var(--accent)] text-white shadow-md' 
+                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                }`}
+                            >
                                 📰 Article Reviews
                             </button>
                         </li>
                         <li>
-                            <button onClick={() => setActiveTab('alerts')} style={{ width: '100%', padding: '15px 20px', textAlign: 'left', background: activeTab === 'alerts' ? '#dc3545' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
+                            <button 
+                                onClick={() => setActiveTab('alerts')} 
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
+                                    activeTab === 'alerts' 
+                                    ? 'bg-red-600 text-white shadow-md' 
+                                    : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                }`}
+                            >
                                 🚨 Breaking News Alert
                             </button>
                         </li>
                     </ul>
                 </nav>
                 
-                <div style={{ padding: '20px' }}>
-                    <button onClick={handleLogout} style={{ width: '100%', padding: '10px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                <div className="p-6 border-t border-[var(--border)]">
+                    <button 
+                        onClick={handleLogout} 
+                        className="w-full p-3 bg-slate-500 hover:bg-slate-600 text-white font-bold rounded-lg transition-colors shadow-sm"
+                    >
                         Logout
                     </button>
                 </div>
             </div>
 
             {/* MAIN CONTENT AREA */}
-            <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+            <div className="flex-1 p-10 overflow-y-auto">
                 
                 {/* TAB 1: PENDING APPROVALS */}
                 {activeTab === 'approvals' && (
-                    <div>
-                        <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px' }}>Review Account Requests</h2>
-                        {loading ? <p>Loading users...</p> : users.length === 0 ? (
-                            <div style={{ backgroundColor: '#d4edda', color: '#155724', padding: '15px', borderRadius: '5px', marginTop: '20px' }}>
+                    <div className="max-w-5xl mx-auto">
+                        <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Review Account Requests</h2>
+                        
+                        {loading ? (
+                            <p className="animate-pulse">Loading users...</p>
+                        ) : users.length === 0 ? (
+                            <div className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 p-4 rounded-lg font-medium border border-green-200 dark:border-green-800">
                                 ✅ No pending approval requests at this time. You're all caught up!
                             </div>
                         ) : (
-                            <table style={{ width: '100%', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '20px', borderCollapse: 'collapse' }}>
-                                <thead style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                                    <tr style={{ textAlign: 'left' }}>
-                                        <th style={{ padding: '15px' }}>Username</th>
-                                        <th style={{ padding: '15px' }}>Email</th>
-                                        <th style={{ padding: '15px' }}>Requested Role</th>
-                                        <th style={{ padding: '15px' }}>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {users.map((user) => (
-                                        <tr key={user.id} style={{ borderBottom: '1px solid #eee' }}>
-                                            <td style={{ padding: '15px', fontWeight: 'bold' }}>{user.username}</td>
-                                            <td style={{ padding: '15px' }}>{user.email}</td>
-                                            <td style={{ padding: '15px' }}><span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: '#fff3cd', fontSize: '12px' }}>{user.role}</span></td>
-                                            <td style={{ padding: '15px' }}><button onClick={() => handleApprove(user.id, user.username)} style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>✓ Approve</button></td>
+                            <div className="overflow-x-auto bg-[var(--code-bg)] border border-[var(--border)] rounded-xl shadow-[var(--shadow)]">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-[var(--bg)] border-b border-[var(--border)]">
+                                        <tr>
+                                            <th className="p-4 font-bold text-[var(--text-h)]">Username</th>
+                                            <th className="p-4 font-bold text-[var(--text-h)]">Email</th>
+                                            <th className="p-4 font-bold text-[var(--text-h)]">Requested Role</th>
+                                            <th className="p-4 font-bold text-[var(--text-h)]">Action</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-[var(--border)]">
+                                        {users.map((user) => (
+                                            <tr key={user.id} className="hover:bg-[var(--bg)] transition-colors">
+                                                <td className="p-4 font-semibold text-[var(--text-h)]">{user.username}</td>
+                                                <td className="p-4">{user.email}</td>
+                                                <td className="p-4">
+                                                    <span className="px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 rounded-full text-xs font-bold tracking-wide">
+                                                        {user.role}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4">
+                                                    <button 
+                                                        onClick={() => handleApprove(user.id, user.username)} 
+                                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
+                                                    >
+                                                        ✓ Approve
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         )}
                     </div>
                 )}
 
                 {/* TAB 2: MANAGE CATEGORIES */}
                 {activeTab === 'categories' && (
-                    <div>
-                        <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px' }}>Manage News Categories</h2>
-                        <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
-                            <div style={{ flex: 1, backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', height: 'fit-content' }}>
-                                <h3 style={{ marginTop: 0 }}>Create New Category</h3>
-                                <form onSubmit={handleCreateCategory} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <div className="max-w-6xl mx-auto">
+                        <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Manage News Categories</h2>
+                        
+                        <div className="flex flex-col lg:flex-row gap-8">
+                            {/* Create Category Form */}
+                            <div className="flex-1 bg-[var(--code-bg)] p-6 md:p-8 rounded-xl shadow-[var(--shadow)] border border-[var(--border)] h-fit">
+                                <h3 className="text-lg font-bold text-[var(--text-h)] mb-6 mt-0">Create New Category</h3>
+                                <form onSubmit={handleCreateCategory} className="flex flex-col gap-5">
                                     <div>
-                                        <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#555' }}>Category Name</label>
-                                        <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} required style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' }} placeholder="e.g. Technology" />
+                                        <label className="block mb-2 text-sm font-semibold text-[var(--text-h)]">Category Name</label>
+                                        <input 
+                                            type="text" 
+                                            value={newCategoryName} 
+                                            onChange={(e) => setNewCategoryName(e.target.value)} 
+                                            required 
+                                            className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all" 
+                                            placeholder="e.g. Technology" 
+                                        />
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#555' }}>Description</label>
-                                        <textarea value={newCategoryDesc} onChange={(e) => setNewCategoryDesc(e.target.value)} required style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '80px', boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                                        <label className="block mb-2 text-sm font-semibold text-[var(--text-h)]">Description</label>
+                                        <textarea 
+                                            value={newCategoryDesc} 
+                                            onChange={(e) => setNewCategoryDesc(e.target.value)} 
+                                            required 
+                                            className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all min-h-[100px] resize-y" 
+                                        />
                                     </div>
-                                    <button type="submit" style={{ padding: '12px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Add Category</button>
+                                    <button 
+                                        type="submit" 
+                                        className="py-3 bg-[var(--accent)] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity mt-2"
+                                    >
+                                        + Add Category
+                                    </button>
                                 </form>
                             </div>
 
-                            <div style={{ flex: 2, backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                                <h3 style={{ marginTop: 0 }}>Existing Categories</h3>
-                                {categories.length === 0 ? <p style={{ color: '#666' }}>No categories found in the database.</p> : (
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                        <thead><tr style={{ backgroundColor: '#f8f9fa', textAlign: 'left' }}><th style={{ padding: '12px', borderBottom: '2px solid #dee2e6' }}>Name</th><th style={{ padding: '12px', borderBottom: '2px solid #dee2e6' }}>Description</th></tr></thead>
-                                        <tbody>
-                                            {categories.map((category) => (
-                                                <tr key={category.id} style={{ borderBottom: '1px solid #eee' }}><td style={{ padding: '12px', fontWeight: 'bold' }}>{category.name}</td><td style={{ padding: '12px', color: '#444' }}>{category.description}</td></tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                            {/* Existing Categories List */}
+                            <div className="flex-[2] bg-[var(--code-bg)] p-6 md:p-8 rounded-xl shadow-[var(--shadow)] border border-[var(--border)]">
+                                <h3 className="text-lg font-bold text-[var(--text-h)] mb-6 mt-0">Existing Categories</h3>
+                                {categories.length === 0 ? (
+                                    <p className="italic opacity-70">No categories found in the database.</p>
+                                ) : (
+                                    <div className="overflow-x-auto border border-[var(--border)] rounded-lg">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead className="bg-[var(--bg)] border-b border-[var(--border)]">
+                                                <tr>
+                                                    <th className="p-4 font-bold text-[var(--text-h)]">Name</th>
+                                                    <th className="p-4 font-bold text-[var(--text-h)]">Description</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-[var(--border)]">
+                                                {categories.map((category) => (
+                                                    <tr key={category.id} className="hover:bg-[var(--bg)] transition-colors">
+                                                        <td className="p-4 font-bold text-[var(--text-h)] whitespace-nowrap">{category.name}</td>
+                                                        <td className="p-4 opacity-80">{category.description}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -269,23 +351,49 @@ const AdminDashboard: React.FC = () => {
 
                 {/* TAB 3: CONTENT OVERSIGHT */}
                 {activeTab === 'articles' && (
-                    <div>
-                        <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px' }}>Article Publishing Queue</h2>
-                        {loading ? <p>Loading pending articles...</p> : pendingArticles.length === 0 ? (
-                            <div style={{ backgroundColor: '#d4edda', color: '#155724', padding: '15px', borderRadius: '5px', marginTop: '20px' }}>✅ Inbox Zero! There are no articles currently waiting for review.</div>
+                    <div className="max-w-5xl mx-auto">
+                        <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Article Publishing Queue</h2>
+                        
+                        {loading ? (
+                            <p className="animate-pulse">Loading pending articles...</p>
+                        ) : pendingArticles.length === 0 ? (
+                            <div className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 p-4 rounded-lg font-medium border border-green-200 dark:border-green-800">
+                                ✅ Inbox Zero! There are no articles currently waiting for review.
+                            </div>
                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>
+                            <div className="flex flex-col gap-6">
                                 {pendingArticles.map((article) => (
-                                    <div key={article.id} style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', borderLeft: '5px solid #ffc107' }}>
-                                        <div style={{ padding: '20px' }}>
-                                            <h3 style={{ margin: '0 0 5px 0', color: '#333' }}>{article.title}</h3>
-                                            <small style={{ color: '#666' }}>Written by <strong>{article.author}</strong> | Status: <span style={{ color: '#d39e00', fontWeight: 'bold' }}>{article.status}</span></small>
-                                            <p style={{ color: '#444', backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '4px', fontStyle: 'italic', margin: '15px 0' }}>{article.content.length > 200 ? article.content.substring(0, 200) + "..." : article.content}</p>
-                                            <div style={{ display: 'flex', gap: '10px', marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-                                                <button onClick={() => handlePublishArticle(article.id!)} style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>✓ Publish</button>
-                                                <button onClick={() => handleRejectArticle(article.id!)} style={{ padding: '8px 16px', backgroundColor: '#ffc107', color: '#212529', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>↩ Reject (Draft)</button>
-                                                <div style={{ flex: 1 }}></div>
-                                                <button onClick={() => handleDeleteArticle(article.id!)} style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>🗑 Delete</button>
+                                    <div key={article.id} className="bg-[var(--code-bg)] border border-[var(--border)] border-l-4 border-l-yellow-500 rounded-xl shadow-[var(--shadow)] overflow-hidden">
+                                        <div className="p-6">
+                                            <h3 className="m-0 mb-2 text-xl font-bold text-[var(--text-h)]">{article.title}</h3>
+                                            <div className="text-sm opacity-80 mb-4">
+                                                Written by <strong className="text-[var(--text-h)]">{article.author}</strong> | Status: <span className="text-yellow-600 dark:text-yellow-400 font-bold">{article.status}</span>
+                                            </div>
+                                            
+                                            <div className="bg-[var(--bg)] p-4 rounded-lg border border-[var(--border)] italic opacity-90 mb-6">
+                                                {article.content.length > 200 ? article.content.substring(0, 200) + "..." : article.content}
+                                            </div>
+                                            
+                                            <div className="flex flex-wrap gap-3 pt-5 border-t border-[var(--border)]">
+                                                <button 
+                                                    onClick={() => handlePublishArticle(article.id!)} 
+                                                    className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
+                                                >
+                                                    ✓ Publish
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleRejectArticle(article.id!)} 
+                                                    className="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold rounded shadow-sm transition-colors text-sm"
+                                                >
+                                                    ↩ Reject (Draft)
+                                                </button>
+                                                <div className="flex-1"></div>
+                                                <button 
+                                                    onClick={() => handleDeleteArticle(article.id!)} 
+                                                    className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
+                                                >
+                                                    🗑 Delete
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -297,27 +405,27 @@ const AdminDashboard: React.FC = () => {
 
                 {/* TAB 4: BREAKING NEWS ALERTS */}
                 {activeTab === 'alerts' && (
-                    <div>
-                        <h2 style={{ borderBottom: '2px solid #dc3545', paddingBottom: '10px', color: '#dc3545' }}>Emergency Alert System</h2>
-                        <p style={{ color: '#666', marginBottom: '20px' }}>Use this console to send an immediate Breaking News email blast to every registered reader in the database.</p>
+                    <div className="max-w-4xl mx-auto">
+                        <h2 className="text-2xl font-bold border-b-2 border-red-500 pb-3 mb-4 text-red-600 dark:text-red-500">Emergency Alert System</h2>
+                        <p className="mb-8 opacity-80">Use this console to send an immediate Breaking News email blast to every registered reader in the database.</p>
                         
-                        <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '2px solid #f5c6cb' }}>
-                            <form onSubmit={handleSendAlert} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div className="bg-[var(--code-bg)] p-8 rounded-xl shadow-[var(--shadow)] border-2 border-red-200 dark:border-red-900/50">
+                            <form onSubmit={handleSendAlert} className="flex flex-col gap-5">
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', color: '#721c24' }}>Breaking News Message</label>
+                                    <label className="block mb-3 font-bold text-red-700 dark:text-red-400">Breaking News Message</label>
                                     <textarea 
                                         value={alertMessage} 
                                         onChange={(e) => setAlertMessage(e.target.value)} 
                                         required 
                                         placeholder="Type the emergency alert or breaking news here..." 
-                                        style={{ width: '100%', padding: '15px', border: '1px solid #dc3545', borderRadius: '4px', minHeight: '150px', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: '16px' }} 
+                                        className="w-full p-4 bg-[var(--bg)] border-2 border-red-400 dark:border-red-500 rounded-lg text-[var(--text-h)] focus:ring-4 focus:ring-red-500/20 outline-none transition-all min-h-[150px] resize-y" 
                                     />
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <div className="flex justify-end mt-2">
                                     <button 
                                         type="submit" 
                                         disabled={sendingAlert} 
-                                        style={{ padding: '12px 24px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: sendingAlert ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '16px' }}
+                                        className="py-3 px-6 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-bold rounded-lg shadow-md transition-colors disabled:cursor-not-allowed"
                                     >
                                         {sendingAlert ? '🚨 Broadcasting Alert to all Users...' : '🚨 Broadcast Breaking News'}
                                     </button>

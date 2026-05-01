@@ -7,7 +7,6 @@ const Register: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    // NEW: Add a state for the role selection, defaulting to normal user
     const [role, setRole] = useState('ROLE_USER'); 
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -24,7 +23,6 @@ const Register: React.FC = () => {
 
         setLoading(true);
         try {
-            // We pass the selected role as 'rolerequest' to match your Java backend
             const backendMessage = await authService.register({ 
                 username, 
                 email, 
@@ -32,11 +30,9 @@ const Register: React.FC = () => {
                 rolerequest: role 
             });
             
-            // Show the exact string returned by your AuthService.java!
             alert(backendMessage); 
             navigate('/login'); 
         } catch (err: any) {
-            // Display error from backend if available
             const errorMsg = err.response?.data || "Registration failed. Username or email might already be taken.";
             setError(errorMsg);
         } finally {
@@ -45,58 +41,112 @@ const Register: React.FC = () => {
     };
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#f4f7f6', fontFamily: 'sans-serif' }}>
-            <div style={{ width: '100%', maxWidth: '400px', padding: '30px', backgroundColor: 'white', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
-                <h2 style={{ textAlign: 'center', color: '#333', marginBottom: '20px' }}>Create an Account</h2>
+        <div className="flex justify-center items-center min-h-screen font-sans">
+            {/* Form Container */}
+            <div className="w-full max-w-md p-8 rounded-xl border border-[var(--border)] bg-[var(--code-bg)] shadow-[var(--shadow)] my-8">
                 
-                {error && <div style={{ padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '5px', marginBottom: '15px', fontSize: '14px' }}>{error}</div>}
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold mb-2 text-[var(--text-h)]">Create an Account</h1>
+                    <p className="text-sm text-[var(--text)]">Join NewsPortal today.</p>
+                </div>
                 
-                <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '5px', color: '#555', fontSize: '14px' }}>Username</label>
-                        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required 
-                            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', boxSizing: 'border-box' }} />
+                {/* Error Message */}
+                {error && (
+                    <div className="p-3 mb-6 text-sm text-red-700 bg-red-100 rounded-lg border border-red-200">
+                        {error}
                     </div>
+                )}
+                
+                {/* Register Form */}
+                <form onSubmit={handleRegister} className="flex flex-col gap-4">
                     <div>
-                        <label style={{ display: 'block', marginBottom: '5px', color: '#555', fontSize: '14px' }}>Email</label>
-                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required 
-                            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', boxSizing: 'border-box' }} />
+                        <label className="block mb-1.5 text-sm font-medium text-[var(--text-h)]">Username</label>
+                        <input 
+                            type="text" 
+                            value={username} 
+                            onChange={(e) => setUsername(e.target.value)} 
+                            required 
+                            className="w-full p-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
+                            placeholder="Choose a username"
+                        />
                     </div>
+
                     <div>
-                        <label style={{ display: 'block', marginBottom: '5px', color: '#555', fontSize: '14px' }}>Password</label>
-                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
-                            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', boxSizing: 'border-box' }} />
+                        <label className="block mb-1.5 text-sm font-medium text-[var(--text-h)]">Email</label>
+                        <input 
+                            type="email" 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                            required 
+                            className="w-full p-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
+                            placeholder="you@example.com"
+                        />
                     </div>
+
                     <div>
-                        <label style={{ display: 'block', marginBottom: '5px', color: '#555', fontSize: '14px' }}>Confirm Password</label>
-                        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required 
-                            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', boxSizing: 'border-box' }} />
+                        <label className="block mb-1.5 text-sm font-medium text-[var(--text-h)]">Password</label>
+                        <input 
+                            type="password" 
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            required 
+                            minLength={6}
+                            className="w-full p-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
+                            placeholder="At least 6 characters"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block mb-1.5 text-sm font-medium text-[var(--text-h)]">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            value={confirmPassword} 
+                            onChange={(e) => setConfirmPassword(e.target.value)} 
+                            required 
+                            className="w-full p-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
+                            placeholder="Confirm your password"
+                        />
                     </div>
                     
-                    {/* NEW: Role Selection Dropdown */}
+                    {/* Role Selection Dropdown */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '5px', color: '#555', fontSize: '14px' }}>Account Type</label>
-                        <select value={role} onChange={(e) => setRole(e.target.value)} required 
-                            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', boxSizing: 'border-box', backgroundColor: 'white' }}>
+                        <label className="block mb-1.5 text-sm font-medium text-[var(--text-h)]">Account Type</label>
+                        <select 
+                            value={role} 
+                            onChange={(e) => setRole(e.target.value)} 
+                            required 
+                            className="w-full p-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all cursor-pointer"
+                        >
                             <option value="ROLE_USER">Standard Reader</option>
                             <option value="ROLE_AUTHOR">Content Author / Editor</option>
                             <option value="ROLE_ADMIN">System Administrator</option>
                         </select>
+                        
                         {role !== 'ROLE_USER' && (
-                            <small style={{ color: '#d9534f', display: 'block', marginTop: '5px' }}>
+                            <small className="block mt-2 text-sm text-red-500 font-medium">
                                 Note: This role requires manual approval from an existing Admin before you can log in.
                             </small>
                         )}
                     </div>
                     
-                    <button type="submit" disabled={loading} style={{ marginTop: '10px', padding: '12px', backgroundColor: '#0056b3', color: 'white', border: 'none', borderRadius: '5px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '16px', fontWeight: 'bold' }}>
+                    <button 
+                        type="submit" 
+                        disabled={loading} 
+                        className="w-full mt-4 py-3 px-4 bg-[var(--accent)] text-white font-semibold rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                         {loading ? 'Processing...' : 'Register'}
                     </button>
                 </form>
 
-                <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#666' }}>
-                    Already have an account? <Link to="/login" style={{ color: '#0056b3', textDecoration: 'none', fontWeight: 'bold' }}>Sign in here</Link>
+                {/* Footer Link */}
+                <div className="text-center mt-8 text-sm text-[var(--text)]">
+                    Already have an account?{' '}
+                    <Link to="/login" className="font-semibold text-[var(--accent)] hover:underline">
+                        Sign in here
+                    </Link>
                 </div>
+                
             </div>
         </div>
     );
