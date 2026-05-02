@@ -5,12 +5,17 @@ import { categoryService, type Category } from '../services/categoryService';
 import { articleService, type Article } from '../services/articleService';
 import { alertService } from '../services/alertService';
 import { authService } from '../services/authService';
+import FullArticle from './FullArticle'; // <-- Imported for inline reading
 
 const AdminDashboard: React.FC = () => {
     // Shared State
     const [activeTab, setActiveTab] = useState<string>('approvals');
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
+
+    // Tab: Read Articles State
+    const [publishedArticles, setPublishedArticles] = useState<Article[]>([]);
+    const [viewingArticleId, setViewingArticleId] = useState<number | null>(null);
 
     // Tab 1 State (Approvals)
     const [users, setUsers] = useState<User[]>([]);
@@ -34,11 +39,35 @@ const AdminDashboard: React.FC = () => {
             return;
         }
         
+        // Always load categories so the Read Tab can display category names
+        fetchCategories();
+
         if (activeTab === 'approvals') fetchPendingUsers();
-        else if (activeTab === 'categories') fetchCategories();
         else if (activeTab === 'articles') fetchPendingArticles();
+        else if (activeTab === 'read') fetchPublishedArticles();
         
+        // Reset the article viewing state if the admin switches tabs
+        setViewingArticleId(null);
     }, [activeTab, navigate]);
+
+    // --- NEW: FETCH PUBLISHED ARTICLES ---
+    const fetchPublishedArticles = async () => {
+        try {
+            setLoading(true);
+            const data = await articleService.getAllPublishedArticles();
+            setPublishedArticles(data.reverse()); // Show newest first
+        } catch (error) {
+            console.error("Error fetching published articles");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Helper to get category name
+    const getCategoryName = (id: number) => {
+        const category = categories.find(c => c.id === id);
+        return category ? category.name : 'Unknown Category';
+    };
 
     // --- TAB 1: APPROVALS ---
     const fetchPendingUsers = async () => {
@@ -164,6 +193,19 @@ const AdminDashboard: React.FC = () => {
                 
                 <nav className="flex-1 py-6 px-4">
                     <ul className="flex flex-col gap-2">
+                        {/* NEW TAB ADDED HERE */}
+                        <li>
+                            <button 
+                                onClick={() => setActiveTab('read')} 
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
+                                    activeTab === 'read' 
+                                    ? 'bg-[var(--accent)] text-white shadow-md' 
+                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                }`}
+                            >
+                                📰 Read Articles
+                            </button>
+                        </li>
                         <li>
                             <button 
                                 onClick={() => setActiveTab('approvals')} 
@@ -231,6 +273,66 @@ const AdminDashboard: React.FC = () => {
             {/* MAIN CONTENT AREA */}
             <div className="flex-1 p-10 overflow-y-auto">
                 
+                {/* TAB 0: READ ARTICLES */}
+                {activeTab === 'read' && (
+                    <div className="max-w-6xl mx-auto">
+                        
+                        {/* CONDITIONAL RENDERING: Article View vs Grid View */}
+                        {viewingArticleId ? (
+                            <div className="bg-[var(--code-bg)] border border-[var(--border)] p-8 rounded-xl shadow-[var(--shadow)]">
+                                <FullArticle 
+                                    articleId={viewingArticleId} 
+                                    onBack={() => setViewingArticleId(null)} 
+                                />
+                            </div>
+                        ) : (
+                            <>
+                                <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Latest Headlines</h2>
+                                
+                                {loading ? (
+                                    <div className="p-8 text-center animate-pulse text-[var(--text)]">Loading today's stories...</div>
+                                ) : publishedArticles.length === 0 ? (
+                                    <div className="p-6 bg-[var(--code-bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] text-center shadow-sm">
+                                        No stories published yet. Check back later!
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                        {publishedArticles.map((article) => (
+                                            <article 
+                                                key={article.id} 
+                                                className="bg-[var(--code-bg)] rounded-xl overflow-hidden shadow-[var(--shadow)] border border-[var(--border)] border-t-4 border-t-[var(--accent)] flex flex-col hover:shadow-lg transition-shadow"
+                                            >
+                                                <div className="p-6 flex-1 flex flex-col">
+                                                    <div className="text-[var(--accent)] text-xs font-bold uppercase tracking-widest mb-3 font-sans">
+                                                        {getCategoryName(article.categoryId)}
+                                                    </div>
+                                                    <h3 className="m-0 mb-4 text-xl leading-snug text-[var(--text-h)] font-bold">
+                                                        {article.title}
+                                                    </h3>
+                                                    <div className="text-sm text-[var(--text)] mb-4 italic">
+                                                        By <span className="font-semibold">{article.author}</span>
+                                                    </div>
+                                                    <p className="text-[var(--text-h)] opacity-80 leading-relaxed text-sm m-0">
+                                                        {article.content.length > 150 ? article.content.substring(0, 150) + "..." : article.content}
+                                                    </p>
+                                                </div>
+                                                <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)] text-right mt-auto">
+                                                    <button 
+                                                        onClick={() => setViewingArticleId(article.id!)}
+                                                        className="bg-transparent border-none text-[var(--accent)] font-bold cursor-pointer font-sans text-sm hover:underline"
+                                                    >
+                                                        Read Full Story →
+                                                    </button>
+                                                </div>
+                                            </article>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+
                 {/* TAB 1: PENDING APPROVALS */}
                 {activeTab === 'approvals' && (
                     <div className="max-w-5xl mx-auto">

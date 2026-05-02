@@ -3,37 +3,51 @@ import { useNavigate } from 'react-router-dom';
 import { articleService, type Article } from '../services/articleService';
 import { categoryService, type Category } from '../services/categoryService';
 import { authService } from '../services/authService';
+import { userService, type UserProfile } from '../services/userService'; // <-- Import user service
+import FullArticle from './FullArticle'; 
 
 const AuthorWorkspace: React.FC = () => {
     // Shared State
-    const [activeTab, setActiveTab] = useState<string>('write');
+    const [activeTab, setActiveTab] = useState<string>('read'); 
     const [loading, setLoading] = useState<boolean>(false);
+    
+    // View Article State
+    const [viewingArticleId, setViewingArticleId] = useState<number | null>(null);
+
     const navigate = useNavigate();
 
-    // Tab 1: Write Article State
+    // Data States
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [publishedArticles, setPublishedArticles] = useState<Article[]>([]);
+    const [myArticles, setMyArticles] = useState<Article[]>([]);
+
+    // Tab: Write Article State
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [categoryId, setCategoryId] = useState<number | ''>('');
-    const [categories, setCategories] = useState<Category[]>([]);
 
-    // Tab 2: My Articles State
-    const [myArticles, setMyArticles] = useState<Article[]>([]);
+    // Tab: Profile State
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [bio, setBio] = useState('');
+    const [savingProfile, setSavingProfile] = useState(false);
 
     useEffect(() => {
-        // SECURITY CHECK: Kick out anyone who isn't an Editor or Author
         const role = authService.getRole();
         if (!authService.isAuthenticated() || (role !== 'ROLE_EDITOR' && role !== 'ROLE_AUTHOR')) {
             navigate('/login');
             return;
         }
 
-        // Always load categories so the dropdown menu works
         fetchCategories();
 
-        // Load articles if on the "My Articles" tab
-        if (activeTab === 'manage') {
-            fetchMyArticles();
-        }
+        if (activeTab === 'manage') fetchMyArticles();
+        else if (activeTab === 'read') fetchPublishedArticles();
+        else if (activeTab === 'profile') fetchUserProfile();
+        
+        // Reset article view if they change tabs
+        setViewingArticleId(null);
     }, [activeTab, navigate]);
 
     // --- FETCH FUNCTIONS ---
@@ -41,13 +55,8 @@ const AuthorWorkspace: React.FC = () => {
         try {
             const data = await categoryService.getAllCategories();
             setCategories(data);
-            // Auto-select the first category if none is selected
-            if (data.length > 0 && categoryId === '') {
-                setCategoryId(data[0].id);
-            }
-        } catch (error) {
-            console.error("Error loading categories");
-        }
+            if (data.length > 0 && categoryId === '') setCategoryId(data[0].id);
+        } catch (error) { console.error("Error loading categories"); }
     };
 
     const fetchMyArticles = async () => {
@@ -55,10 +64,36 @@ const AuthorWorkspace: React.FC = () => {
             setLoading(true);
             const data = await articleService.getMyArticles();
             setMyArticles(data);
-        } catch (error) {
-            console.error("Error fetching my articles");
-        } finally {
-            setLoading(false);
+        } catch (error) { console.error("Error fetching my articles"); } 
+        finally { setLoading(false); }
+    };
+
+    const fetchPublishedArticles = async () => {
+        try {
+            setLoading(true);
+            const data = await articleService.getAllPublishedArticles();
+            setPublishedArticles(data.reverse()); 
+        } catch (error) { console.error("Error fetching published articles"); } 
+        finally { setLoading(false); }
+    };
+
+    const fetchUserProfile = async () => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const username = payload.sub; 
+                setLoading(true);
+                const data = await userService.getProfile(username);
+                setProfile(data);
+                setFirstName(data.firstName || '');
+                setLastName(data.lastName || '');
+                setBio(data.bio || '');
+            } catch (error) {
+                console.error("Profile not found.");
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -69,47 +104,49 @@ const AuthorWorkspace: React.FC = () => {
 
         try {
             setLoading(true);
-            await articleService.createArticle({ 
-                title, 
-                content, 
-                categoryId: Number(categoryId) 
-            });
+            await articleService.createArticle({ title, content, categoryId: Number(categoryId) });
             alert("Article saved successfully as a DRAFT!");
-            
-            // Clear form and switch to manage tab
-            setTitle('');
-            setContent('');
-            setActiveTab('manage');
-        } catch (error) {
-            alert("Failed to save article. Check Java backend logs.");
-        } finally {
-            setLoading(false);
-        }
+            setTitle(''); setContent(''); setActiveTab('manage');
+        } catch (error) { alert("Failed to save article."); } 
+        finally { setLoading(false); }
     };
 
     const handleSubmitForReview = async (id: number) => {
-        if (!window.confirm("Submit this article to the Admin for review? You won't be able to edit it while it's pending.")) return;
+        if (!window.confirm("Submit this article to the Admin for review?")) return;
         try {
             await articleService.submitForReview(id);
             alert("Sent to admin!");
-            fetchMyArticles(); // Refresh the list
+            fetchMyArticles();
+        } catch (error) { alert("Failed to submit article."); }
+    };
+
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSavingProfile(true);
+        try {
+            await userService.updateProfile({ firstName, lastName, bio });
+            alert("Profile updated successfully!");
         } catch (error) {
-            alert("Failed to submit article.");
+            alert("Failed to update profile.");
+        } finally {
+            setSavingProfile(false);
         }
     };
 
-    const handleLogout = () => {
-        authService.logout();
-        navigate('/login');
+    const handleLogout = () => { authService.logout(); navigate('/login'); };
+
+    // --- HELPERS ---
+    const getCategoryName = (id: number) => {
+        const category = categories.find(c => c.id === id);
+        return category ? category.name : 'Breaking News';
     };
 
-    // --- HELPER TO COLOR CODE STATUS ---
     const getStatusClasses = (status: string) => {
         switch(status) {
             case 'PUBLISHED': return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800';
             case 'REVIEW': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
             case 'REJECTED': return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border-red-200 dark:border-red-800';
-            default: return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'; // DRAFT
+            default: return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'; 
         }
     };
 
@@ -127,11 +164,19 @@ const AuthorWorkspace: React.FC = () => {
                     <ul className="flex flex-col gap-2">
                         <li>
                             <button 
+                                onClick={() => setActiveTab('read')} 
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
+                                    activeTab === 'read' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                }`}
+                            >
+                                📰 Read Articles
+                            </button>
+                        </li>
+                        <li>
+                            <button 
                                 onClick={() => setActiveTab('write')} 
                                 className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab === 'write' 
-                                    ? 'bg-[var(--accent)] text-white shadow-md' 
-                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                    activeTab === 'write' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
                                 }`}
                             >
                                 ✍️ Write New Article
@@ -141,12 +186,21 @@ const AuthorWorkspace: React.FC = () => {
                             <button 
                                 onClick={() => setActiveTab('manage')} 
                                 className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab === 'manage' 
-                                    ? 'bg-[var(--accent)] text-white shadow-md' 
-                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                    activeTab === 'manage' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
                                 }`}
                             >
                                 🗂️ My Content
+                            </button>
+                        </li>
+                        {/* NEW PROFILE TAB BUTTON */}
+                        <li>
+                            <button 
+                                onClick={() => setActiveTab('profile')} 
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
+                                    activeTab === 'profile' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                }`}
+                            >
+                                👤 My Profile
                             </button>
                         </li>
                     </ul>
@@ -165,14 +219,71 @@ const AuthorWorkspace: React.FC = () => {
             {/* MAIN CONTENT AREA */}
             <div className="flex-1 p-10 overflow-y-auto">
                 
-                {/* TAB 1: WRITE ARTICLE */}
+                {/* TAB 1: READ ARTICLES */}
+                {activeTab === 'read' && (
+                    <div className="max-w-6xl mx-auto">
+                        {viewingArticleId ? (
+                            <div className="bg-[var(--code-bg)] border border-[var(--border)] p-8 rounded-xl shadow-[var(--shadow)]">
+                                <FullArticle 
+                                    articleId={viewingArticleId} 
+                                    onBack={() => setViewingArticleId(null)} 
+                                />
+                            </div>
+                        ) : (
+                            <>
+                                <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Latest Headlines</h2>
+                                
+                                {loading ? (
+                                    <div className="p-8 text-center animate-pulse text-[var(--text)]">Loading today's stories...</div>
+                                ) : publishedArticles.length === 0 ? (
+                                    <div className="p-6 bg-[var(--code-bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] text-center shadow-sm">
+                                        No stories published yet. Check back later!
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                        {publishedArticles.map((article) => (
+                                            <article 
+                                                key={article.id} 
+                                                className="bg-[var(--code-bg)] rounded-xl overflow-hidden shadow-[var(--shadow)] border border-[var(--border)] border-t-4 border-t-[var(--accent)] flex flex-col hover:shadow-lg transition-shadow"
+                                            >
+                                                <div className="p-6 flex-1 flex flex-col">
+                                                    <div className="text-[var(--accent)] text-xs font-bold uppercase tracking-widest mb-3 font-sans">
+                                                        {getCategoryName(article.categoryId)}
+                                                    </div>
+                                                    <h3 className="m-0 mb-4 text-xl leading-snug text-[var(--text-h)] font-bold">
+                                                        {article.title}
+                                                    </h3>
+                                                    <div className="text-sm text-[var(--text)] mb-4 italic">
+                                                        By <span className="font-semibold">{article.author}</span>
+                                                    </div>
+                                                    <p className="text-[var(--text-h)] opacity-80 leading-relaxed text-sm m-0">
+                                                        {article.content.length > 150 ? article.content.substring(0, 150) + "..." : article.content}
+                                                    </p>
+                                                </div>
+                                                <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)] text-right mt-auto">
+                                                    <button 
+                                                        onClick={() => setViewingArticleId(article.id!)}
+                                                        className="bg-transparent border-none text-[var(--accent)] font-bold cursor-pointer font-sans text-sm hover:underline"
+                                                    >
+                                                        Read Full Story →
+                                                    </button>
+                                                </div>
+                                            </article>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+
+                {/* TAB 2: WRITE ARTICLE */}
                 {activeTab === 'write' && (
                     <div className="max-w-4xl mx-auto">
                         <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Compose News Story</h2>
                         
                         <div className="bg-[var(--code-bg)] border border-[var(--border)] p-8 rounded-xl shadow-[var(--shadow)]">
                             <form onSubmit={handleSaveDraft} className="flex flex-col gap-6">
-                                
                                 <div>
                                     <label className="block mb-2 font-semibold text-[var(--text-h)]">Headline</label>
                                     <input 
@@ -225,7 +336,7 @@ const AuthorWorkspace: React.FC = () => {
                     </div>
                 )}
 
-                {/* TAB 2: MY ARTICLES */}
+                {/* TAB 3: MY ARTICLES */}
                 {activeTab === 'manage' && (
                     <div className="max-w-5xl mx-auto">
                         <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">My Content Portfolio</h2>
@@ -273,6 +384,70 @@ const AuthorWorkspace: React.FC = () => {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* TAB 4: MY PROFILE */}
+                {activeTab === 'profile' && (
+                    <div className="max-w-3xl mx-auto">
+                        <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">My Profile Settings</h2>
+                        
+                        {loading ? (
+                            <div className="p-8 text-center animate-pulse text-[var(--text)]">Loading profile...</div>
+                        ) : (
+                            <div className="bg-[var(--code-bg)] p-8 rounded-xl border border-[var(--border)] shadow-[var(--shadow)]">
+                                <div className="mb-8 border-b border-[var(--border)] pb-6">
+                                    <h3 className="m-0 text-2xl font-bold text-[var(--text-h)] tracking-tight">
+                                        {profile?.username || 'Unknown User'}
+                                    </h3>
+                                    <div className="text-[var(--text)] font-medium mt-1">
+                                        {profile?.email || 'No email associated'}
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleSaveProfile} className="flex flex-col gap-6">
+                                    <div className="flex flex-col sm:flex-row gap-6">
+                                        <div className="flex-1">
+                                            <label className="block mb-2 font-semibold text-[var(--text-h)] text-sm">First Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={firstName} 
+                                                onChange={(e) => setFirstName(e.target.value)} 
+                                                className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all" 
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block mb-2 font-semibold text-[var(--text-h)] text-sm">Last Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={lastName} 
+                                                onChange={(e) => setLastName(e.target.value)} 
+                                                className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all" 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block mb-2 font-semibold text-[var(--text-h)] text-sm">About Me (Bio)</label>
+                                        <textarea 
+                                            value={bio} 
+                                            onChange={(e) => setBio(e.target.value)} 
+                                            rows={4} 
+                                            placeholder="Tell the community about yourself..." 
+                                            className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all resize-y" 
+                                        />
+                                    </div>
+
+                                    <button 
+                                        type="submit" 
+                                        disabled={savingProfile} 
+                                        className="w-full mt-2 py-3 px-4 bg-[var(--accent)] text-white font-bold rounded-lg shadow-md transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {savingProfile ? 'Saving...' : 'Save Profile Changes'}
+                                    </button>
+                                </form>
                             </div>
                         )}
                     </div>
