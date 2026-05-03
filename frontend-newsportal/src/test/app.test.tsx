@@ -1,35 +1,35 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, test, expect, afterEach, vi } from 'vitest';
-import App from './App';
+import App from '../App';
 
 // 1. Mock all the page components using vi.mock
-// Note: We use { default: () => ... } because App.tsx uses default imports
-vi.mock('./pages/Login', () => ({ default: () => <div data-testid="login-page">Login Page</div> }));
-vi.mock('./pages/Register', () => ({ default: () => <div data-testid="register-page">Register Page</div> }));
-vi.mock('./pages/ArticlesDashboard', () => ({ default: () => <div data-testid="articles-page">Articles Dashboard</div> }));
-vi.mock('./pages/AdminDashboard', () => ({ default: () => <div data-testid="admin-page">Admin Dashboard</div> }));
-vi.mock('./pages/AuthorWorkspace', () => ({ default: () => <div data-testid="author-page">Author Workspace</div> }));
-vi.mock('./pages/FullArticle', () => ({ default: () => <div data-testid="full-article-page">Full Article</div> }));
-vi.mock('./pages/UserProfilePage', () => ({ default: () => <div data-testid="profile-page">User Profile</div> }));
-vi.mock('./pages/ForgotPassword', () => ({ default: () => <div data-testid="forgot-password-page">Forgot Password</div> }));
+// We return simple <div> tags with test IDs so we can check if the Router mounted them properly.
+vi.mock('../pages/Login', () => ({ default: () => <div data-testid="login-page">Login Page</div> }));
+vi.mock('../pages/Register', () => ({ default: () => <div data-testid="register-page">Register Page</div> }));
+vi.mock('../pages/ArticlesDashboard', () => ({ default: () => <div data-testid="articles-page">Articles Dashboard</div> }));
+vi.mock('../pages/AdminDashboard', () => ({ default: () => <div data-testid="admin-page">Admin Dashboard</div> }));
+vi.mock('../pages/AuthorWorkspace', () => ({ default: () => <div data-testid="author-page">Author Workspace</div> }));
+vi.mock('../pages/FullArticle', () => ({ default: () => <div data-testid="full-article-page">Full Article</div> }));
+vi.mock('../pages/UserProfilePage', () => ({ default: () => <div data-testid="profile-page">User Profile</div> }));
+vi.mock('../pages/ForgotPassword', () => ({ default: () => <div data-testid="forgot-password-page">Forgot Password</div> }));
 
 describe('App Routing', () => {
-  // Helper function with TypeScript typing (route: string)
+  // Helper function to push a specific route to the DOM history before rendering
   const renderWithRoute = (route: string) => {
     window.history.pushState({}, 'Test page', route);
     render(<App />);
   };
 
   afterEach(() => {
-    // Clean up the URL and clear mocks after each test
+    // Clean up the URL and clear mocks after each test to prevent bleed-over
     window.history.pushState({}, 'Home page', '/');
     vi.clearAllMocks();
   });
 
   test('redirects from "/" to "/login"', () => {
     renderWithRoute('/');
-    // The `<Navigate to="/login" />` should trigger and render the login page
+    // The `<Navigate to="/login" replace />` should immediately trigger
     expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 
@@ -49,7 +49,8 @@ describe('App Routing', () => {
   });
 
   test('renders Full Article page at "/article/:id"', () => {
-    renderWithRoute('/article/123'); // Using a dummy ID "123"
+    // Simulating a dynamic parameter in the URL (e.g., ID: 99)
+    renderWithRoute('/article/99'); 
     expect(screen.getByTestId('full-article-page')).toBeInTheDocument();
   });
 
