@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 import { articleService, type Article } from '../services/articleService';
 import { categoryService, type Category } from '../services/categoryService';
 import { authService } from '../services/authService';
-import { userService, type UserProfile } from '../services/userService'; // <-- Import user service
+import { userService, type UserProfile } from '../services/userService';
 import FullArticle from './FullArticle'; 
 
 const AuthorWorkspace: React.FC = () => {
@@ -13,6 +14,9 @@ const AuthorWorkspace: React.FC = () => {
     
     // View Article State
     const [viewingArticleId, setViewingArticleId] = useState<number | null>(null);
+
+    // Modal State
+    const [confirmSubmitId, setConfirmSubmitId] = useState<number | null>(null);
 
     const navigate = useNavigate();
 
@@ -56,7 +60,9 @@ const AuthorWorkspace: React.FC = () => {
             const data = await categoryService.getAllCategories();
             setCategories(data);
             if (data.length > 0 && categoryId === '') setCategoryId(data[0].id);
-        } catch (error) { console.error("Error loading categories"); }
+        } catch (error) { 
+            console.error("Error loading categories"); 
+        }
     };
 
     const fetchMyArticles = async () => {
@@ -64,8 +70,11 @@ const AuthorWorkspace: React.FC = () => {
             setLoading(true);
             const data = await articleService.getMyArticles();
             setMyArticles(data);
-        } catch (error) { console.error("Error fetching my articles"); } 
-        finally { setLoading(false); }
+        } catch (error) { 
+            console.error("Error fetching my articles"); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     const fetchPublishedArticles = async () => {
@@ -73,8 +82,11 @@ const AuthorWorkspace: React.FC = () => {
             setLoading(true);
             const data = await articleService.getAllPublishedArticles();
             setPublishedArticles(data.reverse()); 
-        } catch (error) { console.error("Error fetching published articles"); } 
-        finally { setLoading(false); }
+        } catch (error) { 
+            console.error("Error fetching published articles"); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     const fetchUserProfile = async () => {
@@ -100,24 +112,38 @@ const AuthorWorkspace: React.FC = () => {
     // --- ACTION FUNCTIONS ---
     const handleSaveDraft = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (categoryId === '') return alert("Please select a category first!");
+        if (categoryId === '') {
+            toast.error("Please select a category first!");
+            return;
+        }
 
         try {
             setLoading(true);
             await articleService.createArticle({ title, content, categoryId: Number(categoryId) });
-            alert("Article saved successfully as a DRAFT!");
-            setTitle(''); setContent(''); setActiveTab('manage');
-        } catch (error) { alert("Failed to save article."); } 
-        finally { setLoading(false); }
+            toast.success("Article saved successfully as a DRAFT!");
+            setTitle(''); 
+            setContent(''); 
+            setActiveTab('manage');
+        } catch (error) { 
+            toast.error("Failed to save article."); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
-    const handleSubmitForReview = async (id: number) => {
-        if (!window.confirm("Submit this article to the Admin for review?")) return;
+    const confirmSubmitForReview = async () => {
+        if (!confirmSubmitId) return;
+        
         try {
-            await articleService.submitForReview(id);
-            alert("Sent to admin!");
+            const toastId = toast.loading("Submitting article...");
+            await articleService.submitForReview(confirmSubmitId);
+            toast.success("Sent to admin for review!", { id: toastId });
+            setConfirmSubmitId(null);
             fetchMyArticles();
-        } catch (error) { alert("Failed to submit article."); }
+        } catch (error) { 
+            toast.error("Failed to submit article."); 
+            setConfirmSubmitId(null);
+        }
     };
 
     const handleSaveProfile = async (e: React.FormEvent) => {
@@ -125,15 +151,18 @@ const AuthorWorkspace: React.FC = () => {
         setSavingProfile(true);
         try {
             await userService.updateProfile({ firstName, lastName, bio });
-            alert("Profile updated successfully!");
+            toast.success("Profile updated successfully!");
         } catch (error) {
-            alert("Failed to update profile.");
+            toast.error("Failed to update profile.");
         } finally {
             setSavingProfile(false);
         }
     };
 
-    const handleLogout = () => { authService.logout(); navigate('/login'); };
+    const handleLogout = () => { 
+        authService.logout(); 
+        navigate('/login'); 
+    };
 
     // --- HELPERS ---
     const getCategoryName = (id: number) => {
@@ -151,8 +180,10 @@ const AuthorWorkspace: React.FC = () => {
     };
 
     return (
-        <div className="flex h-screen font-sans bg-[var(--bg)] text-[var(--text)]">
+        <div className="flex h-screen font-sans bg-[var(--bg)] text-[var(--text)] relative">
             
+            <Toaster position="top-right" reverseOrder={false} />
+
             {/* SIDEBAR NAVIGATION */}
             <div className="w-64 bg-[var(--code-bg)] border-r border-[var(--border)] flex flex-col shrink-0">
                 <div className="p-6 border-b border-[var(--border)]">
@@ -192,7 +223,6 @@ const AuthorWorkspace: React.FC = () => {
                                 🗂️ My Content
                             </button>
                         </li>
-                        {/* NEW PROFILE TAB BUTTON */}
                         <li>
                             <button 
                                 onClick={() => setActiveTab('profile')} 
@@ -371,7 +401,7 @@ const AuthorWorkspace: React.FC = () => {
                                                 <td className="p-4 text-right">
                                                     {article.status === 'DRAFT' || article.status === 'REJECTED' ? (
                                                         <button 
-                                                            onClick={() => handleSubmitForReview(article.id!)} 
+                                                            onClick={() => setConfirmSubmitId(article.id!)} 
                                                             className="py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
                                                         >
                                                             📤 Submit for Review
@@ -454,6 +484,32 @@ const AuthorWorkspace: React.FC = () => {
                 )}
 
             </div>
+
+            {/* CONFIRMATION MODAL */}
+            {confirmSubmitId && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
+                    <div className="bg-[var(--code-bg)] p-6 rounded-xl shadow-xl max-w-md w-full mx-4 border border-[var(--border)]">
+                        <h3 className="text-xl font-bold text-[var(--text-h)] mb-2">Submit for Review?</h3>
+                        <p className="text-[var(--text)] mb-6 opacity-90">
+                            Are you sure you want to submit this article to the admin? Once submitted, it will be locked until reviewed.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button 
+                                onClick={() => setConfirmSubmitId(null)}
+                                className="px-4 py-2 rounded-lg font-semibold bg-[var(--bg)] border border-[var(--border)] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmSubmitForReview}
+                                className="px-4 py-2 rounded-lg font-semibold bg-[var(--accent)] text-white hover:opacity-90 transition-opacity"
+                            >
+                                Confirm Submission
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

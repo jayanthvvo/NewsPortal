@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast'; // <-- Imported toast library
 import { articleService, type Article } from '../services/articleService';
 import { commentService, type Comment } from '../services/commentService';
 import { authService } from '../services/authService';
@@ -20,6 +21,9 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
     const [newComment, setNewComment] = useState('');
     const [loading, setLoading] = useState(true);
 
+    // Modal State for deleting comments
+    const [commentToDelete, setCommentToDelete] = useState<number | null>(null);
+
     // Get user role to conditionally render admin features
     const userRole = authService.getRole();
 
@@ -37,7 +41,7 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
             const fetchedComments = await commentService.getCommentsByArticle(targetId);
             setComments(fetchedComments);
         } catch (error) {
-            alert("Article not found!");
+            toast.error("Article not found!");
             if (onBack) onBack();
             else navigate('/articles');
         } finally {
@@ -49,6 +53,8 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
         e.preventDefault();
         if (!newComment.trim() || !article) return;
 
+        const toastId = toast.loading("Posting comment...");
+
         try {
             await commentService.postComment({
                 articleId: article.id!,
@@ -58,21 +64,27 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
             setNewComment('');
             const updatedComments = await commentService.getCommentsByArticle(article.id!);
             setComments(updatedComments);
+            toast.success("Comment posted successfully!", { id: toastId });
         } catch (error) {
-            alert("Failed to post comment. Check your Java backend endpoints!");
+            toast.error("Failed to post comment. Check your backend.", { id: toastId });
         }
     };
 
-    // --- NEW: Handle Comment Deletion ---
-    const handleDeleteComment = async (commentId: number) => {
-        if (!window.confirm("Admin Action: Are you sure you want to permanently delete this comment?")) return;
+    // --- REFACTORED: Handle Comment Deletion via Modal ---
+    const confirmDeleteComment = async () => {
+        if (!commentToDelete) return;
         
+        const toastId = toast.loading("Deleting comment...");
         try {
-            await commentService.deleteComment(commentId);
+            await commentService.deleteComment(commentToDelete);
+            
             // Immediately remove the deleted comment from the state to update the UI
-            setComments(prevComments => prevComments.filter(c => c.id !== commentId));
+            setComments(prevComments => prevComments.filter(c => c.id !== commentToDelete));
+            toast.success("Comment deleted permanently.", { id: toastId });
         } catch (error) {
-            alert("Failed to delete comment. Check your backend logs.");
+            toast.error("Failed to delete comment. Check your backend logs.", { id: toastId });
+        } finally {
+            setCommentToDelete(null); // Close the modal
         }
     };
 
@@ -95,8 +107,10 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
     if (!article) return null;
 
     return (
-        <div className={`bg-[var(--bg)] font-sans ${!onBack ? 'min-h-screen pb-16' : 'pb-6'}`}>
+        <div className={`bg-[var(--bg)] font-sans relative ${!onBack ? 'min-h-screen pb-16' : 'pb-6'}`}>
             
+            <Toaster position="top-right" reverseOrder={false} />
+
             {/* Header: Show normal header if standalone, show simple button if embedded */}
             {!onBack ? (
                 <header className="px-6 py-5 md:px-10 border-b border-[var(--border)] flex justify-between items-center sticky top-0 bg-[var(--bg)] z-10 shadow-sm">
@@ -181,7 +195,7 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
                                         {/* CONDITIONAL DELETE BUTTON FOR ADMINS */}
                                         {userRole === 'ROLE_ADMIN' && comment.id && (
                                             <button 
-                                                onClick={() => handleDeleteComment(comment.id!)}
+                                                onClick={() => setCommentToDelete(comment.id!)}
                                                 className="text-xs font-bold text-red-600 bg-red-100 hover:bg-red-200 dark:text-red-400 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1.5 rounded transition-colors"
                                             >
                                                 🗑 Delete
@@ -198,6 +212,32 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
                 </section>
 
             </main>
+
+            {/* COMMENT DELETION CONFIRMATION MODAL */}
+            {commentToDelete && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
+                    <div className="bg-[var(--code-bg)] p-6 rounded-xl shadow-xl max-w-md w-full mx-4 border border-[var(--border)]">
+                        <h3 className="text-xl font-bold text-[var(--text-h)] mb-2">Delete Comment</h3>
+                        <p className="text-[var(--text)] mb-6 opacity-90">
+                            Admin Action: Are you sure you want to permanently delete this comment?
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button 
+                                onClick={() => setCommentToDelete(null)}
+                                className="px-4 py-2 rounded-lg font-semibold bg-[var(--bg)] border border-[var(--border)] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmDeleteComment}
+                                className="px-4 py-2 rounded-lg font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm"
+                            >
+                                Delete Permanently
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

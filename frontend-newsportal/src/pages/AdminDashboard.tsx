@@ -1,17 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast'; // <-- Imported toast library
 import { adminService, type User } from '../services/adminService';
 import { categoryService, type Category } from '../services/categoryService';
 import { articleService, type Article } from '../services/articleService';
 import { alertService } from '../services/alertService';
 import { authService } from '../services/authService';
-import FullArticle from './FullArticle'; // <-- Imported for inline reading
+import FullArticle from './FullArticle'; 
 
 const AdminDashboard: React.FC = () => {
     // Shared State
     const [activeTab, setActiveTab] = useState<string>('approvals');
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
+
+    // Reusable Custom Confirmation Modal State
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        confirmText: string;
+        confirmColor: string;
+        onConfirm: () => void;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        confirmText: 'Confirm',
+        confirmColor: 'bg-[var(--accent)]',
+        onConfirm: () => {}
+    });
+
+    const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
     // Tab: Read Articles State
     const [publishedArticles, setPublishedArticles] = useState<Article[]>([]);
@@ -39,23 +59,21 @@ const AdminDashboard: React.FC = () => {
             return;
         }
         
-        // Always load categories so the Read Tab can display category names
         fetchCategories();
 
         if (activeTab === 'approvals') fetchPendingUsers();
         else if (activeTab === 'articles') fetchPendingArticles();
         else if (activeTab === 'read') fetchPublishedArticles();
         
-        // Reset the article viewing state if the admin switches tabs
         setViewingArticleId(null);
     }, [activeTab, navigate]);
 
-    // --- NEW: FETCH PUBLISHED ARTICLES ---
+    // --- FETCH FUNCTIONS ---
     const fetchPublishedArticles = async () => {
         try {
             setLoading(true);
             const data = await articleService.getAllPublishedArticles();
-            setPublishedArticles(data.reverse()); // Show newest first
+            setPublishedArticles(data.reverse()); 
         } catch (error) {
             console.error("Error fetching published articles");
         } finally {
@@ -63,7 +81,6 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
-    // Helper to get category name
     const getCategoryName = (id: number) => {
         const category = categories.find(c => c.id === id);
         return category ? category.name : 'Unknown Category';
@@ -82,14 +99,25 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
-    const handleApprove = async (userId: number, username: string) => {
-        if (!window.confirm(`Are you sure you want to approve ${username}?`)) return;
-        try {
-            await adminService.approveUser(userId);
-            fetchPendingUsers();
-        } catch (error) {
-            alert("Failed to approve user.");
-        }
+    const confirmApproveUser = (userId: number, username: string) => {
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Approve User',
+            message: `Are you sure you want to approve ${username}?`,
+            confirmText: 'Approve User',
+            confirmColor: 'bg-green-600 hover:bg-green-700',
+            onConfirm: async () => {
+                closeConfirm();
+                const toastId = toast.loading(`Approving ${username}...`);
+                try {
+                    await adminService.approveUser(userId);
+                    toast.success(`${username} has been approved!`, { id: toastId });
+                    fetchPendingUsers();
+                } catch (error) {
+                    toast.error("Failed to approve user.", { id: toastId });
+                }
+            }
+        });
     };
 
     // --- TAB 2: CATEGORIES ---
@@ -104,14 +132,15 @@ const AdminDashboard: React.FC = () => {
 
     const handleCreateCategory = async (e: React.FormEvent) => {
         e.preventDefault();
+        const toastId = toast.loading("Creating category...");
         try {
             await categoryService.createCategory({ name: newCategoryName, description: newCategoryDesc });
             setNewCategoryName('');
             setNewCategoryDesc('');
             fetchCategories(); 
-            alert("Category created successfully!");
+            toast.success("Category created successfully!", { id: toastId });
         } catch (error) {
-            alert("Failed to create category.");
+            toast.error("Failed to create category.", { id: toastId });
         }
     };
 
@@ -128,51 +157,93 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
-    const handlePublishArticle = async (id: number) => {
-        if (!window.confirm("Approve this article for public viewing?")) return;
-        try {
-            await articleService.updateArticleStatus(id, "PUBLISHED");
-            fetchPendingArticles();
-        } catch (error) {
-            alert("Failed to publish article.");
-        }
+    const confirmPublishArticle = (id: number) => {
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Publish Article',
+            message: 'Approve this article for public viewing?',
+            confirmText: 'Publish',
+            confirmColor: 'bg-green-600 hover:bg-green-700',
+            onConfirm: async () => {
+                closeConfirm();
+                const toastId = toast.loading("Publishing article...");
+                try {
+                    await articleService.updateArticleStatus(id, "PUBLISHED");
+                    toast.success("Article is now live!", { id: toastId });
+                    fetchPendingArticles();
+                } catch (error) {
+                    toast.error("Failed to publish article.", { id: toastId });
+                }
+            }
+        });
     };
 
-    const handleRejectArticle = async (id: number) => {
-        if (!window.confirm("Send this article back to the author as a Draft?")) return;
-        try {
-            await articleService.updateArticleStatus(id, "DRAFT");
-            fetchPendingArticles();
-        } catch (error) {
-            alert("Failed to reject article.");
-        }
+    const confirmRejectArticle = (id: number) => {
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Reject Article',
+            message: 'Send this article back to the author as a Draft?',
+            confirmText: 'Reject to Draft',
+            confirmColor: 'bg-yellow-500 hover:bg-yellow-600',
+            onConfirm: async () => {
+                closeConfirm();
+                const toastId = toast.loading("Rejecting article...");
+                try {
+                    await articleService.updateArticleStatus(id, "DRAFT");
+                    toast.success("Article sent back to drafts.", { id: toastId });
+                    fetchPendingArticles();
+                } catch (error) {
+                    toast.error("Failed to reject article.", { id: toastId });
+                }
+            }
+        });
     };
 
-    const handleDeleteArticle = async (id: number) => {
-        if (!window.confirm("CRITICAL: Permanently delete this article?")) return;
-        try {
-            await articleService.deleteArticle(id);
-            fetchPendingArticles();
-        } catch (error) {
-            alert("Failed to delete article.");
-        }
+    const confirmDeleteArticle = (id: number) => {
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Delete Article',
+            message: 'CRITICAL: Permanently delete this article? This action cannot be undone.',
+            confirmText: 'Delete Permanently',
+            confirmColor: 'bg-red-600 hover:bg-red-700',
+            onConfirm: async () => {
+                closeConfirm();
+                const toastId = toast.loading("Deleting article...");
+                try {
+                    await articleService.deleteArticle(id);
+                    toast.success("Article deleted.", { id: toastId });
+                    fetchPendingArticles();
+                } catch (error) {
+                    toast.error("Failed to delete article.", { id: toastId });
+                }
+            }
+        });
     };
 
     // --- TAB 4: ALERTS ---
-    const handleSendAlert = async (e: React.FormEvent) => {
+    const confirmSendAlert = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!window.confirm("WARNING: This will send an email to EVERY registered user in the database. Proceed?")) return;
-        
-        setSendingAlert(true);
-        try {
-            const responseMsg = await alertService.sendBreakingNews(alertMessage);
-            alert(`Success! ${responseMsg}`);
-            setAlertMessage('');
-        } catch (error) {
-            alert("Failed to send breaking news. Ensure your alert-service is running and SMTP is configured.");
-        } finally {
-            setSendingAlert(false);
-        }
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Broadcast Emergency Alert',
+            message: 'WARNING: This will send an email to EVERY registered user in the database. Proceed?',
+            confirmText: 'Broadcast Alert',
+            confirmColor: 'bg-red-600 hover:bg-red-700',
+            onConfirm: async () => {
+                closeConfirm();
+                setSendingAlert(true);
+                const toastId = toast.loading("Broadcasting email to all users...");
+                try {
+                    const responseMsg = await alertService.sendBreakingNews(alertMessage);
+                    toast.success(`Success! ${responseMsg}`, { id: toastId, duration: 5000 });
+                    setAlertMessage('');
+                } catch (error) {
+                    toast.error("Failed to send breaking news. Ensure your alert-service is running and SMTP is configured.", { id: toastId, duration: 6000 });
+                } finally {
+                    setSendingAlert(false);
+                }
+            }
+        });
     };
 
     // --- SHARED ---
@@ -182,8 +253,11 @@ const AdminDashboard: React.FC = () => {
     };
 
     return (
-        <div className="flex h-screen font-sans bg-[var(--bg)] text-[var(--text)]">
+        <div className="flex h-screen font-sans bg-[var(--bg)] text-[var(--text)] relative">
             
+            {/* Global Toaster for notifications */}
+            <Toaster position="top-right" reverseOrder={false} />
+
             {/* SIDEBAR NAVIGATION */}
             <div className="w-64 bg-[var(--code-bg)] border-r border-[var(--border)] flex flex-col shrink-0">
                 <div className="p-6 border-b border-[var(--border)]">
@@ -193,14 +267,11 @@ const AdminDashboard: React.FC = () => {
                 
                 <nav className="flex-1 py-6 px-4">
                     <ul className="flex flex-col gap-2">
-                        {/* NEW TAB ADDED HERE */}
                         <li>
                             <button 
                                 onClick={() => setActiveTab('read')} 
                                 className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab === 'read' 
-                                    ? 'bg-[var(--accent)] text-white shadow-md' 
-                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                    activeTab === 'read' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
                                 }`}
                             >
                                 📰 Read Articles
@@ -210,9 +281,7 @@ const AdminDashboard: React.FC = () => {
                             <button 
                                 onClick={() => setActiveTab('approvals')} 
                                 className={`w-full p-3 text-left rounded-lg font-medium transition-colors flex justify-between items-center ${
-                                    activeTab === 'approvals' 
-                                    ? 'bg-[var(--accent)] text-white shadow-md' 
-                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                    activeTab === 'approvals' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
                                 }`}
                             >
                                 <span>👤 Approvals</span>
@@ -225,9 +294,7 @@ const AdminDashboard: React.FC = () => {
                             <button 
                                 onClick={() => setActiveTab('categories')} 
                                 className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab === 'categories' 
-                                    ? 'bg-[var(--accent)] text-white shadow-md' 
-                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                    activeTab === 'categories' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
                                 }`}
                             >
                                 📁 Categories
@@ -237,9 +304,7 @@ const AdminDashboard: React.FC = () => {
                             <button 
                                 onClick={() => setActiveTab('articles')} 
                                 className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab === 'articles' 
-                                    ? 'bg-[var(--accent)] text-white shadow-md' 
-                                    : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                    activeTab === 'articles' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
                                 }`}
                             >
                                 📰 Article Reviews
@@ -249,9 +314,7 @@ const AdminDashboard: React.FC = () => {
                             <button 
                                 onClick={() => setActiveTab('alerts')} 
                                 className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab === 'alerts' 
-                                    ? 'bg-red-600 text-white shadow-md' 
-                                    : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                    activeTab === 'alerts' ? 'bg-red-600 text-white shadow-md' : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
                                 }`}
                             >
                                 🚨 Breaking News Alert
@@ -276,8 +339,6 @@ const AdminDashboard: React.FC = () => {
                 {/* TAB 0: READ ARTICLES */}
                 {activeTab === 'read' && (
                     <div className="max-w-6xl mx-auto">
-                        
-                        {/* CONDITIONAL RENDERING: Article View vs Grid View */}
                         {viewingArticleId ? (
                             <div className="bg-[var(--code-bg)] border border-[var(--border)] p-8 rounded-xl shadow-[var(--shadow)]">
                                 <FullArticle 
@@ -367,7 +428,7 @@ const AdminDashboard: React.FC = () => {
                                                 </td>
                                                 <td className="p-4">
                                                     <button 
-                                                        onClick={() => handleApprove(user.id, user.username)} 
+                                                        onClick={() => confirmApproveUser(user.id, user.username)} 
                                                         className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
                                                     >
                                                         ✓ Approve
@@ -388,7 +449,6 @@ const AdminDashboard: React.FC = () => {
                         <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Manage News Categories</h2>
                         
                         <div className="flex flex-col lg:flex-row gap-8">
-                            {/* Create Category Form */}
                             <div className="flex-1 bg-[var(--code-bg)] p-6 md:p-8 rounded-xl shadow-[var(--shadow)] border border-[var(--border)] h-fit">
                                 <h3 className="text-lg font-bold text-[var(--text-h)] mb-6 mt-0">Create New Category</h3>
                                 <form onSubmit={handleCreateCategory} className="flex flex-col gap-5">
@@ -421,7 +481,6 @@ const AdminDashboard: React.FC = () => {
                                 </form>
                             </div>
 
-                            {/* Existing Categories List */}
                             <div className="flex-[2] bg-[var(--code-bg)] p-6 md:p-8 rounded-xl shadow-[var(--shadow)] border border-[var(--border)]">
                                 <h3 className="text-lg font-bold text-[var(--text-h)] mb-6 mt-0">Existing Categories</h3>
                                 {categories.length === 0 ? (
@@ -478,20 +537,20 @@ const AdminDashboard: React.FC = () => {
                                             
                                             <div className="flex flex-wrap gap-3 pt-5 border-t border-[var(--border)]">
                                                 <button 
-                                                    onClick={() => handlePublishArticle(article.id!)} 
+                                                    onClick={() => confirmPublishArticle(article.id!)} 
                                                     className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
                                                 >
                                                     ✓ Publish
                                                 </button>
                                                 <button 
-                                                    onClick={() => handleRejectArticle(article.id!)} 
+                                                    onClick={() => confirmRejectArticle(article.id!)} 
                                                     className="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold rounded shadow-sm transition-colors text-sm"
                                                 >
                                                     ↩ Reject (Draft)
                                                 </button>
                                                 <div className="flex-1"></div>
                                                 <button 
-                                                    onClick={() => handleDeleteArticle(article.id!)} 
+                                                    onClick={() => confirmDeleteArticle(article.id!)} 
                                                     className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
                                                 >
                                                     🗑 Delete
@@ -512,7 +571,7 @@ const AdminDashboard: React.FC = () => {
                         <p className="mb-8 opacity-80">Use this console to send an immediate Breaking News email blast to every registered reader in the database.</p>
                         
                         <div className="bg-[var(--code-bg)] p-8 rounded-xl shadow-[var(--shadow)] border-2 border-red-200 dark:border-red-900/50">
-                            <form onSubmit={handleSendAlert} className="flex flex-col gap-5">
+                            <form onSubmit={confirmSendAlert} className="flex flex-col gap-5">
                                 <div>
                                     <label className="block mb-3 font-bold text-red-700 dark:text-red-400">Breaking News Message</label>
                                     <textarea 
@@ -536,8 +595,31 @@ const AdminDashboard: React.FC = () => {
                         </div>
                     </div>
                 )}
-
             </div>
+
+            {/* SHARED CONFIRMATION MODAL */}
+            {confirmDialog.isOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
+                    <div className="bg-[var(--code-bg)] p-6 rounded-xl shadow-xl max-w-md w-full mx-4 border border-[var(--border)]">
+                        <h3 className="text-xl font-bold text-[var(--text-h)] mb-2">{confirmDialog.title}</h3>
+                        <p className="text-[var(--text)] mb-6 opacity-90">{confirmDialog.message}</p>
+                        <div className="flex justify-end gap-3">
+                            <button 
+                                onClick={closeConfirm}
+                                className="px-4 py-2 rounded-lg font-semibold bg-[var(--bg)] border border-[var(--border)] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmDialog.onConfirm}
+                                className={`px-4 py-2 rounded-lg font-semibold text-white transition-opacity shadow-sm ${confirmDialog.confirmColor}`}
+                            >
+                                {confirmDialog.confirmText}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

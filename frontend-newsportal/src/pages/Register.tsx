@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast'; // <-- Imported toast library
 import { authService } from '../services/authService';
 
 const Register: React.FC = () => {
@@ -18,10 +19,15 @@ const Register: React.FC = () => {
         setError(null);
 
         if (password !== confirmPassword) {
-            return setError("Passwords do not match!");
+            const mismatchError = "Passwords do not match!";
+            setError(mismatchError);
+            toast.error(mismatchError);
+            return;
         }
 
         setLoading(true);
+        const toastId = toast.loading("Creating your account..."); // <-- Loading toast
+
         try {
             const backendMessage = await authService.register({ 
                 username, 
@@ -30,18 +36,24 @@ const Register: React.FC = () => {
                 rolerequest: role 
             });
             
-            alert(backendMessage); 
+            // <-- Replaced alert() with toast.success()
+            toast.success(backendMessage || "Registration successful!", { id: toastId }); 
             navigate('/login'); 
         } catch (err: any) {
             const errorMsg = err.response?.data || "Registration failed. Username or email might already be taken.";
             setError(errorMsg);
+            toast.error(errorMsg, { id: toastId }); // <-- Error toast
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen font-sans">
+        <div className="flex justify-center items-center min-h-screen font-sans relative">
+            
+            {/* Global Toaster for notifications */}
+            <Toaster position="top-right" reverseOrder={false} />
+
             {/* Form Container */}
             <div className="w-full max-w-md p-8 rounded-xl border border-[var(--border)] bg-[var(--code-bg)] shadow-[var(--shadow)] my-8">
                 
@@ -119,7 +131,7 @@ const Register: React.FC = () => {
                             className="w-full p-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all cursor-pointer"
                         >
                             <option value="ROLE_USER">Standard Reader</option>
-                            <option value="ROLE_AUTHOR">Content Author / Editor</option>
+                            <option value="ROLE_EDITOR">Content Author / Editor</option>
                             <option value="ROLE_ADMIN">System Administrator</option>
                         </select>
                         
