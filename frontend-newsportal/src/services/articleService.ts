@@ -35,7 +35,7 @@ export const articleService = {
     },
 
     // --- AUTHOR ENDPOINTS ---
-    // Create a brand new article (Default status is usually DRAFT)
+    
     createArticle: async (articleData: { title: string; content: string; categoryId: number }): Promise<Article> => {
         const response = await api.post('/articles/create', articleData);
         return response.data;
@@ -45,6 +45,11 @@ export const articleService = {
     getMyArticles: async (): Promise<Article[]> => {
         // If your Java backend figures out the author via the JWT token:
         const response = await api.get('/articles/my-articles'); 
+        return response.data;
+    },
+    getArticlesByAuthor: async (authorName: string): Promise<Article[]> => {
+        
+        const response = await api.get(`/articles/author/${authorName}`); 
         return response.data;
     },
 

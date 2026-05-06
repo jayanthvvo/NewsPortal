@@ -28,9 +28,8 @@ export default function ForgotPassword() {
     try {
       await authService.forgotPassword(email);
       setMessage('OTP sent successfully! Please check your email.');
-      setStep(2); // Move to the next step to enter OTP
+      setStep(2);
     } catch (err: any) {
-      // Catching the exact 400 error we set up in the backend!
       if (err.response && err.response.data && err.response.data.error) {
         setError(err.response.data.error);
       } else {

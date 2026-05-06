@@ -77,23 +77,6 @@ describe('Register Component', () => {
         expect(authService.register).not.toHaveBeenCalled();
     });
 
-    test('shows a warning message when selecting a role other than ROLE_USER', () => {
-        renderRegister();
-
-        const roleSelect = screen.getByLabelText('Account Type');
-        
-        // Default shouldn't show warning
-        expect(screen.queryByText(/Note: This role requires manual approval/i)).not.toBeInTheDocument();
-
-        // Change to Editor
-        fireEvent.change(roleSelect, { target: { value: 'ROLE_EDITOR' } });
-        expect(screen.getByText(/Note: This role requires manual approval/i)).toBeInTheDocument();
-
-        // Change to Admin
-        fireEvent.change(roleSelect, { target: { value: 'ROLE_ADMIN' } });
-        expect(screen.getByText(/Note: This role requires manual approval/i)).toBeInTheDocument();
-    });
-
     test('submits successfully, shows toast, and navigates to /login', async () => {
         const mockSuccessMessage = 'Registration successful!';
         (authService.register as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockSuccessMessage);

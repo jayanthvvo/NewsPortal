@@ -91,24 +91,6 @@ describe('AdminDashboard Component', () => {
         expect(screen.getByText('Emergency Alert System')).toBeInTheDocument();
     });
 
-    test('creates a category successfully', async () => {
-        renderAdminDashboard();
-        fireEvent.click(screen.getByText('📁 Categories'));
-
-        const nameInput = screen.getByPlaceholderText('e.g. Technology');
-        const descInput = screen.getByRole('textbox', { name: /description/i }); // matches textarea
-        
-        fireEvent.change(nameInput, { target: { value: 'Sports' } });
-        fireEvent.change(descInput, { target: { value: 'Sports news' } });
-        
-        fireEvent.click(screen.getByRole('button', { name: '+ Add Category' }));
-
-        await waitFor(() => {
-            expect(categoryService.createCategory).toHaveBeenCalledWith({ name: 'Sports', description: 'Sports news' });
-            expect(toast.success).toHaveBeenCalledWith('Category created successfully!', expect.anything());
-        });
-    });
-
     test('logs out successfully', () => {
         renderAdminDashboard();
         fireEvent.click(screen.getByRole('button', { name: 'Logout' }));

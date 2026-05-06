@@ -20,7 +20,7 @@ export const adminService = {
         }
     },
 
-    // MATCHES BACKEND: Removed '/auth' from the beginning
+    
     approveUser: async (userId: number): Promise<string> => {
         try {
             const response = await api.post(`/admin/approve/${userId}`);
