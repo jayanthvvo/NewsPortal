@@ -1,33 +1,39 @@
-import React, { useState } from 'react';
+// src/pages/Login.tsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { authService } from '../services/authService';
+import { useAppDispatch, useAppSelector } from '../store/hooks'; // <-- 1. Import Redux hooks
+import { loginUser, clearError } from '../store/slices/authSlice'; // <-- 2. Import Redux actions
 
 const Login: React.FC = () => {
+    // We keep username and password as local state because only this form needs to know what the user is typing right now.
     const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+    
+    // 3. Get global loading and error states from Redux!
+    const { loading, error } = useAppSelector((state) => state.auth);
+    
+    const dispatch = useAppDispatch();
     const navigate = useNavigate();
+
+    // Clear any leftover errors when the user first visits the login page
+    useEffect(() => {
+        dispatch(clearError());
+    }, [dispatch]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError(null);
-        setLoading(true);
-
-        try {
-            const response = await authService.login({ username, password });
-            
-            // Redirect based on role
-            const userRole = response.role;
+        
+        // 4. Dispatch the async Redux action
+        const resultAction = await dispatch(loginUser({ username, password }));
+        
+        // If the login was successful, navigate!
+        if (loginUser.fulfilled.match(resultAction)) {
+            const userRole = resultAction.payload.role;
             if (userRole === 'ROLE_ADMIN') navigate('/admin');
             else if (userRole === 'ROLE_EDITOR') navigate('/author');
             else navigate('/articles');
-            
-        } catch (err) {
-            setError("Invalid username or password. Please try again.");
-        } finally {
-            setLoading(false);
         }
+        // Notice we don't need a catch block here! Redux handles setting the error state automatically if it fails.
     };
 
     return (
@@ -41,7 +47,7 @@ const Login: React.FC = () => {
                     <p className="text-sm text-[var(--text)]">Welcome back! Please sign in.</p>
                 </div>
                 
-                {/* Error Message */}
+                {/* Error Message (Now powered by Redux) */}
                 {error && (
                     <div className="p-3 mb-6 text-sm text-red-700 bg-red-100 rounded-lg border border-red-200">
                         {error}
@@ -86,6 +92,7 @@ const Login: React.FC = () => {
                         </div>
                     </div>
                     
+                    {/* Submit Button (Loading state now powered by Redux) */}
                     <button 
                         type="submit" 
                         disabled={loading} 
