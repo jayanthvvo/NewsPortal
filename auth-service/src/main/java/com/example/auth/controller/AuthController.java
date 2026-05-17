@@ -15,34 +15,38 @@ import com.example.auth.dto.RegisterRequest;
 import com.example.auth.service.AuthService;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")
-
 public class AuthController {
+
     @Autowired
-	private AuthService authService;
-	@PostMapping("/register")
-	public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request){
-		String result=authService.registerUser(request);
-		return ResponseEntity.ok(result);
-	}
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginRequest request){
-		try {
-			JwtResponse response=authService.loginuser(request);
-			return ResponseEntity.ok(response);
-		} catch (Exception e) {
-			// TODO: handle exception
-			return ResponseEntity.status(401).body(e.getMessage());
-		}
-	}
-	@PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+    private AuthService authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request){
+        String result = authService.registerUser(request);
+        // Returns a String, so we use ResponseEntity<String>
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Object> login(@RequestBody LoginRequest request){
+        try {
+            JwtResponse response = authService.loginuser(request);
+            // Returns a JwtResponse on success
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            // Returns a String on error. Because it returns two different types, we use ResponseEntity<Object>
+            return ResponseEntity.status(401).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@RequestBody Map<String, String> request) {
         try {
             authService.generateAndSendOtp(request.get("email"));
-            // Return JSON so React handles it cleanly
+            // Returns a Map, so we use ResponseEntity<Map<String, String>>
             return ResponseEntity.ok(Map.of("message", "OTP sent to email"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -50,9 +54,10 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, String>> resetPassword(@RequestBody Map<String, String> request) {
         try {
             authService.resetPassword(request.get("email"), request.get("otp"), request.get("newPassword"));
+            // Returns a Map, so we use ResponseEntity<Map<String, String>>
             return ResponseEntity.ok(Map.of("message", "Password successfully reset"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

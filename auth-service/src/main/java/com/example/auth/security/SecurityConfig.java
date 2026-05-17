@@ -1,6 +1,5 @@
 package com.example.auth.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,29 +17,30 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    @Autowired
-	private JwtAuthenticationFilter jwtAuthenticationFilter;
-	
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration authconfig) throws Exception {
-		return authconfig.getAuthenticationManager();
-	}
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+    
+    // REMOVED the @Autowired field here
 
-		http.csrf(csrf -> csrf.disable())
-		.sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-		.authorizeHttpRequests(auth->auth.
-				requestMatchers("/auth/register","/auth/login","/auth/forgot-password", "/auth/reset-password").permitAll().anyRequest()
-				.authenticated())
-		.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-		
-		return http.build();
-	}
-	
-	
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authconfig) throws Exception {
+        return authconfig.getAuthenticationManager();
+    }
+    
+    // ADDED JwtAuthenticationFilter directly as a method parameter
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception{
+
+        http.csrf(csrf -> csrf.disable())
+        .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth->auth.
+                requestMatchers("/auth/register","/auth/login","/auth/forgot-password", "/auth/reset-password").permitAll().anyRequest()
+                .authenticated())
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        
+        return http.build();
+    }
 }

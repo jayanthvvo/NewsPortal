@@ -1,5 +1,6 @@
 package com.example.auth.service;
 
+import java.security.SecureRandom; // 1. IMPORT SECURE RANDOM
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,9 @@ import com.example.auth.security.JwtUtils;
 
 @Service
 public class AuthService {
+    
+    // 2. CREATE A REUSABLE, SECURE RANDOM INSTANCE
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     
     @Autowired
     private JwtUtils jwtUtils;
@@ -100,10 +104,9 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new RuntimeException("User with this email not found"));
             
-        // Generate a 6-digit OTP
-        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        // 3. USE THE REUSABLE SECURE RANDOM INSTANCE HERE (And use 1000000 to cover 000000-999999)
+        String otp = String.format("%06d", SECURE_RANDOM.nextInt(1000000));
         
-       
         user.setOtp(otp);
         user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
         userRepository.save(user);
