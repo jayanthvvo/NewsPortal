@@ -1,6 +1,7 @@
 package com.example.auth.contoller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.example.auth.controller.AdminController;
+import com.example.auth.service.UserEventProducer; // Ensure this is imported
 import com.example.auth.model.Role;
 import com.example.auth.model.User;
 import com.example.auth.model.User.UserStatus;
@@ -31,12 +33,16 @@ public class AdminControllerTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private UserEventProducer userEventProducer; // MOCK ADDED HERE
+
     private User pendingUser;
 
     @BeforeEach
     void setUp() {
         pendingUser = new User();
         pendingUser.setUsername("testadmin");
+        pendingUser.setEmail("test@test.com"); // Set email to avoid nulls
         pendingUser.setRole(Role.ROLE_ADMIN);
         pendingUser.setStatus(UserStatus.PENDING);
     }
@@ -59,9 +65,13 @@ public class AdminControllerTest {
         ResponseEntity<String> response = adminController.approveUser(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("User testadmin has been approved as ROLE_ADMIN", response.getBody());
+        // UPDATED EXPECTED STRING TO MATCH CONTROLLER
+        assertEquals("User testadmin has been approved. Profile creation triggered in the background.", response.getBody());
         assertEquals(UserStatus.APPROVED, pendingUser.getStatus());
+        
         verify(userRepository, times(1)).save(pendingUser);
+        // Verify that the producer was triggered
+        verify(userEventProducer, times(1)).sendUserApprovedEvent(anyMap());
     }
 
     @Test

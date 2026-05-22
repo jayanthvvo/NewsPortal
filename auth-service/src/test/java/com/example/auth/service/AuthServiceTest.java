@@ -15,7 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.client.RestTemplate; // Added
 
+import com.example.auth.client.UserClient; // Added
 import com.example.auth.dto.JwtResponse;
 import com.example.auth.dto.LoginRequest;
 import com.example.auth.dto.RegisterRequest;
@@ -42,6 +44,13 @@ public class AuthServiceTest {
 
     @Mock
     private AuthenticationManager authenticationManager;
+    
+    // 1. ADD MISSING MOCKS
+    @Mock
+    private UserClient userClient;
+    
+    @Mock
+    private RestTemplate restTemplate;
 
     private RegisterRequest registerRequest;
     private LoginRequest loginRequest;
@@ -96,10 +105,12 @@ public class AuthServiceTest {
         when(userRepository.existsByUsername("testuser")).thenReturn(false);
         when(userRepository.existsByEmail("test@email.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+        // No need to stub userClient.createUserProfile() as Mockito defaults to doing nothing for void/un-stubbed methods
 
         String response = authService.registerUser(registerRequest);
 
-        assertEquals("User registered successfully!", response);
+        // 2. UPDATE THE EXPECTED STRING TO MATCH AuthService.java
+        assertEquals("User registered successfully and profile created!", response);
         verify(userRepository, times(1)).save(any(User.class));
     }
 

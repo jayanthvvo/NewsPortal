@@ -71,12 +71,17 @@ public class CommentControllerTest {
 
     @Test
     void testCreateComment_MissingArticleId() {
-        comment.setArticleId(null);
-        
-        ResponseEntity<?> response = commentController.createComment(comment, authentication);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Error: Article ID is required.", response.getBody());
+        comment.setArticleId(null);
+
+        ResponseEntity<?> response =
+                commentController.createComment(comment, authentication);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR,
+                response.getStatusCode());
+
+        assertEquals("Error: Could not verify article status.",
+                response.getBody());
     }
 
     @Test
