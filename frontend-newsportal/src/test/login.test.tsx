@@ -4,6 +4,8 @@ import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import Login from '../pages/Login';
 import { authService } from '../services/authService';
+import { Provider } from 'react-redux';
+import { store } from '../store/store';
 
 // 1. Mock the react-router-dom module to track navigation
 const mockNavigate = vi.fn();
@@ -15,10 +17,13 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// 2. Mock the authService
+// 2. Mock the authService (Added missing methods here)
 vi.mock('../services/authService', () => ({
   authService: {
     login: vi.fn(),
+    isAuthenticated: vi.fn().mockReturnValue(false),
+    getRole: vi.fn().mockReturnValue(null),
+    logout: vi.fn()
   },
 }));
 
@@ -29,11 +34,14 @@ describe('Login Component', () => {
   });
 
   // Helper function to render the component wrapped in a Router (required for <Link>)
+  // Helper function to render the component wrapped in a Router and Redux Provider
   const renderLogin = () => {
     render(
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
+      <Provider store={store}>
+        <BrowserRouter>
+          <Login />
+        </BrowserRouter>
+      </Provider>
     );
   };
 
@@ -60,12 +68,11 @@ describe('Login Component', () => {
     // Submit the form
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
-    // Wait for the error message to appear in the DOM
+    // Wait for the actual error message defined in authSlice.ts to appear in the DOM
     await waitFor(() => {
-      expect(screen.getByText('Invalid username or password. Please try again.')).toBeInTheDocument();
+      expect(screen.getByText('Login failed. Please check your credentials.')).toBeInTheDocument();
     });
   });
-
   test('navigates to /admin on successful login with ROLE_ADMIN', async () => {
     // Mock the login function to resolve with the admin role
     (authService.login as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ role: 'ROLE_ADMIN' });

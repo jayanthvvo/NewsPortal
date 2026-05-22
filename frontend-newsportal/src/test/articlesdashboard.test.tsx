@@ -25,6 +25,7 @@ vi.mock('../services/authService', () => ({
 vi.mock('../services/articleService', () => ({
     articleService: {
         getAllPublishedArticles: vi.fn(),
+        getArticlesByAuthor: vi.fn()
     }
 }));
 
@@ -86,8 +87,8 @@ describe('ArticlesDashboard Component', () => {
     test('renders layout, fetches data, and displays articles', async () => {
         renderDashboard();
 
-        // Check header texts
-        expect(screen.getByText('The Daily Chronicle')).toBeInTheDocument();
+        // Check header texts (UPDATED)
+        expect(screen.getByText('NewsPortal')).toBeInTheDocument();
         expect(screen.getByText('Latest Headlines')).toBeInTheDocument();
 
         // Check if loading text appears initially
@@ -124,19 +125,27 @@ describe('ArticlesDashboard Component', () => {
         
         fireEvent.click(screen.getAllByRole('button', { name: 'My Workspace' })[1]); // Grab the newly rendered one
         expect(mockNavigate).toHaveBeenCalledWith('/admin');
+
+        await waitFor(() => expect(screen.getByText('React 19 Released')).toBeInTheDocument());
     });
 
-    test('logs out successfully', () => {
+    test('logs out successfully', async () => {
         renderDashboard();
         fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));
         expect(authService.logout).toHaveBeenCalled();
         expect(mockNavigate).toHaveBeenCalledWith('/login');
+
+        // Wait for API calls to resolve to clear act() warnings
+        await waitFor(() => expect(screen.getByText('React 19 Released')).toBeInTheDocument());
     });
 
-    test('navigates to profile page', () => {
+    test('navigates to profile page', async () => {
         renderDashboard();
         fireEvent.click(screen.getByRole('button', { name: 'My Profile' }));
         expect(mockNavigate).toHaveBeenCalledWith('/profile');
+
+        // Wait for API calls to resolve to clear act() warnings
+        await waitFor(() => expect(screen.getByText('React 19 Released')).toBeInTheDocument());
     });
 
     test('filters articles correctly using the search bar', async () => {
@@ -147,7 +156,8 @@ describe('ArticlesDashboard Component', () => {
             expect(screen.getByText('React 19 Released')).toBeInTheDocument();
         });
 
-        const searchInput = screen.getByPlaceholderText('🔍 Search stories, authors...');
+        // UPDATED PLACEHOLDER
+        const searchInput = screen.getByPlaceholderText('🔍 Search titles & content...');
 
         // Search for "React" (Title match)
         fireEvent.change(searchInput, { target: { value: 'react' } });
@@ -167,7 +177,8 @@ describe('ArticlesDashboard Component', () => {
             expect(screen.getByText('React 19 Released')).toBeInTheDocument();
         });
 
-        const searchInput = screen.getByPlaceholderText('🔍 Search stories, authors...');
+        // UPDATED PLACEHOLDER
+        const searchInput = screen.getByPlaceholderText('🔍 Search titles & content...');
         fireEvent.change(searchInput, { target: { value: 'xyz123nonsense' } });
 
         expect(screen.queryByText('React 19 Released')).not.toBeInTheDocument();
