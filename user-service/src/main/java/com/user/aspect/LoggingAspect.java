@@ -34,3 +34,5 @@ public class LoggingAspect {
 		log.error("❌ [ERROR] {}() crashed with exception: {}", methodName, exception.getMessage());
 	}
 }
+
+
