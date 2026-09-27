@@ -7,13 +7,14 @@ import AuthorWorkspace from './pages/AuthorWorkspace';
 import FullArticle from './pages/FullArticle';
 import UserProfilePage from './pages/UserProfilePage';
 import ForgotPassword from './pages/ForgotPassword';
-
+import LandingPage from './pages/LandingFile';
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* <Route path="/" element={<Navigate to="/login" replace />} /> */}
         
+         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
