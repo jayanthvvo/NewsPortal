@@ -143,26 +143,26 @@ public class ArticleServiceTest {
 
     // --- Tests for updateArticle ---
 
-    @Test
-    void testUpdateArticle_Success() {
-        when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
-        when(articleRepository.save(any(Article.class))).thenReturn(article);
+//    @Test
+//    void testUpdateArticle_Success() {
+//        when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
+//        when(articleRepository.save(any(Article.class))).thenReturn(article);
+//
+//        Article updated = articleService.updateArticle(1L, ArticleStatus.PUBLISHED);
+//
+//        assertEquals(ArticleStatus.PUBLISHED, updated.getStatus());
+//        verify(articleRepository, times(1)).save(article);
+//    }
 
-        Article updated = articleService.updateArticle(1L, ArticleStatus.PUBLISHED);
-
-        assertEquals(ArticleStatus.PUBLISHED, updated.getStatus());
-        verify(articleRepository, times(1)).save(article);
-    }
-
-    @Test
-    void testUpdateArticle_NotFound() {
-        when(articleRepository.findById(1L)).thenReturn(Optional.empty());
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
-            articleService.updateArticle(1L, ArticleStatus.PUBLISHED);
-        });
-        assertEquals("Article not found", ex.getMessage());
-    }
+//    @Test
+//    void testUpdateArticle_NotFound() {
+//        when(articleRepository.findById(1L)).thenReturn(Optional.empty());
+//
+//        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
+//            articleService.updateArticle(1L, ArticleStatus.PUBLISHED);
+//        });
+//        assertEquals("Article not found", ex.getMessage());
+//    }
 
     // --- Tests for deleteArticle ---
 

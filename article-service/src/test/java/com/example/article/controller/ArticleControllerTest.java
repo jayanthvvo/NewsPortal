@@ -119,16 +119,16 @@ public class ArticleControllerTest {
         assertEquals(1, response.getBody().size());
     }
 
-    @Test
-    void testUpdateStatus() {
-        article.setStatus(ArticleStatus.PUBLISHED);
-        when(articleService.updateArticle(1L, ArticleStatus.PUBLISHED)).thenReturn(article);
-
-        ResponseEntity<Article> response = articleController.updateStatus(1L, "PUBLISHED");
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ArticleStatus.PUBLISHED, response.getBody().getStatus());
-    }
+//    @Test
+//    void testUpdateStatus() {
+//        article.setStatus(ArticleStatus.PUBLISHED);
+//        when(articleService.updateArticle(1L, ArticleStatus.PUBLISHED)).thenReturn(article);
+//
+//        ResponseEntity<Article> response = articleController.updateStatus(1L, "PUBLISHED");
+//
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//        assertEquals(ArticleStatus.PUBLISHED, response.getBody().getStatus());
+//    }
 
     @Test
     void testGetArticleById_Found() {

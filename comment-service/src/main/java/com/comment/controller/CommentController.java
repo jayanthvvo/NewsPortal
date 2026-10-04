@@ -44,11 +44,21 @@ public class CommentController {
                 return ResponseEntity.badRequest().body("Error: You can only comment on published articles.");
             }
             
-        } catch (FeignException.NotFound e) {
-            return ResponseEntity.badRequest().body("Error: Article does not exist.");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error: Could not verify article status.");
-        }
+       } catch (FeignException.NotFound e) {
+    	    return ResponseEntity
+    	            .badRequest()
+    	            .body("Error: Article does not exist.");
+
+    	} catch (FeignException.ServiceUnavailable e) {
+    	    return ResponseEntity
+    	            .status(503)
+    	            .body("Error: Article Service is unavailable.");
+
+    	} catch (FeignException e) {
+    	    return ResponseEntity
+    	            .status(503)
+    	            .body("Error: Could not verify article status.");
+    	}
 
        
         comment.setAuthorUsername(authentication.getName());
@@ -59,19 +69,29 @@ public class CommentController {
 	
 	@GetMapping("/article/{articleId}")
 	public ResponseEntity<List<Comment>> getCommentByArticleId(@PathVariable Long articleId){
-		List<Comment> comments=commentRepository.findByArticleId(articleId);
+		List<Comment> comments =
+		        commentRepository.findByArticleIdOrderByCreatedAtDesc(articleId);
 		return ResponseEntity.ok(comments);
 		
 	}
 	@DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<String> deleteComment(@PathVariable Long id) {
-        
-        if (commentRepository.existsById(id)) {
-            commentRepository.deleteById(id);
-            return ResponseEntity.ok("Comment deleted successfully");
-        }
-        
-        return ResponseEntity.badRequest().body("Error: Comment not found.");
-    }
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	public ResponseEntity<String> deleteComment(@PathVariable Long id) {
+
+	    if (commentRepository.existsById(id)) {
+	        commentRepository.deleteById(id);
+	        return ResponseEntity.ok("Comment deleted successfully");
+	    }
+
+	    return ResponseEntity.notFound().build();
+	}
+	@DeleteMapping("/article/{articleId}")
+	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')")
+	public ResponseEntity<String> deleteCommentsByArticle(
+	        @PathVariable Long articleId) {
+
+	    commentRepository.deleteByArticleId(articleId);
+
+	    return ResponseEntity.ok("Comments deleted successfully");
+	}
 }

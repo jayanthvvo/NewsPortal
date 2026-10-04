@@ -71,10 +71,24 @@ public class ArticleController {
     
     @PostMapping("/{id}/status")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')")
-    public ResponseEntity<Article> updateStatus(@PathVariable Long id, @RequestParam String status) {
-       
-        ArticleStatus newStatus = ArticleStatus.valueOf(status.toUpperCase());
-        Article updatedArticle = articleService.updateArticle(id, newStatus);
+    public ResponseEntity<Article> updateStatus(
+            @PathVariable Long id,
+            @RequestParam String status,
+            Authentication authentication) {
+
+        ArticleStatus newStatus =
+                ArticleStatus.valueOf(status.toUpperCase());
+
+        String username = authentication.getName();
+
+        Article updatedArticle =
+                articleService.updateArticle(
+                        id,
+                        newStatus,
+                        username,
+                        authentication.getAuthorities()
+                );
+
         return ResponseEntity.ok(updatedArticle);
     }
     
@@ -110,5 +124,12 @@ public class ArticleController {
         List<Article> myArticles = articleService.getArticlesByAuthor(username);
         return ResponseEntity.ok(myArticles);
     }
-    
+    @GetMapping("/category/{categoryId}/exists")
+    public ResponseEntity<Boolean> categoryHasArticles(
+            @PathVariable Long categoryId) {
+
+        return ResponseEntity.ok(
+            articleService.hasArticlesForCategory(categoryId)
+        );
+    }
 }

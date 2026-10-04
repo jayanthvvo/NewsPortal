@@ -1,15 +1,18 @@
 package com.example.article.service;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import com.example.article.client.CategoryClient;
 import com.example.article.model.Article;
 import com.example.article.model.ArticleStatus;
 import com.example.article.repository.ArticleRepository;
+import com.example.article.client.CommentClient;
 
 import feign.FeignException;
 
@@ -20,6 +23,8 @@ public class ArticleService {
     private ArticleRepository articleRepository;
     @Autowired
     private CategoryClient categoryClient;
+    @Autowired
+    private CommentClient commentClient;
 
     public Article createArticle(Article article, String authorUsername) {
     	
@@ -35,12 +40,11 @@ public class ArticleService {
         }
     	
     	
-        article.setAuthorUsername(authorUsername);
-        article.setCreatedAt(LocalDateTime.now());
-        if (article.getStatus() == null) {
-            article.setStatus(ArticleStatus.DRAFT);
-        }
-         return articleRepository.save(article);
+    	article.setAuthorUsername(authorUsername);
+    	if (article.getStatus() == null) {
+    	    article.setStatus(ArticleStatus.DRAFT);
+    	}
+    	return articleRepository.save(article);
     }
 
     public List<Article> getAllArticles() {
@@ -65,23 +69,99 @@ public class ArticleService {
         return articleRepository.findByAuthorUsername(username);
     }
     
-    public Article updateArticle(Long id,ArticleStatus articleStatus) {
-    	
-    	Article article=articleRepository.findById(id)
-    			.orElseThrow(()->new RuntimeException("Article not found"));
-    	
-    	article.setStatus(articleStatus);
-    	
-    	return articleRepository.save(article);
-    }
+    public Article updateArticle(
+            Long id,
+            ArticleStatus newStatus,
+            String username,
+            Collection<? extends GrantedAuthority> authorities) {
 
-    public boolean deleteArticle(Long id) {
-     
-        if(articleRepository.existsById(id)) {
-            articleRepository.deleteById(id);
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Article not found"));
+
+        boolean isAdmin = authorities.stream()
+                .anyMatch(a ->
+                        a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isEditor = authorities.stream()
+                .anyMatch(a ->
+                        a.getAuthority().equals("ROLE_EDITOR"));
+
+        ArticleStatus currentStatus = article.getStatus();
+
+
+        // ADMIN
+        if (isAdmin) {
+
+            if (!isValidAdminTransition(currentStatus, newStatus)) {
+                throw new RuntimeException(
+                        "Invalid article status transition: "
+                        + currentStatus + " -> " + newStatus);
+            }
+
+            article.setStatus(newStatus);
+
+            return articleRepository.save(article);
+        }
+
+
+        // EDITOR
+        if (isEditor) {
+
+            // Editor can only modify their own article
+            if (!article.getAuthorUsername().equals(username)) {
+                throw new RuntimeException(
+                        "You are not authorized to modify this article");
+            }
+
+            // Editor can only submit DRAFT -> REVIEW
+            if (currentStatus == ArticleStatus.DRAFT
+                    && newStatus == ArticleStatus.REVIEW) {
+
+                article.setStatus(ArticleStatus.REVIEW);
+
+                return articleRepository.save(article);
+            }
+
+            throw new RuntimeException(
+                    "Editors can only submit draft articles for review");
+        }
+
+
+        throw new RuntimeException(
+                "You are not authorized to change article status");
+    }
+    
+    private boolean isValidAdminTransition(
+            ArticleStatus currentStatus,
+            ArticleStatus newStatus) {
+
+        if (currentStatus == ArticleStatus.DRAFT
+                && newStatus == ArticleStatus.REVIEW) {
             return true;
         }
+
+        if (currentStatus == ArticleStatus.REVIEW
+                && newStatus == ArticleStatus.PUBLISHED) {
+            return true;
+        }
+
         return false;
+    }
+    
+    public boolean deleteArticle(Long id) {
+
+        if (!articleRepository.existsById(id)) {
+            return false;
+        }
+
+        // Delete associated comments first
+        commentClient.deleteCommentsByArticle(id);
+
+        // Delete the article only after comment cleanup succeeds
+        articleRepository.deleteById(id);
+
+        return true;
     }
 
     public Article getArticleById(Long id) {
@@ -95,5 +175,9 @@ public class ArticleService {
    
     public List<Article> filterPublishedArticles(Long categoryId, String authorUsername) {
         return articleRepository.filterArticles(categoryId, authorUsername, ArticleStatus.PUBLISHED);
+    }
+    
+    public boolean hasArticlesForCategory(Long categoryId) {
+        return articleRepository.existsByCategoryId(categoryId);
     }
 }

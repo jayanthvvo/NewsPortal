@@ -11,21 +11,26 @@ import com.example.article.model.ArticleStatus;
 
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
-	List<Article> findByAuthorUsername(String authorUsername);
+    List<Article> findByAuthorUsername(String authorUsername);
+
     List<Article> findByStatus(ArticleStatus status);
-    
-    
-    List<Article> findByAuthorUsernameAndStatus(String authorUsername, ArticleStatus status);
-    
-    List<Article> findByTitleContainingIgnoreCaseAndStatus(String keyword, ArticleStatus status);
-    
-   
+
+    List<Article> findByAuthorUsernameAndStatus(
+            String authorUsername,
+            ArticleStatus status);
+
+    List<Article> findByTitleContainingIgnoreCaseAndStatus(
+            String keyword,
+            ArticleStatus status);
+
+    boolean existsByCategoryId(Long categoryId);
+
     @Query("SELECT a FROM Article a WHERE " +
            "(:categoryId IS NULL OR a.categoryId = :categoryId) AND " +
            "(:authorUsername IS NULL OR a.authorUsername = :authorUsername) AND " +
            "a.status = :status")
-    List<Article> filterArticles(@Param("categoryId") Long categoryId, 
-                                 @Param("authorUsername") String authorUsername, 
-                                 @Param("status") ArticleStatus status);
+    List<Article> filterArticles(
+            @Param("categoryId") Long categoryId,
+            @Param("authorUsername") String authorUsername,
+            @Param("status") ArticleStatus status);
 }
-

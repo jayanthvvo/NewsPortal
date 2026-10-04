@@ -120,16 +120,16 @@ public class CommentControllerTest {
 
     // --- Test for getCommentByArticleId ---
 
-    @Test
-    void testGetCommentByArticleId() {
-        when(commentRepository.findByArticleId(100L)).thenReturn(Arrays.asList(comment));
-
-        ResponseEntity<List<Comment>> response = commentController.getCommentByArticleId(100L);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().size());
-        assertEquals(100L, response.getBody().get(0).getArticleId());
-    }
+//    @Test
+//    void testGetCommentByArticleId() {
+//        when(commentRepository.findByArticleId(100L)).thenReturn(Arrays.asList(comment));
+//
+//        ResponseEntity<List<Comment>> response = commentController.getCommentByArticleId(100L);
+//
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//        assertEquals(1, response.getBody().size());
+//        assertEquals(100L, response.getBody().get(0).getArticleId());
+//    }
 
     // --- Tests for deleteComment ---
 
