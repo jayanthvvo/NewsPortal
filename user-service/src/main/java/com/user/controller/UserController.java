@@ -20,65 +20,121 @@ public class UserController {
     @Autowired
     private UserProfileRepository userProfileRepository;
 
-  
+
+    // Get all profiles
     @GetMapping("/all")
     public ResponseEntity<List<UserProfile>> getAllUsers() {
+
         List<UserProfile> users = userProfileRepository.findAll();
+
         return ResponseEntity.ok(users);
     }
-    
+
+
+    // Get profile by username
     @GetMapping("/{username}")
-    public ResponseEntity<?> getProfile(@PathVariable String username) {
-        Optional<UserProfile> profile = userProfileRepository.findByUsername(username);
-        
-        if (profile.isPresent()) {
-            return ResponseEntity.ok(profile.get());
-        } else {
+    public ResponseEntity<?> getProfile(
+            @PathVariable String username) {
+
+        Optional<UserProfile> profile =
+                userProfileRepository.findByUsername(username);
+
+        if (profile.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
+        return ResponseEntity.ok(profile.get());
     }
 
-   
-    @PostMapping("/profile")
-    public ResponseEntity<?> updateProfile(@RequestBody UserProfile updatedProfile, Authentication authentication) {
-        
-        String tokenUsername = authentication.getName();
-        
-       
-        Optional<UserProfile> profileOptional = userProfileRepository.findByUsername(tokenUsername);
 
-        
+    // Update logged-in user's profile
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(
+            @RequestBody UserProfile updatedProfile,
+            Authentication authentication) {
+
+        String username = authentication.getName();
+
+        Optional<UserProfile> profileOptional =
+                userProfileRepository.findByUsername(username);
+
         if (profileOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Error: User profile for '" + tokenUsername + "' not found. Cannot update.");
+
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("User profile not found");
         }
 
-       
         UserProfile profile = profileOptional.get();
-        
-       
+
         profile.setFirstName(updatedProfile.getFirstName());
         profile.setLastName(updatedProfile.getLastName());
         profile.setBio(updatedProfile.getBio());
         profile.setAvatarUrl(updatedProfile.getAvatarUrl());
 
-        UserProfile savedProfile = userProfileRepository.save(profile);
+        /*
+         * Do NOT update username or email here.
+         *
+         * Those belong to the authentication identity
+         * managed by Auth Service.
+         */
+
+        UserProfile savedProfile =
+                userProfileRepository.save(profile);
+
         return ResponseEntity.ok(savedProfile);
     }
+
+
+    // Create initial profile
     @PostMapping("/create")
-    public ResponseEntity<?> createInitialProfile(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> createInitialProfile(
+            @RequestBody Map<String, String> request) {
+
         String username = request.get("username");
-        String email = request.get("email"); 
-        
-        if (userProfileRepository.findByUsername(username).isPresent()) {
-            return ResponseEntity.badRequest().body("Profile already exists");
+        String email = request.get("email");
+
+        if (username == null || username.isBlank()) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body("Username is required");
         }
 
-        UserProfile newProfile = new UserProfile();
-        newProfile.setUsername(username);
-        newProfile.setEmail(email); 
+        if (email == null || email.isBlank()) {
 
-        userProfileRepository.save(newProfile);
-        return ResponseEntity.ok("Profile created successfully");
+            return ResponseEntity
+                    .badRequest()
+                    .body("Email is required");
+        }
+
+
+        if (userProfileRepository.existsByUsername(username)) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body("Username already exists");
+        }
+
+
+        if (userProfileRepository.existsByEmail(email)) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body("Email already exists");
+        }
+
+
+        UserProfile newProfile = new UserProfile();
+
+        newProfile.setUsername(username);
+        newProfile.setEmail(email);
+
+        UserProfile savedProfile =
+                userProfileRepository.save(newProfile);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(savedProfile);
     }
 }
