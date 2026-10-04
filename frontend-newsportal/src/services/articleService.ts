@@ -1,4 +1,3 @@
-
 import api from '../api/axiosConfig';
 
 export interface Article {
@@ -17,6 +16,29 @@ export interface ArticleLikeResponse {
     likeCount: number;
 }
 
+
+// =========================
+// PAGINATION RESPONSE
+// =========================
+
+export interface PaginatedArticles {
+    content: Article[];
+
+    totalElements: number;
+    totalPages: number;
+
+    size: number;
+    number: number;
+
+    first: boolean;
+    last: boolean;
+}
+
+
+// =========================
+// ARTICLE SERVICE
+// =========================
+
 export const articleService = {
 
     // =========================
@@ -24,7 +46,10 @@ export const articleService = {
     // =========================
 
     getPendingReviews: async (): Promise<Article[]> => {
-        const response = await api.get('/articles/pending-review');
+
+        const response =
+            await api.get('/articles/pending-review');
+
         return response.data;
     },
 
@@ -33,27 +58,67 @@ export const articleService = {
     // READER ENDPOINTS
     // =========================
 
-    getArticleById: async (id: number): Promise<Article> => {
-        const response = await api.get(`/articles/${id}`);
+    getArticleById: async (
+        id: number
+    ): Promise<Article> => {
+
+        const response =
+            await api.get(`/articles/${id}`);
+
         return response.data;
     },
 
-    getAllPublishedArticles: async (): Promise<Article[]> => {
-        const response = await api.get('/articles/all');
+
+    // =========================
+    // PAGINATED ARTICLES
+    // =========================
+
+    getAllPublishedArticles: async (
+        page: number = 0,
+        size: number = 10
+    ): Promise<PaginatedArticles> => {
+
+        const response =
+            await api.get('/articles/all', {
+                params: {
+                    page,
+                    size
+                }
+            });
+
         return response.data;
     },
 
-    // Increment article view count
-    incrementView: async (id: number): Promise<Article> => {
-        const response = await api.post(`/articles/${id}/view`);
+
+    // =========================
+    // VIEW COUNT
+    // =========================
+
+    incrementView: async (
+        id: number
+    ): Promise<Article> => {
+
+        const response =
+            await api.post(
+                `/articles/${id}/view`
+            );
+
         return response.data;
     },
 
-    // Like article
+
+    // =========================
+    // LIKE ARTICLE
+    // =========================
+
     likeArticle: async (
         id: number
     ): Promise<ArticleLikeResponse> => {
-        const response = await api.post(`/articles/${id}/like`);
+
+        const response =
+            await api.post(
+                `/articles/${id}/like`
+            );
 
         return {
             articleId: id,
@@ -62,11 +127,19 @@ export const articleService = {
         };
     },
 
-    // Unlike article
+
+    // =========================
+    // UNLIKE ARTICLE
+    // =========================
+
     unlikeArticle: async (
         id: number
     ): Promise<ArticleLikeResponse> => {
-        const response = await api.delete(`/articles/${id}/like`);
+
+        const response =
+            await api.delete(
+                `/articles/${id}/like`
+            );
 
         return {
             articleId: id,
@@ -75,20 +148,33 @@ export const articleService = {
         };
     },
 
-    // Check whether current user liked article
+
+    // =========================
+    // LIKE STATUS
+    // =========================
+
     getLikeStatus: async (
         id: number
     ): Promise<ArticleLikeResponse> => {
-        const response = await api.get(
-            `/articles/${id}/like-status`
-        );
+
+        const response =
+            await api.get(
+                `/articles/${id}/like-status`
+            );
 
         return response.data;
     },
 
-    // Get all articles liked by current user
+
+    // =========================
+    // LIKED ARTICLES
+    // =========================
+
     getLikedArticles: async (): Promise<Article[]> => {
-        const response = await api.get('/articles/liked');
+
+        const response =
+            await api.get('/articles/liked');
+
         return response.data;
     },
 
@@ -101,19 +187,33 @@ export const articleService = {
         id: number,
         status: string
     ): Promise<Article> => {
-        const response = await api.post(
-            `/articles/${id}/status`,
-            null,
-            {
-                params: { status }
-            }
-        );
+
+        const response =
+            await api.post(
+                `/articles/${id}/status`,
+                null,
+                {
+                    params: {
+                        status
+                    }
+                }
+            );
 
         return response.data;
     },
 
-    deleteArticle: async (id: number): Promise<void> => {
-        await api.delete(`/articles/delete/${id}`);
+
+    // =========================
+    // DELETE ARTICLE
+    // =========================
+
+    deleteArticle: async (
+        id: number
+    ): Promise<void> => {
+
+        await api.delete(
+            `/articles/delete/${id}`
+        );
     },
 
 
@@ -128,41 +228,55 @@ export const articleService = {
             categoryId: number;
         }
     ): Promise<Article> => {
-        const response = await api.post(
-            '/articles/create',
-            articleData
-        );
+
+        const response =
+            await api.post(
+                '/articles/create',
+                articleData
+            );
 
         return response.data;
     },
+
 
     getMyArticles: async (): Promise<Article[]> => {
-        const response = await api.get('/articles/my-articles');
+
+        const response =
+            await api.get(
+                '/articles/my-articles'
+            );
+
         return response.data;
     },
+
 
     getArticlesByAuthor: async (
         authorName: string
     ): Promise<Article[]> => {
-        const response = await api.get(
-            `/articles/author/${authorName}`
-        );
+
+        const response =
+            await api.get(
+                `/articles/author/${authorName}`
+            );
 
         return response.data;
     },
 
+
     submitForReview: async (
         id: number
     ): Promise<Article> => {
-        const response = await api.post(
-            `/articles/${id}/status`,
-            null,
-            {
-                params: {
-                    status: 'REVIEW'
+
+        const response =
+            await api.post(
+                `/articles/${id}/status`,
+                null,
+                {
+                    params: {
+                        status: 'REVIEW'
+                    }
                 }
-            }
-        );
+            );
 
         return response.data;
     }
