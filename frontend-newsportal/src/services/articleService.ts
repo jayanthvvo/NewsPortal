@@ -88,6 +88,31 @@ export const articleService = {
 
         return response.data;
     },
+    getFilteredArticles: async (
+    categoryId?: number,
+    author?: string,
+    page: number = 0,
+    size: number = 10
+): Promise<PaginatedArticles> => {
+
+    const response =
+        await api.get('/articles/filter', {
+            params: {
+                ...(categoryId !== undefined
+                    ? { categoryId }
+                    : {}),
+
+                ...(author?.trim()
+                    ? { author: author.trim() }
+                    : {}),
+
+                page,
+                size
+            }
+        });
+
+    return response.data;
+},
 
 
     // =========================

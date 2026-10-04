@@ -51,6 +51,9 @@ const ArticlesDashboard: React.FC = () => {
     const [authorSearch, setAuthorSearch] =
         useState('');
 
+    const [selectedCategoryId, setSelectedCategoryId] =
+        useState<number | null>(null);
+
 
     // =========================
     // ARTICLE VIEW
@@ -98,11 +101,13 @@ const ArticlesDashboard: React.FC = () => {
 
 
     // =========================
-    // FETCH PAGINATED ARTICLES
+    // FETCH ARTICLES
     // =========================
 
     const fetchData = async (
-        page: number
+        page: number,
+        categoryId: number | null = selectedCategoryId,
+        author: string = authorSearch
     ) => {
 
         try {
@@ -110,19 +115,25 @@ const ArticlesDashboard: React.FC = () => {
             setLoading(true);
 
 
-            const [
-                articlesData,
-                categoriesData
-            ] = await Promise.all([
+            const hasFilters =
+                categoryId !== null ||
+                author.trim() !== '';
 
-                articleService.getAllPublishedArticles(
-                    page,
-                    ARTICLES_PER_PAGE
-                ),
 
-                categoryService.getAllCategories()
+            const articlesData =
+                hasFilters
 
-            ]);
+                    ? await articleService.getFilteredArticles(
+                          categoryId ?? undefined,
+                          author.trim() || undefined,
+                          page,
+                          ARTICLES_PER_PAGE
+                      )
+
+                    : await articleService.getAllPublishedArticles(
+                          page,
+                          ARTICLES_PER_PAGE
+                      );
 
 
             setArticles(
@@ -145,9 +156,16 @@ const ArticlesDashboard: React.FC = () => {
             );
 
 
-            setCategories(
-                categoriesData
-            );
+            // Load categories if they are not already loaded
+            if (categories.length === 0) {
+
+                const categoriesData =
+                    await categoryService.getAllCategories();
+
+                setCategories(
+                    categoriesData
+                );
+            }
 
 
         } catch (error) {
@@ -187,10 +205,47 @@ const ArticlesDashboard: React.FC = () => {
 
         setSearchQuery('');
 
-        fetchData(page);
+
+        fetchData(
+            page,
+            selectedCategoryId,
+            authorSearch
+        );
 
 
         // Scroll back to top
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+
+
+    // =========================
+    // CATEGORY CHANGE
+    // =========================
+
+    const handleCategoryChange = (
+        categoryId: number | null
+    ) => {
+
+        setSelectedCategoryId(
+            categoryId
+        );
+
+        setCurrentPage(0);
+
+        setSearchQuery('');
+
+
+        // Always start category results from page 1
+        fetchData(
+            0,
+            categoryId,
+            authorSearch
+        );
+
+
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
@@ -204,59 +259,22 @@ const ArticlesDashboard: React.FC = () => {
 
     const handleAuthorSearch = async () => {
 
-        try {
+        setCurrentPage(0);
 
-            setLoading(true);
-
-
-            // If author search is cleared,
-            // return to normal pagination.
-            if (!authorSearch.trim()) {
-
-                setCurrentPage(0);
-
-                await fetchData(0);
-
-                return;
-            }
+        setSearchQuery('');
 
 
-            const articlesByAuthor =
-                await articleService.getArticlesByAuthor(
-                    authorSearch.trim()
-                );
+        await fetchData(
+            0,
+            selectedCategoryId,
+            authorSearch
+        );
 
 
-            setArticles(
-                articlesByAuthor
-            );
-
-
-            // Author endpoint currently
-            // returns List<Article>, not Page.
-            setTotalPages(0);
-
-            setTotalElements(
-                articlesByAuthor.length
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                'Error fetching articles by author',
-                error
-            );
-
-            toast.error(
-                'Unable to search articles by author.'
-            );
-
-        } finally {
-
-            setLoading(false);
-
-        }
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     };
 
 
@@ -333,6 +351,7 @@ const ArticlesDashboard: React.FC = () => {
 
         const pages: number[] = [];
 
+
         for (
             let i = 0;
             i < totalPages;
@@ -342,6 +361,7 @@ const ArticlesDashboard: React.FC = () => {
             pages.push(i);
 
         }
+
 
         return pages;
     };
@@ -558,27 +578,27 @@ const ArticlesDashboard: React.FC = () => {
                                 </h2>
 
 
-                                {!authorSearch && (
-                                    <p
-                                        className="
-                                            mt-1
-                                            text-sm
-                                            text-[var(--text)]
-                                            font-sans
-                                        "
-                                    >
-                                        Showing{' '}
-                                        {articles.length}{' '}
-                                        of{' '}
-                                        {totalElements}{' '}
-                                        articles
-                                    </p>
-                                )}
+                                <p
+                                    className="
+                                        mt-1
+                                        text-sm
+                                        text-[var(--text)]
+                                        font-sans
+                                    "
+                                >
+                                    Showing{' '}
+                                    {articles.length}{' '}
+                                    of{' '}
+                                    {totalElements}{' '}
+                                    articles
+                                </p>
 
                             </div>
 
 
-                            {/* SEARCH */}
+                            {/* =========================
+                                SEARCH / FILTERS
+                            ========================= */}
 
                             <div
                                 className="
@@ -692,6 +712,76 @@ const ArticlesDashboard: React.FC = () => {
                                     </button>
 
                                 </div>
+
+
+                                {/* CATEGORY FILTER */}
+
+                                <select
+                                    value={
+                                        selectedCategoryId !== null
+                                            ? selectedCategoryId
+                                            : ''
+                                    }
+                                    onChange={e => {
+
+                                        const value =
+                                            e.target.value;
+
+
+                                        const categoryId =
+                                            value === ''
+                                                ? null
+                                                : Number(value);
+
+
+                                        handleCategoryChange(
+                                            categoryId
+                                        );
+
+                                    }}
+                                    className="
+                                        p-2.5
+                                        rounded-lg
+                                        border
+                                        border-[var(--border)]
+                                        bg-[var(--code-bg)]
+                                        text-[var(--text-h)]
+                                        focus:ring-2
+                                        focus:ring-[var(--accent)]
+                                        outline-none
+                                        transition-all
+                                        shadow-sm
+                                        w-full
+                                        md:w-48
+                                        font-sans
+                                    "
+                                >
+
+                                    <option value="">
+                                        All Categories
+                                    </option>
+
+
+                                    {categories.map(
+                                        category => (
+
+                                            <option
+                                                key={
+                                                    category.id
+                                                }
+                                                value={
+                                                    category.id
+                                                }
+                                            >
+                                                {
+                                                    category.name
+                                                }
+                                            </option>
+
+                                        )
+                                    )}
+
+                                </select>
 
                             </div>
 
@@ -857,9 +947,11 @@ const ArticlesDashboard: React.FC = () => {
                                                             font-sans
                                                         "
                                                     >
-                                                        {getCategoryName(
-                                                            article.categoryId
-                                                        )}
+                                                        {
+                                                            getCategoryName(
+                                                                article.categoryId
+                                                            )
+                                                        }
                                                     </div>
 
 
@@ -925,7 +1017,9 @@ const ArticlesDashboard: React.FC = () => {
                                                 </div>
 
 
-                                                {/* FOOTER */}
+                                                {/* =========================
+                                                    FOOTER
+                                                ========================= */}
 
                                                 <div
                                                     className="
@@ -972,139 +1066,134 @@ const ArticlesDashboard: React.FC = () => {
                                     PAGINATION
                                 ========================= */}
 
-                                {!authorSearch &&
-                                    totalPages > 1 && (
+                                {totalPages > 1 && (
+
+                                    <div
+                                        className="
+                                            mt-12
+                                            flex
+                                            flex-col
+                                            sm:flex-row
+                                            items-center
+                                            justify-center
+                                            gap-3
+                                            font-sans
+                                        "
+                                    >
+
+                                        {/* PREVIOUS */}
+
+                                        <button
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    currentPage - 1
+                                                )
+                                            }
+                                            disabled={
+                                                currentPage === 0
+                                            }
+                                            className="
+                                                px-4
+                                                py-2
+                                                rounded-lg
+                                                border
+                                                border-[var(--border)]
+                                                bg-[var(--code-bg)]
+                                                text-[var(--text-h)]
+                                                font-semibold
+                                                disabled:opacity-40
+                                                disabled:cursor-not-allowed
+                                                hover:bg-[var(--accent-bg)]
+                                                transition-colors
+                                            "
+                                        >
+                                            ← Previous
+                                        </button>
+
+
+                                        {/* PAGE NUMBERS */}
 
                                         <div
                                             className="
-                                                mt-12
                                                 flex
-                                                flex-col
-                                                sm:flex-row
                                                 items-center
+                                                gap-2
+                                                flex-wrap
                                                 justify-center
-                                                gap-3
-                                                font-sans
                                             "
                                         >
 
-                                            {/* PREVIOUS */}
+                                            {getPageNumbers().map(
+                                                page => (
 
-                                            <button
-                                                onClick={() =>
-                                                    handlePageChange(
-                                                        currentPage -
-                                                            1
-                                                    )
-                                                }
-                                                disabled={
-                                                    currentPage ===
-                                                    0
-                                                }
-                                                className="
-                                                    px-4
-                                                    py-2
-                                                    rounded-lg
-                                                    border
-                                                    border-[var(--border)]
-                                                    bg-[var(--code-bg)]
-                                                    text-[var(--text-h)]
-                                                    font-semibold
-                                                    disabled:opacity-40
-                                                    disabled:cursor-not-allowed
-                                                    hover:bg-[var(--accent-bg)]
-                                                    transition-colors
-                                                "
-                                            >
-                                                ← Previous
-                                            </button>
-
-
-                                            {/* PAGE NUMBERS */}
-
-                                            <div
-                                                className="
-                                                    flex
-                                                    items-center
-                                                    gap-2
-                                                    flex-wrap
-                                                    justify-center
-                                                "
-                                            >
-
-                                                {getPageNumbers().map(
-                                                    page => (
-
-                                                        <button
-                                                            key={
+                                                    <button
+                                                        key={
+                                                            page
+                                                        }
+                                                        onClick={() =>
+                                                            handlePageChange(
                                                                 page
+                                                            )
+                                                        }
+                                                        className={`
+                                                            min-w-[40px]
+                                                            px-3
+                                                            py-2
+                                                            rounded-lg
+                                                            border
+                                                            font-semibold
+                                                            transition-colors
+
+                                                            ${
+                                                                currentPage ===
+                                                                page
+                                                                    ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                                                                    : 'bg-[var(--code-bg)] text-[var(--text-h)] border-[var(--border)] hover:bg-[var(--accent-bg)]'
                                                             }
-                                                            onClick={() =>
-                                                                handlePageChange(
-                                                                    page
-                                                                )
-                                                            }
-                                                            className={`
-                                                                min-w-[40px]
-                                                                px-3
-                                                                py-2
-                                                                rounded-lg
-                                                                border
-                                                                font-semibold
-                                                                transition-colors
+                                                        `}
+                                                    >
+                                                        {page + 1}
+                                                    </button>
 
-                                                                ${
-                                                                    currentPage ===
-                                                                    page
-                                                                        ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                                                                        : 'bg-[var(--code-bg)] text-[var(--text-h)] border-[var(--border)] hover:bg-[var(--accent-bg)]'
-                                                                }
-                                                            `}
-                                                        >
-                                                            {page +
-                                                                1}
-                                                        </button>
-
-                                                    )
-                                                )}
-
-                                            </div>
-
-
-                                            {/* NEXT */}
-
-                                            <button
-                                                onClick={() =>
-                                                    handlePageChange(
-                                                        currentPage +
-                                                            1
-                                                    )
-                                                }
-                                                disabled={
-                                                    currentPage ===
-                                                    totalPages - 1
-                                                }
-                                                className="
-                                                    px-4
-                                                    py-2
-                                                    rounded-lg
-                                                    border
-                                                    border-[var(--border)]
-                                                    bg-[var(--code-bg)]
-                                                    text-[var(--text-h)]
-                                                    font-semibold
-                                                    disabled:opacity-40
-                                                    disabled:cursor-not-allowed
-                                                    hover:bg-[var(--accent-bg)]
-                                                    transition-colors
-                                                "
-                                            >
-                                                Next →
-                                            </button>
+                                                )
+                                            )}
 
                                         </div>
 
-                                    )}
+
+                                        {/* NEXT */}
+
+                                        <button
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    currentPage + 1
+                                                )
+                                            }
+                                            disabled={
+                                                currentPage ===
+                                                totalPages - 1
+                                            }
+                                            className="
+                                                px-4
+                                                py-2
+                                                rounded-lg
+                                                border
+                                                border-[var(--border)]
+                                                bg-[var(--code-bg)]
+                                                text-[var(--text-h)]
+                                                font-semibold
+                                                disabled:opacity-40
+                                                disabled:cursor-not-allowed
+                                                hover:bg-[var(--accent-bg)]
+                                                transition-colors
+                                            "
+                                        >
+                                            Next →
+                                        </button>
+
+                                    </div>
+
+                                )}
 
                             </>
 
