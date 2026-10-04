@@ -1,8 +1,15 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
-import { articleService, type Article } from '../services/articleService';
-import { commentService, type Comment } from '../services/commentService';
+import {
+    articleService,
+    type Article
+} from '../services/articleService';
+import {
+    commentService,
+    type Comment
+} from '../services/commentService';
 import { authService } from '../services/authService';
 
 interface FullArticleProps {
@@ -10,7 +17,10 @@ interface FullArticleProps {
     onBack?: () => void;
 }
 
-const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
+const FullArticle: React.FC<FullArticleProps> = ({
+    articleId,
+    onBack
+}) => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
@@ -21,63 +31,189 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
     const [newComment, setNewComment] = useState('');
     const [loading, setLoading] = useState(true);
 
-    // Modal State for deleting comments
-    const [commentToDelete, setCommentToDelete] = useState<number | null>(null);
+    const [liked, setLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(0);
+    const [likeLoading, setLikeLoading] = useState(false);
 
-    // Get user role to conditionally render admin features
+    // Modal state for deleting comments
+    const [commentToDelete, setCommentToDelete] =
+        useState<number | null>(null);
+
     const userRole = authService.getRole();
 
     useEffect(() => {
-        if (!activeId) return;
+        if (!activeId) {
+            return;
+        }
 
         fetchArticleAndComments(activeId);
     }, [activeId]);
 
-    const fetchArticleAndComments = async (targetId: number) => {
+    const fetchArticleAndComments = async (
+        targetId: number
+    ) => {
         try {
             setLoading(true);
 
-            // Fetch article separately
-            const fetchedArticle = await articleService.getArticleById(targetId);
+            // =========================
+            // 1. FETCH ARTICLE
+            // =========================
+
+            const fetchedArticle =
+                await articleService.getArticleById(targetId);
+
             setArticle(fetchedArticle);
 
-            // Fetch comments separately
+            // =========================
+            // 2. INCREMENT VIEW COUNT
+            // =========================
+
+            try {
+                const updatedArticle =
+                    await articleService.incrementView(targetId);
+
+                setArticle(prev =>
+                    prev
+                        ? {
+                              ...prev,
+                              viewCount:
+                                  updatedArticle.viewCount ??
+                                  (prev.viewCount || 0) + 1
+                          }
+                        : prev
+                );
+            } catch (error) {
+                console.error(
+                    'Failed to increment view count:',
+                    error
+                );
+            }
+
+            // =========================
+            // 3. GET LIKE STATUS
+            // =========================
+
+            try {
+                const likeStatus =
+                    await articleService.getLikeStatus(targetId);
+
+                setLiked(likeStatus.liked);
+                setLikeCount(likeStatus.likeCount);
+            } catch (error) {
+                console.error(
+                    'Failed to load like status:',
+                    error
+                );
+            }
+
+            // =========================
+            // 4. FETCH COMMENTS
+            // =========================
+
             try {
                 const fetchedComments =
-                    await commentService.getCommentsByArticle(targetId);
+                    await commentService.getCommentsByArticle(
+                        targetId
+                    );
 
                 setComments(fetchedComments);
             } catch (error) {
-                console.error("Failed to load comments", error);
-                toast.error("Unable to load comments.");
+                console.error(
+                    'Failed to load comments:',
+                    error
+                );
+
+                toast.error(
+                    'Unable to load comments.'
+                );
+
                 setComments([]);
             }
 
         } catch (error) {
-            console.error("Failed to load article", error);
-            toast.error("Article not found!");
+            console.error(
+                'Failed to load article:',
+                error
+            );
+
+            toast.error('Article not found!');
 
             if (onBack) {
                 onBack();
             } else {
                 navigate('/articles');
             }
+
         } finally {
             setLoading(false);
         }
     };
 
-    const handlePostComment = async (e: React.FormEvent) => {
+
+    // =========================
+    // LIKE / UNLIKE
+    // =========================
+
+    const handleLike = async () => {
+        if (!article?.id || likeLoading) {
+            return;
+        }
+
+        try {
+            setLikeLoading(true);
+
+            if (liked) {
+                const response =
+                    await articleService.unlikeArticle(
+                        article.id
+                    );
+
+                setLiked(false);
+                setLikeCount(response.likeCount);
+
+            } else {
+                const response =
+                    await articleService.likeArticle(
+                        article.id
+                    );
+
+                setLiked(true);
+                setLikeCount(response.likeCount);
+            }
+
+        } catch (error) {
+            console.error(
+                'Failed to update like:',
+                error
+            );
+
+            toast.error(
+                'Unable to update like. Please try again.'
+            );
+
+        } finally {
+            setLikeLoading(false);
+        }
+    };
+
+
+    // =========================
+    // POST COMMENT
+    // =========================
+
+    const handlePostComment = async (
+        e: React.FormEvent
+    ) => {
         e.preventDefault();
 
         if (!newComment.trim() || !article) {
             return;
         }
 
-        const toastId = toast.loading("Posting comment...");
+        const toastId =
+            toast.loading('Posting comment...');
 
         try {
-            // Step 1: Create the comment
             await commentService.postComment({
                 articleId: article.id!,
                 content: newComment
@@ -85,66 +221,101 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
 
             setNewComment('');
 
-            toast.success("Comment posted successfully!", {
-                id: toastId
-            });
+            toast.success(
+                'Comment posted successfully!',
+                {
+                    id: toastId
+                }
+            );
 
-            // Step 2: Refresh comments separately
             try {
                 const updatedComments =
-                    await commentService.getCommentsByArticle(article.id!);
+                    await commentService.getCommentsByArticle(
+                        article.id!
+                    );
 
                 setComments(updatedComments);
+
             } catch (error) {
-                console.error("Comment was posted but refresh failed:", error);
+                console.error(
+                    'Comment was posted but refresh failed:',
+                    error
+                );
 
                 toast.error(
-                    "Comment posted, but comments could not be refreshed."
+                    'Comment posted, but comments could not be refreshed.'
                 );
             }
 
         } catch (error) {
-            console.error("Failed to post comment:", error);
+            console.error(
+                'Failed to post comment:',
+                error
+            );
 
             toast.error(
-                "Failed to post comment. Please try again.",
-                { id: toastId }
+                'Failed to post comment. Please try again.',
+                {
+                    id: toastId
+                }
             );
         }
     };
+
+
+    // =========================
+    // DELETE COMMENT
+    // =========================
 
     const confirmDeleteComment = async () => {
         if (!commentToDelete) {
             return;
         }
 
-        const toastId = toast.loading("Deleting comment...");
+        const toastId =
+            toast.loading('Deleting comment...');
 
         try {
-            await commentService.deleteComment(commentToDelete);
+            await commentService.deleteComment(
+                commentToDelete
+            );
 
-            // Immediately remove the deleted comment from the state
             setComments(prevComments =>
                 prevComments.filter(
-                    comment => comment.id !== commentToDelete
+                    comment =>
+                        comment.id !== commentToDelete
                 )
             );
 
-            toast.success("Comment deleted permanently.", {
-                id: toastId
-            });
+            toast.success(
+                'Comment deleted permanently.',
+                {
+                    id: toastId
+                }
+            );
 
         } catch (error) {
-            console.error("Failed to delete comment:", error);
+            console.error(
+                'Failed to delete comment:',
+                error
+            );
 
             toast.error(
-                "Failed to delete comment.",
-                { id: toastId }
+                'Failed to delete comment.',
+                {
+                    id: toastId
+                }
             );
+
         } finally {
             setCommentToDelete(null);
         }
     };
+
+
+    // =========================
+    // BACK
+    // =========================
 
     const handleBackClick = () => {
         if (onBack) {
@@ -154,11 +325,18 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
         }
     };
 
+
+    // =========================
+    // LOADING
+    // =========================
+
     if (loading) {
         return (
             <div
                 className={`flex items-center justify-center bg-[var(--bg)] text-[var(--text)] ${
-                    !onBack ? 'min-h-screen' : 'py-20'
+                    !onBack
+                        ? 'min-h-screen'
+                        : 'py-20'
                 }`}
             >
                 <div className="text-xl animate-pulse font-sans">
@@ -168,19 +346,30 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
         );
     }
 
+
     if (!article) {
         return null;
     }
 
+
     return (
         <div
             className={`bg-[var(--bg)] font-sans relative ${
-                !onBack ? 'min-h-screen pb-16' : 'pb-6'
+                !onBack
+                    ? 'min-h-screen pb-16'
+                    : 'pb-6'
             }`}
         >
-            <Toaster position="top-right" reverseOrder={false} />
+            <Toaster
+                position="top-right"
+                reverseOrder={false}
+            />
 
-            {/* Header */}
+
+            {/* =========================
+                HEADER
+            ========================= */}
+
             {!onBack ? (
                 <header className="px-6 py-5 md:px-10 border-b border-[var(--border)] flex justify-between items-center sticky top-0 bg-[var(--bg)] z-10 shadow-sm">
 
@@ -210,22 +399,30 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
                 </div>
             )}
 
+
             <main
                 className={`max-w-3xl mx-auto ${
-                    !onBack ? 'mt-10 px-6 md:px-0' : ''
+                    !onBack
+                        ? 'mt-10 px-6 md:px-0'
+                        : ''
                 }`}
             >
 
-                {/* ARTICLE CONTENT */}
+                {/* =========================
+                    ARTICLE
+                ========================= */}
+
                 <article>
 
                     <h1 className="text-4xl md:text-5xl font-bold leading-tight text-[var(--text-h)] mb-6 font-serif">
                         {article.title}
                     </h1>
 
-                    <div className="text-base text-[var(--text)] border-b-2 border-[var(--border)] pb-5 mb-8 italic">
+
+                    <div className="text-base text-[var(--text)] border-b-2 border-[var(--border)] pb-5 mb-6 italic">
 
                         Written by{' '}
+
                         <strong className="text-[var(--text-h)]">
                             {article.author}
                         </strong>
@@ -238,20 +435,88 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
 
                     </div>
 
+
+                    {/* =========================
+                        ARTICLE STATS
+                    ========================= */}
+
+                    <div className="flex flex-wrap items-center gap-6 mb-8 text-sm text-[var(--text)] font-sans">
+
+                        {/* VIEWS */}
+
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg">
+                                👁️
+                            </span>
+
+                            <span className="font-semibold">
+                                {article.viewCount || 0}
+                            </span>
+
+                            <span>
+                                {article.viewCount === 1
+                                    ? 'view'
+                                    : 'views'}
+                            </span>
+                        </div>
+
+
+                        {/* LIKES */}
+
+                        <button
+                            onClick={handleLike}
+                            disabled={likeLoading}
+                            className={`flex items-center gap-2 font-semibold transition-all ${
+                                liked
+                                    ? 'text-red-500'
+                                    : 'text-[var(--text)] hover:text-red-500'
+                            } ${
+                                likeLoading
+                                    ? 'opacity-50 cursor-not-allowed'
+                                    : 'cursor-pointer'
+                            }`}
+                        >
+
+                            <span className="text-xl">
+                                {liked
+                                    ? '❤️'
+                                    : '♡'}
+                            </span>
+
+                            <span>
+                                {likeCount}{' '}
+                                {likeCount === 1
+                                    ? 'like'
+                                    : 'likes'}
+                            </span>
+
+                        </button>
+
+                    </div>
+
+
+                    {/* CONTENT */}
+
                     <div className="text-lg md:text-xl leading-relaxed text-[var(--text-h)] whitespace-pre-wrap font-serif">
                         {article.content}
                     </div>
 
                 </article>
 
-                {/* COMMENTS SECTION */}
+
+                {/* =========================
+                    COMMENTS
+                ========================= */}
+
                 <section className="mt-16 border-t border-[var(--border)] pt-10 font-sans">
 
                     <h3 className="text-2xl font-bold mb-6 text-[var(--text-h)]">
                         Discussion ({comments.length})
                     </h3>
 
-                    {/* Post a comment form */}
+
+                    {/* POST COMMENT */}
+
                     <div className="bg-[var(--code-bg)] p-6 rounded-xl mb-10 border border-[var(--border)] shadow-sm">
 
                         <form
@@ -262,7 +527,9 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
                             <textarea
                                 value={newComment}
                                 onChange={(e) =>
-                                    setNewComment(e.target.value)
+                                    setNewComment(
+                                        e.target.value
+                                    )
                                 }
                                 placeholder="Share your thoughts on this story..."
                                 required
@@ -281,9 +548,12 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
                             </div>
 
                         </form>
+
                     </div>
 
-                    {/* List of comments */}
+
+                    {/* COMMENTS LIST */}
+
                     <div className="flex flex-col gap-5">
 
                         {comments.length === 0 ? (
@@ -292,50 +562,64 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
                                 conversation!
                             </p>
                         ) : (
-                            comments.map((comment, index) => (
-                                <div
-                                    key={comment.id || index}
-                                    className="p-6 border border-[var(--border)] rounded-xl bg-[var(--bg)] shadow-sm hover:border-[var(--accent-border)] transition-colors relative"
-                                >
+                            comments.map(
+                                (comment, index) => (
+                                    <div
+                                        key={
+                                            comment.id ||
+                                            index
+                                        }
+                                        className="p-6 border border-[var(--border)] rounded-xl bg-[var(--bg)] shadow-sm hover:border-[var(--accent-border)] transition-colors relative"
+                                    >
 
-                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="flex justify-between items-start mb-3">
 
-                                        <div className="font-bold text-[var(--accent)] text-lg">
-                                            {comment.authorUsername ||
-                                                'Anonymous'}
+                                            <div className="font-bold text-[var(--accent)] text-lg">
+                                                {comment.authorUsername ||
+                                                    'Anonymous'}
+                                            </div>
+
+
+                                            {/* ADMIN DELETE */}
+
+                                            {userRole ===
+                                                'ROLE_ADMIN' &&
+                                                comment.id && (
+                                                    <button
+                                                        onClick={() =>
+                                                            setCommentToDelete(
+                                                                comment.id!
+                                                            )
+                                                        }
+                                                        className="text-xs font-bold text-red-600 bg-red-100 hover:bg-red-200 dark:text-red-400 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1.5 rounded transition-colors"
+                                                    >
+                                                        🗑 Delete
+                                                    </button>
+                                                )}
+
                                         </div>
 
-                                        {/* CONDITIONAL DELETE BUTTON FOR ADMINS */}
-                                        {userRole === 'ROLE_ADMIN' &&
-                                            comment.id && (
-                                                <button
-                                                    onClick={() =>
-                                                        setCommentToDelete(
-                                                            comment.id!
-                                                        )
-                                                    }
-                                                    className="text-xs font-bold text-red-600 bg-red-100 hover:bg-red-200 dark:text-red-400 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-3 py-1.5 rounded transition-colors"
-                                                >
-                                                    🗑 Delete
-                                                </button>
-                                            )}
+
+                                        <div className="text-[var(--text-h)] leading-relaxed text-base">
+                                            {comment.content}
+                                        </div>
 
                                     </div>
-
-                                    <div className="text-[var(--text-h)] leading-relaxed text-base">
-                                        {comment.content}
-                                    </div>
-
-                                </div>
-                            ))
+                                )
+                            )
                         )}
 
                     </div>
+
                 </section>
 
             </main>
 
-            {/* COMMENT DELETION CONFIRMATION MODAL */}
+
+            {/* =========================
+                DELETE COMMENT MODAL
+            ========================= */}
+
             {commentToDelete && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
 
@@ -353,7 +637,9 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
                         <div className="flex justify-end gap-3">
 
                             <button
-                                onClick={() => setCommentToDelete(null)}
+                                onClick={() =>
+                                    setCommentToDelete(null)
+                                }
                                 className="px-4 py-2 rounded-lg font-semibold bg-[var(--bg)] border border-[var(--border)] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                             >
                                 Cancel
@@ -367,7 +653,9 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
                             </button>
 
                         </div>
+
                     </div>
+
                 </div>
             )}
 

@@ -130,15 +130,7 @@ public class ArticleController {
         return ResponseEntity.ok(updatedArticle);
     }
     
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getArticleById(@PathVariable Long id) {
-        try {
-            Article article = articleService.getArticleById(id);
-            return ResponseEntity.ok(article);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+   
     @GetMapping("/search")
     public ResponseEntity<List<Article>> searchArticles(@RequestParam String keyword) {
         List<Article> results = articleService.searchPublishedArticles(keyword);
@@ -179,5 +171,21 @@ public class ArticleController {
         return ResponseEntity.ok(
                 articleService.getLikedArticles(username)
         );
+    }
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getArticleById(
+            @PathVariable Long id) {
+
+        try {
+            Article article =
+                    articleService.getArticleById(id);
+
+            return ResponseEntity.ok(article);
+
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

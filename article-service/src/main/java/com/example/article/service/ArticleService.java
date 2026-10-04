@@ -8,6 +8,7 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.article.DTO.ArticleLikeResponse;
 import com.example.article.client.CategoryClient;
@@ -22,234 +23,208 @@ import feign.FeignException;
 @Service
 public class ArticleService {
 
-    @Autowired
-    private ArticleRepository articleRepository;
-    @Autowired
-    private CategoryClient categoryClient;
-    @Autowired
-    private CommentClient commentClient;
-    
-    @Autowired
-    private ArticleLikeRepository articleLikeRepository;
+	@Autowired
+	private ArticleRepository articleRepository;
+	@Autowired
+	private CategoryClient categoryClient;
+	@Autowired
+	private CommentClient commentClient;
 
-    public Article createArticle(Article article, String authorUsername) {
-    	
-    	if (article.getCategoryId()==null) {
+	@Autowired
+	private ArticleLikeRepository articleLikeRepository;
+
+	public Article createArticle(Article article, String authorUsername) {
+
+		if (article.getCategoryId() == null) {
 			throw new RuntimeException("Article must be assigned to some category");
 		}
-    	try {
-    		categoryClient.getCategoryById(article.getCategoryId());
-    	}catch (FeignException.NotFound e) {
-    		throw new RuntimeException("Invalid Category ID: Category does not exist.");
-        } catch (Exception e) {
-            throw new RuntimeException("Could not verify category. Category Service might be down.");
-        }
-    	
-    	
-    	article.setAuthorUsername(authorUsername);
-    	if (article.getStatus() == null) {
-    	    article.setStatus(ArticleStatus.DRAFT);
-    	}
-    	return articleRepository.save(article);
-    }
+		try {
+			categoryClient.getCategoryById(article.getCategoryId());
+		} catch (FeignException.NotFound e) {
+			throw new RuntimeException("Invalid Category ID: Category does not exist.");
+		} catch (Exception e) {
+			throw new RuntimeException("Could not verify category. Category Service might be down.");
+		}
 
-    public Article incrementViewCount(Long id) {
-        Article article = articleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Article not found"));
+		article.setAuthorUsername(authorUsername);
+		if (article.getStatus() == null) {
+			article.setStatus(ArticleStatus.DRAFT);
+		}
+		return articleRepository.save(article);
+	}
 
-        article.incrementViewCount();
+	@Transactional
+	public Article incrementViewCount(Long id) {
 
-        return articleRepository.save(article);
-    }
-    public List<Article> getAllArticles() {
-        return articleRepository.findAll();
-    }
-    //Users
-    public List<Article> getPublishedArticles() {
-        return articleRepository.findByStatus(ArticleStatus.PUBLISHED);
-    }
+		int updatedRows = articleRepository.incrementViewCount(id);
 
-    // Authors
-    public List<Article> getDraftsForAuthor(String username) {
-        return articleRepository.findByAuthorUsernameAndStatus(username, ArticleStatus.DRAFT);
-    }
+		if (updatedRows == 0) {
+			throw new RuntimeException("Article not found");
+		}
 
-    // Admins 
-    public List<Article> getArticlesPendingReview() {
-        return articleRepository.findByStatus(ArticleStatus.REVIEW);
-    }
-    
-    public List<Article> getArticlesByAuthor(String username) {
-        return articleRepository.findByAuthorUsername(username);
-    }
-    
-    public Article updateArticle(
-            Long id,
-            ArticleStatus newStatus,
-            String username,
-            Collection<? extends GrantedAuthority> authorities) {
+		return articleRepository.findById(id).orElseThrow(() -> new RuntimeException("Article not found"));
+	}
 
-        Article article = articleRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Article not found"));
+	public List<Article> getAllArticles() {
+		return articleRepository.findAll();
+	}
 
-        boolean isAdmin = authorities.stream()
-                .anyMatch(a ->
-                        a.getAuthority().equals("ROLE_ADMIN"));
+	// Users
+	public List<Article> getPublishedArticles() {
+		return articleRepository.findByStatus(ArticleStatus.PUBLISHED);
+	}
 
-        boolean isEditor = authorities.stream()
-                .anyMatch(a ->
-                        a.getAuthority().equals("ROLE_EDITOR"));
+	// Authors
+	public List<Article> getDraftsForAuthor(String username) {
+		return articleRepository.findByAuthorUsernameAndStatus(username, ArticleStatus.DRAFT);
+	}
 
-        ArticleStatus currentStatus = article.getStatus();
+	// Admins
+	public List<Article> getArticlesPendingReview() {
+		return articleRepository.findByStatus(ArticleStatus.REVIEW);
+	}
 
+	public List<Article> getArticlesByAuthor(String username) {
+		return articleRepository.findByAuthorUsername(username);
+	}
 
-        // ADMIN
-        if (isAdmin) {
+	public Article updateArticle(Long id, ArticleStatus newStatus, String username,
+			Collection<? extends GrantedAuthority> authorities) {
 
-            if (!isValidAdminTransition(currentStatus, newStatus)) {
-                throw new RuntimeException(
-                        "Invalid article status transition: "
-                        + currentStatus + " -> " + newStatus);
-            }
+		Article article = articleRepository.findById(id).orElseThrow(() -> new RuntimeException("Article not found"));
 
-            article.setStatus(newStatus);
+		boolean isAdmin = authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-            return articleRepository.save(article);
-        }
+		boolean isEditor = authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_EDITOR"));
 
+		ArticleStatus currentStatus = article.getStatus();
 
-        // EDITOR
-        if (isEditor) {
+		// ADMIN
+		if (isAdmin) {
 
-            // Editor can only modify their own article
-            if (!article.getAuthorUsername().equals(username)) {
-                throw new RuntimeException(
-                        "You are not authorized to modify this article");
-            }
+			if (!isValidAdminTransition(currentStatus, newStatus)) {
+				throw new RuntimeException("Invalid article status transition: " + currentStatus + " -> " + newStatus);
+			}
 
-            // Editor can only submit DRAFT -> REVIEW
-            if (currentStatus == ArticleStatus.DRAFT
-                    && newStatus == ArticleStatus.REVIEW) {
+			article.setStatus(newStatus);
 
-                article.setStatus(ArticleStatus.REVIEW);
+			return articleRepository.save(article);
+		}
 
-                return articleRepository.save(article);
-            }
+		// EDITOR
+		if (isEditor) {
 
-            throw new RuntimeException(
-                    "Editors can only submit draft articles for review");
-        }
+			// Editor can only modify their own article
+			if (!article.getAuthorUsername().equals(username)) {
+				throw new RuntimeException("You are not authorized to modify this article");
+			}
 
+			// Editor can only submit DRAFT -> REVIEW
+			if (currentStatus == ArticleStatus.DRAFT && newStatus == ArticleStatus.REVIEW) {
 
-        throw new RuntimeException(
-                "You are not authorized to change article status");
-    }
-    
-    private boolean isValidAdminTransition(
-            ArticleStatus currentStatus,
-            ArticleStatus newStatus) {
+				article.setStatus(ArticleStatus.REVIEW);
 
-        if (currentStatus == ArticleStatus.DRAFT
-                && newStatus == ArticleStatus.REVIEW) {
-            return true;
-        }
+				return articleRepository.save(article);
+			}
 
-        if (currentStatus == ArticleStatus.REVIEW
-                && newStatus == ArticleStatus.PUBLISHED) {
-            return true;
-        }
+			throw new RuntimeException("Editors can only submit draft articles for review");
+		}
 
-        return false;
-    }
-    
-    public boolean deleteArticle(Long id) {
+		throw new RuntimeException("You are not authorized to change article status");
+	}
 
-        if (!articleRepository.existsById(id)) {
-            return false;
-        }
+	private boolean isValidAdminTransition(ArticleStatus currentStatus, ArticleStatus newStatus) {
 
-        // Delete associated comments first
-        commentClient.deleteCommentsByArticle(id);
+		if (currentStatus == ArticleStatus.DRAFT && newStatus == ArticleStatus.REVIEW) {
+			return true;
+		}
 
-        // Delete the article only after comment cleanup succeeds
-        articleRepository.deleteById(id);
+		if (currentStatus == ArticleStatus.REVIEW && newStatus == ArticleStatus.PUBLISHED) {
+			return true;
+		}
 
-        return true;
-    }
+		return false;
+	}
 
-    public long likeArticle(Long articleId, String username) {
+	public boolean deleteArticle(Long id) {
 
-        // Make sure article exists
-        articleRepository.findById(articleId)
-                .orElseThrow(() -> new RuntimeException("Article not found"));
+		if (!articleRepository.existsById(id)) {
+			return false;
+		}
 
-        // Prevent duplicate like
-        if (articleLikeRepository.existsByArticleIdAndUsername(articleId, username)) {
-            throw new RuntimeException("Article already liked");
-        }
+		// Delete associated comments first
+		commentClient.deleteCommentsByArticle(id);
 
-        ArticleLike like = new ArticleLike();
-        like.setArticleId(articleId);
-        like.setUsername(username);
+		// Delete all likes associated with the article
+		articleLikeRepository.deleteByArticleId(id);
 
-        articleLikeRepository.save(like);
+		// Delete the article only after related data is cleaned up
+		articleRepository.deleteById(id);
 
-        return articleLikeRepository.countByArticleId(articleId);
-    }public long unlikeArticle(Long articleId, String username) {
+		return true;
+	}
 
-        ArticleLike like = articleLikeRepository
-                .findByArticleIdAndUsername(articleId, username)
-                .orElseThrow(() -> new RuntimeException("Article not liked"));
+	public long likeArticle(Long articleId, String username) {
 
-        articleLikeRepository.delete(like);
+		// Make sure article exists
+		articleRepository.findById(articleId).orElseThrow(() -> new RuntimeException("Article not found"));
 
-        return articleLikeRepository.countByArticleId(articleId);
-    }
-    public Article getArticleById(Long id) {
-        return articleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Article not found"));
-    }
-    public List<Article> searchPublishedArticles(String keyword) {
-        return articleRepository.findByTitleContainingIgnoreCaseAndStatus(keyword, ArticleStatus.PUBLISHED);
-    }
+		// Prevent duplicate like
+		if (articleLikeRepository.existsByArticleIdAndUsername(articleId, username)) {
+			throw new RuntimeException("Article already liked");
+		}
 
-    public ArticleLikeResponse getLikeStatus(
-            Long articleId,
-            String username) {
+		ArticleLike like = new ArticleLike();
+		like.setArticleId(articleId);
+		like.setUsername(username);
 
-        articleRepository.findById(articleId)
-                .orElseThrow(() -> new RuntimeException("Article not found"));
+		articleLikeRepository.save(like);
 
-        boolean liked = articleLikeRepository
-                .existsByArticleIdAndUsername(articleId, username);
+		return articleLikeRepository.countByArticleId(articleId);
+	}
 
-        long likeCount = articleLikeRepository
-                .countByArticleId(articleId);
+	public long unlikeArticle(Long articleId, String username) {
 
-        return new ArticleLikeResponse(
-                articleId,
-                liked,
-                likeCount
-        );
-    }
-   
-    public List<Article> filterPublishedArticles(Long categoryId, String authorUsername) {
-        return articleRepository.filterArticles(categoryId, authorUsername, ArticleStatus.PUBLISHED);
-    }
-    
-    public boolean hasArticlesForCategory(Long categoryId) {
-        return articleRepository.existsByCategoryId(categoryId);
-    }
-    public List<Article> getLikedArticles(String username) {
+		ArticleLike like = articleLikeRepository.findByArticleIdAndUsername(articleId, username)
+				.orElseThrow(() -> new RuntimeException("Article not liked"));
 
-        List<ArticleLike> likes =
-                articleLikeRepository.findByUsername(username);
+		articleLikeRepository.delete(like);
 
-        return likes.stream()
-                .map(like -> articleRepository.findById(like.getArticleId())
-                        .orElse(null))
-                .filter(Objects::nonNull)
-                .toList();
-    }
+		return articleLikeRepository.countByArticleId(articleId);
+	}
+
+	public Article getArticleById(Long id) {
+		return articleRepository.findById(id).orElseThrow(() -> new RuntimeException("Article not found"));
+	}
+
+	public List<Article> searchPublishedArticles(String keyword) {
+		return articleRepository.findByTitleContainingIgnoreCaseAndStatus(keyword, ArticleStatus.PUBLISHED);
+	}
+
+	public ArticleLikeResponse getLikeStatus(Long articleId, String username) {
+
+		articleRepository.findById(articleId).orElseThrow(() -> new RuntimeException("Article not found"));
+
+		boolean liked = articleLikeRepository.existsByArticleIdAndUsername(articleId, username);
+
+		long likeCount = articleLikeRepository.countByArticleId(articleId);
+
+		return new ArticleLikeResponse(articleId, liked, likeCount);
+	}
+
+	public List<Article> filterPublishedArticles(Long categoryId, String authorUsername) {
+		return articleRepository.filterArticles(categoryId, authorUsername, ArticleStatus.PUBLISHED);
+	}
+
+	public boolean hasArticlesForCategory(Long categoryId) {
+		return articleRepository.existsByCategoryId(categoryId);
+	}
+
+	public List<Article> getLikedArticles(String username) {
+
+		List<ArticleLike> likes = articleLikeRepository.findByUsername(username);
+
+		return likes.stream().map(like -> articleRepository.findById(like.getArticleId()).orElse(null))
+				.filter(Objects::nonNull).toList();
+	}
 }
