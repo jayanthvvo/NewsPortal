@@ -41,9 +41,13 @@ const UserProfilePage: React.FC = () => {
             setFirstName(data.firstName || '');
             setLastName(data.lastName || '');
             setBio(data.bio || '');
-        } catch (error) {
-            console.error("Profile not found.");
-        } finally {
+       } catch (error: any) {
+    console.error(
+        "Failed to fetch profile:",
+        error.response?.status,
+        error.response?.data || error.message
+    );
+} finally {
             setLoading(false);
         }
     };

@@ -8,9 +8,12 @@ export interface UserProfile {
     lastName?: string;
     bio?: string;
     avatarUrl?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export const userService = {
+
     // Get the profile for a specific username
     getProfile: async (username: string): Promise<UserProfile> => {
         try {
@@ -22,10 +25,16 @@ export const userService = {
         }
     },
 
-    // Update the profile of the currently logged-in user
-    updateProfile: async (profileData: Partial<UserProfile>): Promise<UserProfile> => {
+    // Update the currently logged-in user's profile
+    updateProfile: async (
+        profileData: Partial<UserProfile>
+    ): Promise<UserProfile> => {
         try {
-            const response = await api.post('/users/profile', profileData);
+            const response = await api.put(
+                '/users/profile',
+                profileData
+            );
+
             return response.data;
         } catch (error) {
             console.error("Failed to update profile", error);
