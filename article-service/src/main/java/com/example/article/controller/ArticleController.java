@@ -1,6 +1,7 @@
 package com.example.article.controller;
 
 import jakarta.validation.Valid;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.article.DTO.ArticleLikeResponse;
 import com.example.article.model.Article;
 import com.example.article.model.ArticleStatus;
 import com.example.article.service.ArticleService; 
@@ -41,6 +43,10 @@ public class ArticleController {
         return ResponseEntity.ok(articlesByAuthor);
     }
     
+    @PostMapping("/{id}/view")
+    public ResponseEntity<Article> incrementViewCount(@PathVariable Long id) {
+        return ResponseEntity.ok(articleService.incrementViewCount(id));
+    }
     
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')") 
@@ -57,6 +63,28 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.getPublishedArticles());
     }
     
+    @PostMapping("/{id}/like")
+    public ResponseEntity<Long> likeArticle(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        String username = authentication.getName();
+
+        long likeCount = articleService.likeArticle(id, username);
+
+        return ResponseEntity.ok(likeCount);
+    }
+    @DeleteMapping("/{id}/like")
+    public ResponseEntity<Long> unlikeArticle(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        String username = authentication.getName();
+
+        long likeCount = articleService.unlikeArticle(id, username);
+
+        return ResponseEntity.ok(likeCount);
+    }
     @GetMapping("/my-drafts")
     @PreAuthorize("hasAnyAuthority('ROLE_EDITOR')")
     public ResponseEntity<List<Article>> getMyDrafts(Authentication authentication){
@@ -68,7 +96,17 @@ public class ArticleController {
     public ResponseEntity<List<Article>> getPendingReviews(){
         return ResponseEntity.ok(articleService.getArticlesPendingReview());
     }
-    
+    @GetMapping("/{id}/like-status")
+    public ResponseEntity<ArticleLikeResponse> getLikeStatus(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        String username = authentication.getName();
+
+        return ResponseEntity.ok(
+                articleService.getLikeStatus(id, username)
+        );
+    }
     @PostMapping("/{id}/status")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')")
     public ResponseEntity<Article> updateStatus(
@@ -130,6 +168,16 @@ public class ArticleController {
 
         return ResponseEntity.ok(
             articleService.hasArticlesForCategory(categoryId)
+        );
+    }
+    @GetMapping("/liked")
+    public ResponseEntity<List<Article>> getLikedArticles(
+            Authentication authentication) {
+
+        String username = authentication.getName();
+
+        return ResponseEntity.ok(
+                articleService.getLikedArticles(username)
         );
     }
 }

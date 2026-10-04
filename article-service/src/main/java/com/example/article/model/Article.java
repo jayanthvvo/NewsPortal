@@ -56,6 +56,9 @@ public class Article {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+    
+    @Column(nullable = false)
+    private Long viewCount = 0L;
 
 
     @PrePersist
@@ -68,6 +71,12 @@ public class Article {
     }
 
 
+    public void incrementViewCount() {
+        this.viewCount++;
+    }
+    public Long getViewCount() {
+        return viewCount;
+    }
     @PreUpdate
     protected void onUpdate() {
 
