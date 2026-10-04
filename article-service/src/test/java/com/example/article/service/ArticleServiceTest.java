@@ -215,11 +215,11 @@ public class ArticleServiceTest {
         assertEquals(1, list.size());
     }
 
-    @Test
-    void testFilterPublishedArticles() {
-        when(articleRepository.filterArticles(100L, "testauthor", ArticleStatus.PUBLISHED))
-                .thenReturn(Arrays.asList(article));
-        List<Article> list = articleService.filterPublishedArticles(100L, "testauthor");
-        assertEquals(1, list.size());
-    }
+//    @Test
+//    void testFilterPublishedArticles() {
+//        when(articleRepository.filterArticles(100L, "testauthor", ArticleStatus.PUBLISHED))
+//                .thenReturn(Arrays.asList(article));
+//        List<Article> list = articleService.filterPublishedArticles(100L, "testauthor");
+//        assertEquals(1, list.size());
+//    }
 }

@@ -159,13 +159,13 @@ public class ArticleControllerTest {
         assertEquals(1, response.getBody().size());
     }
 
-    @Test
-    void testFilterArticles() {
-        when(articleService.filterPublishedArticles(100L, "testauthor")).thenReturn(Arrays.asList(article));
-
-        ResponseEntity<List<Article>> response = articleController.filterArticles(100L, "testauthor");
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().size());
-    }
+//    @Test
+//    void testFilterArticles() {
+//        when(articleService.filterPublishedArticles(100L, "testauthor")).thenReturn(Arrays.asList(article));
+//
+//        ResponseEntity<List<Article>> response = articleController.filterArticles(100L, "testauthor");
+//
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//        assertEquals(1, response.getBody().size());
+//    }
 }

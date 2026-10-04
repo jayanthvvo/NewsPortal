@@ -1,10 +1,12 @@
 package com.example.article.controller;
 
-import jakarta.validation.Valid;
-
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -20,178 +22,244 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.article.DTO.ArticleLikeResponse;
 import com.example.article.model.Article;
 import com.example.article.model.ArticleStatus;
-import com.example.article.service.ArticleService; 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.example.article.service.ArticleService;
 
 @RestController
 @RequestMapping("/articles")
 public class ArticleController {
-    
-    @Autowired
-    private ArticleService articleService; 
 
-    @PostMapping("/create")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')") 
-    public ResponseEntity<Article> create(@Valid @RequestBody Article article, Authentication authentication){
-        String username = authentication.getName();
-        Article savedArticle = articleService.createArticle(article, username);
-       return ResponseEntity.ok(savedArticle);
-    }
-    
-    @GetMapping("/author/{username}")
-    public ResponseEntity<List<Article>> getArticleByAuthor(@PathVariable String username){
-        List<Article> articlesByAuthor = articleService.getArticlesByAuthor(username);
-        return ResponseEntity.ok(articlesByAuthor);
-    }
-    
-    @PostMapping("/{id}/view")
-    public ResponseEntity<Article> incrementViewCount(@PathVariable Long id) {
-        return ResponseEntity.ok(articleService.incrementViewCount(id));
-    }
-    
-    @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')") 
-    public ResponseEntity<String> deleteArticle(@PathVariable Long id){
-        boolean isDeleted = articleService.deleteArticle(id);
-        
-        if(isDeleted) {
-            return ResponseEntity.ok("Deleted Successfully");
-        }
-        return ResponseEntity.badRequest().body("Error: Article not found!");
-    }
-    @GetMapping("/all")
-    public ResponseEntity<Page<Article>> getAllPublishedArticles(
-            Pageable pageable) {
+	@Autowired
+	private ArticleService articleService;
 
-        return ResponseEntity.ok(
-                articleService.getPublishedArticles(pageable)
-        );
-    }
-    
-    @PostMapping("/{id}/like")
-    public ResponseEntity<Long> likeArticle(
-            @PathVariable Long id,
-            Authentication authentication) {
+	// =========================
+	// CREATE ARTICLE
+	// =========================
 
-        String username = authentication.getName();
+	@PostMapping("/create")
+	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')")
+	public ResponseEntity<Article> create(@Valid @RequestBody Article article, Authentication authentication) {
 
-        long likeCount = articleService.likeArticle(id, username);
+		String username = authentication.getName();
 
-        return ResponseEntity.ok(likeCount);
-    }
-    @DeleteMapping("/{id}/like")
-    public ResponseEntity<Long> unlikeArticle(
-            @PathVariable Long id,
-            Authentication authentication) {
+		Article savedArticle = articleService.createArticle(article, username);
 
-        String username = authentication.getName();
+		return ResponseEntity.ok(savedArticle);
+	}
 
-        long likeCount = articleService.unlikeArticle(id, username);
+	// =========================
+	// ARTICLES BY AUTHOR
+	// =========================
 
-        return ResponseEntity.ok(likeCount);
-    }
-    @GetMapping("/my-drafts")
-    @PreAuthorize("hasAnyAuthority('ROLE_EDITOR')")
-    public ResponseEntity<List<Article>> getMyDrafts(Authentication authentication){
-        String username = authentication.getName();
-        return ResponseEntity.ok(articleService.getDraftsForAuthor(username));
-    }
-    @GetMapping("/pending-review")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<List<Article>> getPendingReviews(){
-        return ResponseEntity.ok(articleService.getArticlesPendingReview());
-    }
-    @GetMapping("/{id}/like-status")
-    public ResponseEntity<ArticleLikeResponse> getLikeStatus(
-            @PathVariable Long id,
-            Authentication authentication) {
+	@GetMapping("/author/{username}")
+	public ResponseEntity<List<Article>> getArticleByAuthor(@PathVariable String username) {
 
-        String username = authentication.getName();
+		List<Article> articlesByAuthor = articleService.getArticlesByAuthor(username);
 
-        return ResponseEntity.ok(
-                articleService.getLikeStatus(id, username)
-        );
-    }
-    @PostMapping("/{id}/status")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')")
-    public ResponseEntity<Article> updateStatus(
-            @PathVariable Long id,
-            @RequestParam String status,
-            Authentication authentication) {
+		return ResponseEntity.ok(articlesByAuthor);
+	}
 
-        ArticleStatus newStatus =
-                ArticleStatus.valueOf(status.toUpperCase());
+	// =========================
+	// INCREMENT VIEW COUNT
+	// =========================
 
-        String username = authentication.getName();
+	@PostMapping("/{id}/view")
+	public ResponseEntity<Article> incrementViewCount(@PathVariable Long id) {
 
-        Article updatedArticle =
-                articleService.updateArticle(
-                        id,
-                        newStatus,
-                        username,
-                        authentication.getAuthorities()
-                );
+		return ResponseEntity.ok(articleService.incrementViewCount(id));
+	}
 
-        return ResponseEntity.ok(updatedArticle);
-    }
-    
-   
-    @GetMapping("/search")
-    public ResponseEntity<List<Article>> searchArticles(@RequestParam String keyword) {
-        List<Article> results = articleService.searchPublishedArticles(keyword);
-        return ResponseEntity.ok(results);
-    }
+	// =========================
+	// DELETE ARTICLE
+	// =========================
 
-    
-    @GetMapping("/filter")
-    public ResponseEntity<List<Article>> filterArticles(
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String author) {
-        
-        List<Article> results = articleService.filterPublishedArticles(categoryId, author);
-        return ResponseEntity.ok(results);
-    }
-    @GetMapping("/my-articles")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR', 'ROLE_AUTHOR')")
-    public ResponseEntity<List<Article>> getMyArticles(Authentication authentication) {
-        String username = authentication.getName();
-        // Assuming your ArticleService has this method already, based on the other endpoints
-        List<Article> myArticles = articleService.getArticlesByAuthor(username);
-        return ResponseEntity.ok(myArticles);
-    }
-    @GetMapping("/category/{categoryId}/exists")
-    public ResponseEntity<Boolean> categoryHasArticles(
-            @PathVariable Long categoryId) {
+	@DeleteMapping("/delete/{id}")
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	public ResponseEntity<String> deleteArticle(@PathVariable Long id) {
 
-        return ResponseEntity.ok(
-            articleService.hasArticlesForCategory(categoryId)
-        );
-    }
-    @GetMapping("/liked")
-    public ResponseEntity<List<Article>> getLikedArticles(
-            Authentication authentication) {
+		boolean isDeleted = articleService.deleteArticle(id);
 
-        String username = authentication.getName();
+		if (isDeleted) {
 
-        return ResponseEntity.ok(
-                articleService.getLikedArticles(username)
-        );
-    }
+			return ResponseEntity.ok("Deleted Successfully");
+		}
 
+		return ResponseEntity.badRequest().body("Error: Article not found!");
+	}
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getArticleById(
-            @PathVariable Long id) {
+	// =========================
+	// ALL PUBLISHED ARTICLES
+	// =========================
 
-        try {
-            Article article =
-                    articleService.getArticleById(id);
+	@GetMapping("/all")
+	public ResponseEntity<Page<Article>> getAllPublishedArticles(Pageable pageable) {
 
-            return ResponseEntity.ok(article);
+		return ResponseEntity.ok(articleService.getPublishedArticles(pageable));
+	}
 
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+	// =========================
+	// LIKE ARTICLE
+	// =========================
+
+	@PostMapping("/{id}/like")
+	public ResponseEntity<Long> likeArticle(@PathVariable Long id, Authentication authentication) {
+
+		String username = authentication.getName();
+
+		long likeCount = articleService.likeArticle(id, username);
+
+		return ResponseEntity.ok(likeCount);
+	}
+
+	// =========================
+	// UNLIKE ARTICLE
+	// =========================
+
+	@DeleteMapping("/{id}/like")
+	public ResponseEntity<Long> unlikeArticle(@PathVariable Long id, Authentication authentication) {
+
+		String username = authentication.getName();
+
+		long likeCount = articleService.unlikeArticle(id, username);
+
+		return ResponseEntity.ok(likeCount);
+	}
+
+	// =========================
+	// MY DRAFTS
+	// =========================
+
+	@GetMapping("/my-drafts")
+	@PreAuthorize("hasAnyAuthority('ROLE_EDITOR')")
+	public ResponseEntity<List<Article>> getMyDrafts(Authentication authentication) {
+
+		String username = authentication.getName();
+
+		return ResponseEntity.ok(articleService.getDraftsForAuthor(username));
+	}
+
+	// =========================
+	// PENDING REVIEW
+	// =========================
+
+	@GetMapping("/pending-review")
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	public ResponseEntity<List<Article>> getPendingReviews() {
+
+		return ResponseEntity.ok(articleService.getArticlesPendingReview());
+	}
+
+	// =========================
+	// LIKE STATUS
+	// =========================
+
+	@GetMapping("/{id}/like-status")
+	public ResponseEntity<ArticleLikeResponse> getLikeStatus(@PathVariable Long id, Authentication authentication) {
+
+		String username = authentication.getName();
+
+		return ResponseEntity.ok(articleService.getLikeStatus(id, username));
+	}
+
+	// =========================
+	// UPDATE ARTICLE STATUS
+	// =========================
+
+	@PostMapping("/{id}/status")
+	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')")
+	public ResponseEntity<Article> updateStatus(@PathVariable Long id, @RequestParam String status,
+			Authentication authentication) {
+
+		ArticleStatus newStatus = ArticleStatus.valueOf(status.toUpperCase());
+
+		String username = authentication.getName();
+
+		Article updatedArticle = articleService.updateArticle(id, newStatus, username, authentication.getAuthorities());
+
+		return ResponseEntity.ok(updatedArticle);
+	}
+
+	// =========================
+	// SEARCH
+	// =========================
+
+	@GetMapping("/search")
+	public ResponseEntity<List<Article>> searchArticles(@RequestParam String keyword) {
+
+		List<Article> results = articleService.searchPublishedArticles(keyword);
+
+		return ResponseEntity.ok(results);
+	}
+
+	// =========================
+	// CATEGORY / AUTHOR FILTER
+	// WITH PAGINATION
+	// =========================
+
+	@GetMapping("/filter")
+	public ResponseEntity<Page<Article>> filterArticles(@RequestParam(required = false) Long categoryId,
+
+			@RequestParam(required = false) String author,
+
+			Pageable pageable) {
+
+		Page<Article> results = articleService.filterPublishedArticles(categoryId, author, pageable);
+
+		return ResponseEntity.ok(results);
+	}
+
+	// =========================
+	// MY ARTICLES
+	// =========================
+
+	@GetMapping("/my-articles")
+	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR', 'ROLE_AUTHOR')")
+	public ResponseEntity<List<Article>> getMyArticles(Authentication authentication) {
+
+		String username = authentication.getName();
+
+		List<Article> myArticles = articleService.getArticlesByAuthor(username);
+
+		return ResponseEntity.ok(myArticles);
+	}
+
+	// =========================
+	// CATEGORY HAS ARTICLES
+	// =========================
+
+	@GetMapping("/category/{categoryId}/exists")
+	public ResponseEntity<Boolean> categoryHasArticles(@PathVariable Long categoryId) {
+
+		return ResponseEntity.ok(articleService.hasArticlesForCategory(categoryId));
+	}
+
+	// =========================
+	// LIKED ARTICLES
+	// =========================
+
+	@GetMapping("/liked")
+	public ResponseEntity<List<Article>> getLikedArticles(Authentication authentication) {
+
+		String username = authentication.getName();
+
+		return ResponseEntity.ok(articleService.getLikedArticles(username));
+	}
+
+	// =========================
+	// GET ARTICLE BY ID
+	// =========================
+
+	@GetMapping("/{id}")
+	public ResponseEntity<?> getArticleById(@PathVariable Long id) {
+
+		try {
+
+			Article article = articleService.getArticleById(id);
+
+			return ResponseEntity.ok(article);
+
+		} catch (Exception e) {
+
+			return ResponseEntity.notFound().build();
+		}
+	}
 }
