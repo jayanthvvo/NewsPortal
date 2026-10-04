@@ -23,10 +23,10 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable()) 
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/alerts/breaking-news").hasAuthority("ROLE_ADMIN") 
-                .requestMatchers("/alerts/send-email").permitAll() // <--- ADD THIS LINE
-                .anyRequest().authenticated() 
-            )
+            	    .requestMatchers("/alerts/breaking-news").hasAuthority("ROLE_ADMIN")
+            	    .requestMatchers("/alerts/send-email").hasAuthority("ROLE_ADMIN")
+            	    .anyRequest().authenticated()
+            	)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();

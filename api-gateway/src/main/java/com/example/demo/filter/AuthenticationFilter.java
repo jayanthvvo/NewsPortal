@@ -5,10 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
+public class AuthenticationFilter
+        extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
     @Autowired
     private RouteValidator validator;
@@ -22,37 +24,52 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
     @Override
     public GatewayFilter apply(Config config) {
-        return ((exchange, chain) -> {
-            
-            
+
+        return (exchange, chain) -> {
+
+            // Check whether this route requires authentication
             if (validator.isSecured().test(exchange.getRequest())) {
-                
-//. Provides access to the HTTP request and response 
-                if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                    throw new RuntimeException("Missing Authorization header!");
+
+                // 1. Authorization header missing
+                String authHeader = exchange.getRequest()
+                        .getHeaders()
+                        .getFirst(HttpHeaders.AUTHORIZATION);
+
+                if (authHeader == null) {
+                    exchange.getResponse()
+                            .setStatusCode(HttpStatus.UNAUTHORIZED);
+
+                    return exchange.getResponse().setComplete();
                 }
 
-                
-                String authHeader = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
-                if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                    authHeader = authHeader.substring(7); 
+                // 2. Authorization header is not Bearer
+                if (!authHeader.startsWith("Bearer ")) {
+                    exchange.getResponse()
+                            .setStatusCode(HttpStatus.UNAUTHORIZED);
+
+                    return exchange.getResponse().setComplete();
                 }
 
-              
+                // Remove "Bearer " and get only the JWT
+                String token = authHeader.substring(7);
+
+                // 3. Validate JWT
                 try {
-                    jwtUtils.validateToken(authHeader);
+                    jwtUtils.validateToken(token);
                 } catch (Exception e) {
-                    System.out.println("Invalid token error: " + e.getMessage());
-                    throw new RuntimeException("Unauthorized access to application!");
+
+                    exchange.getResponse()
+                            .setStatusCode(HttpStatus.UNAUTHORIZED);
+
+                    return exchange.getResponse().setComplete();
                 }
             }
-            
-            
+
+            // 4. Authentication successful → continue to service
             return chain.filter(exchange);
-        });
+        };
     }
 
     public static class Config {
-        
     }
 }
