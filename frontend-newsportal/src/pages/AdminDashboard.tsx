@@ -6,7 +6,7 @@ import { categoryService, type Category } from '../services/categoryService';
 import { articleService, type Article } from '../services/articleService';
 import { alertService } from '../services/alertService';
 import { authService } from '../services/authService';
-import FullArticle from './FullArticle'; 
+import FullArticle from './FullArticle';
 
 const AdminDashboard: React.FC = () => {
     // Shared State
@@ -28,7 +28,7 @@ const AdminDashboard: React.FC = () => {
         message: '',
         confirmText: 'Confirm',
         confirmColor: 'bg-[var(--accent)]',
-        onConfirm: () => {}
+        onConfirm: () => { }
     });
 
     const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
@@ -58,13 +58,13 @@ const AdminDashboard: React.FC = () => {
             navigate('/login');
             return;
         }
-        
+
         fetchCategories();
 
         if (activeTab === 'approvals') fetchPendingUsers();
         else if (activeTab === 'articles') fetchPendingArticles();
         else if (activeTab === 'read') fetchPublishedArticles();
-        
+
         setViewingArticleId(null);
     }, [activeTab, navigate]);
 
@@ -73,7 +73,7 @@ const AdminDashboard: React.FC = () => {
         try {
             setLoading(true);
             const data = await articleService.getAllPublishedArticles();
-            setPublishedArticles(data.reverse()); 
+            setPublishedArticles(data.reverse());
         } catch (error) {
             console.error("Error fetching published articles");
         } finally {
@@ -137,13 +137,36 @@ const AdminDashboard: React.FC = () => {
             await categoryService.createCategory({ name: newCategoryName, description: newCategoryDesc });
             setNewCategoryName('');
             setNewCategoryDesc('');
-            fetchCategories(); 
+            fetchCategories();
             toast.success("Category created successfully!", { id: toastId });
         } catch (error) {
             toast.error("Failed to create category.", { id: toastId });
         }
-    };
 
+
+    };
+    const confirmDeleteCategory = (id: number, name: string) => {
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Delete Category',
+            message: `Are you sure you want to delete the category "${name}"?`,
+            confirmText: 'Delete Category',
+            confirmColor: 'bg-red-600 hover:bg-red-700',
+            onConfirm: async () => {
+                closeConfirm();
+
+                const toastId = toast.loading("Deleting category...");
+
+                try {
+                    await categoryService.deleteCategory(id);
+                    toast.success("Category deleted successfully!", { id: toastId });
+                    fetchCategories();
+                } catch (error) {
+                    toast.error("Failed to delete category.", { id: toastId });
+                }
+            }
+        });
+    };
     // --- TAB 3: ARTICLES ---
     const fetchPendingArticles = async () => {
         try {
@@ -254,7 +277,7 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div className="flex h-screen font-sans bg-[var(--bg)] text-[var(--text)] relative">
-            
+
             {/* Global Toaster for notifications */}
             <Toaster position="top-right" reverseOrder={false} />
 
@@ -264,25 +287,23 @@ const AdminDashboard: React.FC = () => {
                     <h2 className="text-xl font-bold text-[var(--text-h)] m-0">Admin Console</h2>
                     <span className="text-sm font-medium opacity-70">System Oversight</span>
                 </div>
-                
+
                 <nav className="flex-1 py-6 px-4">
                     <ul className="flex flex-col gap-2">
                         <li>
-                            <button 
-                                onClick={() => setActiveTab('read')} 
-                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab === 'read' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
-                                }`}
+                            <button
+                                onClick={() => setActiveTab('read')}
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${activeTab === 'read' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                    }`}
                             >
                                 📰 Read Articles
                             </button>
                         </li>
                         <li>
-                            <button 
-                                onClick={() => setActiveTab('approvals')} 
-                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors flex justify-between items-center ${
-                                    activeTab === 'approvals' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
-                                }`}
+                            <button
+                                onClick={() => setActiveTab('approvals')}
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors flex justify-between items-center ${activeTab === 'approvals' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                    }`}
                             >
                                 <span>👤 Approvals</span>
                                 {users.length > 0 && activeTab !== 'approvals' && (
@@ -291,41 +312,38 @@ const AdminDashboard: React.FC = () => {
                             </button>
                         </li>
                         <li>
-                            <button 
-                                onClick={() => setActiveTab('categories')} 
-                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab === 'categories' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
-                                }`}
+                            <button
+                                onClick={() => setActiveTab('categories')}
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${activeTab === 'categories' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                    }`}
                             >
                                 📁 Categories
                             </button>
                         </li>
                         <li>
-                            <button 
-                                onClick={() => setActiveTab('articles')} 
-                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab === 'articles' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
-                                }`}
+                            <button
+                                onClick={() => setActiveTab('articles')}
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${activeTab === 'articles' ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                    }`}
                             >
                                 📰 Article Reviews
                             </button>
                         </li>
                         <li>
-                            <button 
-                                onClick={() => setActiveTab('alerts')} 
-                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab === 'alerts' ? 'bg-red-600 text-white shadow-md' : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-                                }`}
+                            <button
+                                onClick={() => setActiveTab('alerts')}
+                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${activeTab === 'alerts' ? 'bg-red-600 text-white shadow-md' : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                    }`}
                             >
                                 🚨 Breaking News Alert
                             </button>
                         </li>
                     </ul>
                 </nav>
-                
+
                 <div className="p-6 border-t border-[var(--border)]">
-                    <button 
-                        onClick={handleLogout} 
+                    <button
+                        onClick={handleLogout}
                         className="w-full p-3 bg-slate-500 hover:bg-slate-600 text-white font-bold rounded-lg transition-colors shadow-sm"
                     >
                         Logout
@@ -335,21 +353,21 @@ const AdminDashboard: React.FC = () => {
 
             {/* MAIN CONTENT AREA */}
             <div className="flex-1 p-10 overflow-y-auto">
-                
+
                 {/* TAB 0: READ ARTICLES */}
                 {activeTab === 'read' && (
                     <div className="max-w-6xl mx-auto">
                         {viewingArticleId ? (
                             <div className="bg-[var(--code-bg)] border border-[var(--border)] p-8 rounded-xl shadow-[var(--shadow)]">
-                                <FullArticle 
-                                    articleId={viewingArticleId} 
-                                    onBack={() => setViewingArticleId(null)} 
+                                <FullArticle
+                                    articleId={viewingArticleId}
+                                    onBack={() => setViewingArticleId(null)}
                                 />
                             </div>
                         ) : (
                             <>
                                 <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Latest Headlines</h2>
-                                
+
                                 {loading ? (
                                     <div className="p-8 text-center animate-pulse text-[var(--text)]">Loading today's stories...</div>
                                 ) : publishedArticles.length === 0 ? (
@@ -359,8 +377,8 @@ const AdminDashboard: React.FC = () => {
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                         {publishedArticles.map((article) => (
-                                            <article 
-                                                key={article.id} 
+                                            <article
+                                                key={article.id}
                                                 className="bg-[var(--code-bg)] rounded-xl overflow-hidden shadow-[var(--shadow)] border border-[var(--border)] border-t-4 border-t-[var(--accent)] flex flex-col hover:shadow-lg transition-shadow"
                                             >
                                                 <div className="p-6 flex-1 flex flex-col">
@@ -377,13 +395,22 @@ const AdminDashboard: React.FC = () => {
                                                         {article.content.length > 150 ? article.content.substring(0, 150) + "..." : article.content}
                                                     </p>
                                                 </div>
-                                                <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)] text-right mt-auto">
-                                                    <button 
+                                                <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)] flex justify-between items-center mt-auto">
+
+                                                    <button
                                                         onClick={() => setViewingArticleId(article.id!)}
                                                         className="bg-transparent border-none text-[var(--accent)] font-bold cursor-pointer font-sans text-sm hover:underline"
                                                     >
                                                         Read Full Story →
                                                     </button>
+
+                                                    <button
+                                                        onClick={() => confirmDeleteArticle(article.id!)}
+                                                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
+                                                    >
+                                                        🗑 Delete
+                                                    </button>
+
                                                 </div>
                                             </article>
                                         ))}
@@ -398,7 +425,7 @@ const AdminDashboard: React.FC = () => {
                 {activeTab === 'approvals' && (
                     <div className="max-w-5xl mx-auto">
                         <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Review Account Requests</h2>
-                        
+
                         {loading ? (
                             <p className="animate-pulse">Loading users...</p>
                         ) : users.length === 0 ? (
@@ -427,8 +454,8 @@ const AdminDashboard: React.FC = () => {
                                                     </span>
                                                 </td>
                                                 <td className="p-4">
-                                                    <button 
-                                                        onClick={() => confirmApproveUser(user.id, user.username)} 
+                                                    <button
+                                                        onClick={() => confirmApproveUser(user.id, user.username)}
                                                         className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
                                                     >
                                                         ✓ Approve
@@ -447,33 +474,33 @@ const AdminDashboard: React.FC = () => {
                 {activeTab === 'categories' && (
                     <div className="max-w-6xl mx-auto">
                         <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Manage News Categories</h2>
-                        
+
                         <div className="flex flex-col lg:flex-row gap-8">
                             <div className="flex-1 bg-[var(--code-bg)] p-6 md:p-8 rounded-xl shadow-[var(--shadow)] border border-[var(--border)] h-fit">
                                 <h3 className="text-lg font-bold text-[var(--text-h)] mb-6 mt-0">Create New Category</h3>
                                 <form onSubmit={handleCreateCategory} className="flex flex-col gap-5">
                                     <div>
                                         <label className="block mb-2 text-sm font-semibold text-[var(--text-h)]">Category Name</label>
-                                        <input 
-                                            type="text" 
-                                            value={newCategoryName} 
-                                            onChange={(e) => setNewCategoryName(e.target.value)} 
-                                            required 
-                                            className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all" 
-                                            placeholder="e.g. Technology" 
+                                        <input
+                                            type="text"
+                                            value={newCategoryName}
+                                            onChange={(e) => setNewCategoryName(e.target.value)}
+                                            required
+                                            className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
+                                            placeholder="e.g. Technology"
                                         />
                                     </div>
                                     <div>
                                         <label className="block mb-2 text-sm font-semibold text-[var(--text-h)]">Description</label>
-                                        <textarea 
-                                            value={newCategoryDesc} 
-                                            onChange={(e) => setNewCategoryDesc(e.target.value)} 
-                                            required 
-                                            className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all min-h-[100px] resize-y" 
+                                        <textarea
+                                            value={newCategoryDesc}
+                                            onChange={(e) => setNewCategoryDesc(e.target.value)}
+                                            required
+                                            className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all min-h-[100px] resize-y"
                                         />
                                     </div>
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         className="py-3 bg-[var(--accent)] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity mt-2"
                                     >
                                         + Add Category
@@ -492,6 +519,7 @@ const AdminDashboard: React.FC = () => {
                                                 <tr>
                                                     <th className="p-4 font-bold text-[var(--text-h)]">Name</th>
                                                     <th className="p-4 font-bold text-[var(--text-h)]">Description</th>
+                                                    <th className="p-4 font-bold text-[var(--text-h)]">Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-[var(--border)]">
@@ -499,6 +527,16 @@ const AdminDashboard: React.FC = () => {
                                                     <tr key={category.id} className="hover:bg-[var(--bg)] transition-colors">
                                                         <td className="p-4 font-bold text-[var(--text-h)] whitespace-nowrap">{category.name}</td>
                                                         <td className="p-4 opacity-80">{category.description}</td>
+                                                        <td className="p-4">
+                                                            <button
+                                                                onClick={() =>
+                                                                    confirmDeleteCategory(category.id, category.name)
+                                                                }
+                                                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
+                                                            >
+                                                                🗑 Delete
+                                                            </button>
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -514,7 +552,7 @@ const AdminDashboard: React.FC = () => {
                 {activeTab === 'articles' && (
                     <div className="max-w-5xl mx-auto">
                         <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">Article Publishing Queue</h2>
-                        
+
                         {loading ? (
                             <p className="animate-pulse">Loading pending articles...</p>
                         ) : pendingArticles.length === 0 ? (
@@ -530,27 +568,27 @@ const AdminDashboard: React.FC = () => {
                                             <div className="text-sm opacity-80 mb-4">
                                                 Written by <strong className="text-[var(--text-h)]">{article.author}</strong> | Status: <span className="text-yellow-600 dark:text-yellow-400 font-bold">{article.status}</span>
                                             </div>
-                                            
+
                                             <div className="bg-[var(--bg)] p-4 rounded-lg border border-[var(--border)] italic opacity-90 mb-6">
                                                 {article.content.length > 200 ? article.content.substring(0, 200) + "..." : article.content}
                                             </div>
-                                            
+
                                             <div className="flex flex-wrap gap-3 pt-5 border-t border-[var(--border)]">
-                                                <button 
-                                                    onClick={() => confirmPublishArticle(article.id!)} 
+                                                <button
+                                                    onClick={() => confirmPublishArticle(article.id!)}
                                                     className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
                                                 >
                                                     ✓ Publish
                                                 </button>
-                                                <button 
-                                                    onClick={() => confirmRejectArticle(article.id!)} 
+                                                <button
+                                                    onClick={() => confirmRejectArticle(article.id!)}
                                                     className="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold rounded shadow-sm transition-colors text-sm"
                                                 >
                                                     ↩ Reject (Draft)
                                                 </button>
                                                 <div className="flex-1"></div>
-                                                <button 
-                                                    onClick={() => confirmDeleteArticle(article.id!)} 
+                                                <button
+                                                    onClick={() => confirmDeleteArticle(article.id!)}
                                                     className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
                                                 >
                                                     🗑 Delete
@@ -569,23 +607,23 @@ const AdminDashboard: React.FC = () => {
                     <div className="max-w-4xl mx-auto">
                         <h2 className="text-2xl font-bold border-b-2 border-red-500 pb-3 mb-4 text-red-600 dark:text-red-500">Emergency Alert System</h2>
                         <p className="mb-8 opacity-80">Use this console to send an immediate Breaking News email blast to every registered reader in the database.</p>
-                        
+
                         <div className="bg-[var(--code-bg)] p-8 rounded-xl shadow-[var(--shadow)] border-2 border-red-200 dark:border-red-900/50">
                             <form onSubmit={confirmSendAlert} className="flex flex-col gap-5">
                                 <div>
                                     <label className="block mb-3 font-bold text-red-700 dark:text-red-400">Breaking News Message</label>
-                                    <textarea 
-                                        value={alertMessage} 
-                                        onChange={(e) => setAlertMessage(e.target.value)} 
-                                        required 
-                                        placeholder="Type the emergency alert or breaking news here..." 
-                                        className="w-full p-4 bg-[var(--bg)] border-2 border-red-400 dark:border-red-500 rounded-lg text-[var(--text-h)] focus:ring-4 focus:ring-red-500/20 outline-none transition-all min-h-[150px] resize-y" 
+                                    <textarea
+                                        value={alertMessage}
+                                        onChange={(e) => setAlertMessage(e.target.value)}
+                                        required
+                                        placeholder="Type the emergency alert or breaking news here..."
+                                        className="w-full p-4 bg-[var(--bg)] border-2 border-red-400 dark:border-red-500 rounded-lg text-[var(--text-h)] focus:ring-4 focus:ring-red-500/20 outline-none transition-all min-h-[150px] resize-y"
                                     />
                                 </div>
                                 <div className="flex justify-end mt-2">
-                                    <button 
-                                        type="submit" 
-                                        disabled={sendingAlert} 
+                                    <button
+                                        type="submit"
+                                        disabled={sendingAlert}
                                         className="py-3 px-6 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-bold rounded-lg shadow-md transition-colors disabled:cursor-not-allowed"
                                     >
                                         {sendingAlert ? '🚨 Broadcasting Alert to all Users...' : '🚨 Broadcast Breaking News'}
@@ -604,13 +642,13 @@ const AdminDashboard: React.FC = () => {
                         <h3 className="text-xl font-bold text-[var(--text-h)] mb-2">{confirmDialog.title}</h3>
                         <p className="text-[var(--text)] mb-6 opacity-90">{confirmDialog.message}</p>
                         <div className="flex justify-end gap-3">
-                            <button 
+                            <button
                                 onClick={closeConfirm}
                                 className="px-4 py-2 rounded-lg font-semibold bg-[var(--bg)] border border-[var(--border)] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                             >
                                 Cancel
                             </button>
-                            <button 
+                            <button
                                 onClick={confirmDialog.onConfirm}
                                 className={`px-4 py-2 rounded-lg font-semibold text-white transition-opacity shadow-sm ${confirmDialog.confirmColor}`}
                             >
