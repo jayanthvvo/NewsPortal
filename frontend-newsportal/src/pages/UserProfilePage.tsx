@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
@@ -6,11 +7,11 @@ import { authService } from '../services/authService';
 
 const UserProfilePage: React.FC = () => {
     const navigate = useNavigate();
+
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    // Form states
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [bio, setBio] = useState('');
@@ -21,24 +22,42 @@ const UserProfilePage: React.FC = () => {
             return;
         }
 
-        // Extract username from JWT token
         const token = localStorage.getItem('token');
 
-        if (token) {
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                const username = payload.sub;
+        if (!token) {
+            navigate('/login');
+            return;
+        }
 
-                fetchProfile(username);
-            } catch (e) {
-                console.error("Error decoding token");
-                navigate('/login');
+        try {
+            const payload = JSON.parse(
+                atob(
+                    token
+                        .split('.')[1]
+                        .replace(/-/g, '+')
+                        .replace(/_/g, '/')
+                )
+            );
+
+            const username = payload.sub;
+
+            if (!username) {
+                throw new Error('Username not found in token.');
             }
+
+            fetchProfile(username);
+        } catch (error) {
+            console.error('Error decoding token:', error);
+            toast.error('Your session is invalid. Please log in again.');
+            authService.logout();
+            navigate('/login');
         }
     }, [navigate]);
 
     const fetchProfile = async (username: string) => {
         try {
+            setLoading(true);
+
             const data = await userService.getProfile(username);
 
             setProfile(data);
@@ -47,9 +66,13 @@ const UserProfilePage: React.FC = () => {
             setBio(data.bio || '');
         } catch (error: any) {
             console.error(
-                "Failed to fetch profile:",
+                'Failed to fetch profile:',
                 error.response?.status,
                 error.response?.data || error.message
+            );
+
+            toast.error(
+                'Unable to load your profile. Please try again.'
             );
         } finally {
             setLoading(false);
@@ -58,9 +81,10 @@ const UserProfilePage: React.FC = () => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+
         setSaving(true);
 
-        const toastId = toast.loading("Saving profile...");
+        const toastId = toast.loading('Saving profile...');
 
         try {
             await userService.updateProfile({
@@ -69,13 +93,13 @@ const UserProfilePage: React.FC = () => {
                 bio
             });
 
-            toast.success("Profile updated successfully!", {
+            toast.success('Profile updated successfully!', {
                 id: toastId
             });
         } catch (error) {
-            console.error("Failed to update profile:", error);
+            console.error('Failed to update profile:', error);
 
-            toast.error("Failed to update profile.", {
+            toast.error('Failed to update profile.', {
                 id: toastId
             });
         } finally {
@@ -98,12 +122,19 @@ const UserProfilePage: React.FC = () => {
             <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)]">
                 <div className="text-center p-8 bg-[var(--code-bg)] border border-[var(--border)] rounded-xl shadow-sm">
                     <h2 className="text-xl font-bold text-[var(--text-h)] mb-2">
-                        Profile not found!
+                        Profile could not be loaded
                     </h2>
 
-                    <p>
-                        Did the auth-service create it during registration?
+                    <p className="mb-5">
+                        Please try again or return to the news feed.
                     </p>
+
+                    <button
+                        onClick={() => navigate('/articles')}
+                        className="px-4 py-2 bg-[var(--accent)] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                        Back to News
+                    </button>
                 </div>
             </div>
         );
@@ -114,7 +145,6 @@ const UserProfilePage: React.FC = () => {
 
             <Toaster position="top-right" reverseOrder={false} />
 
-            {/* Simple Header */}
             <header className="px-6 py-5 md:px-10 border-b border-[var(--border)] flex justify-between items-center sticky top-0 bg-[var(--code-bg)] z-10 shadow-sm">
 
                 <h2
@@ -137,7 +167,6 @@ const UserProfilePage: React.FC = () => {
 
                 <div className="bg-[var(--code-bg)] p-8 md:p-10 rounded-xl border border-[var(--border)] shadow-[var(--shadow)]">
 
-                    {/* Profile Header */}
                     <div className="mb-8 border-b border-[var(--border)] pb-8 text-center sm:text-left">
 
                         <h1 className="m-0 mb-1 text-3xl font-bold text-[var(--text-h)] tracking-tight">
@@ -150,8 +179,10 @@ const UserProfilePage: React.FC = () => {
 
                     </div>
 
-                    {/* Edit Form */}
-                    <form onSubmit={handleSave} className="flex flex-col gap-6">
+                    <form
+                        onSubmit={handleSave}
+                        className="flex flex-col gap-6"
+                    >
 
                         <div className="flex flex-col sm:flex-row gap-6">
 
@@ -164,7 +195,9 @@ const UserProfilePage: React.FC = () => {
                                 <input
                                     type="text"
                                     value={firstName}
-                                    onChange={(e) => setFirstName(e.target.value)}
+                                    onChange={(e) =>
+                                        setFirstName(e.target.value)
+                                    }
                                     className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
                                 />
 
@@ -179,7 +212,9 @@ const UserProfilePage: React.FC = () => {
                                 <input
                                     type="text"
                                     value={lastName}
-                                    onChange={(e) => setLastName(e.target.value)}
+                                    onChange={(e) =>
+                                        setLastName(e.target.value)
+                                    }
                                     className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
                                 />
 
@@ -208,7 +243,9 @@ const UserProfilePage: React.FC = () => {
                             disabled={saving}
                             className="w-full mt-4 py-3 px-4 bg-[var(--accent)] text-white font-bold rounded-lg shadow-md transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {saving ? 'Saving...' : 'Save Profile Changes'}
+                            {saving
+                                ? 'Saving...'
+                                : 'Save Profile Changes'}
                         </button>
 
                     </form>

@@ -1,5 +1,4 @@
 import api from '../api/axiosConfig';
-import axiosInstance from '../api/axiosConfig';
 
 export interface LoginCredentials {
     username?: string;
@@ -10,22 +9,23 @@ export interface RegisterCredentials {
     username: string;
     email: string;
     password: string;
-    rolerequest: string; // Changed to match request.getRolerequest() in Java
+    rolerequest: string;
 }
 
 export const authService = {
     login: async (credentials: LoginCredentials) => {
         try {
             const response = await api.post('/auth/login', credentials);
-            
+
             if (response.data && response.data.token) {
                 localStorage.setItem('token', response.data.token);
-                localStorage.setItem('role', response.data.role); 
+                localStorage.setItem('role', response.data.role);
             }
+
             return response.data;
         } catch (error) {
             console.error("Login request failed:", error);
-            throw error; 
+            throw error;
         }
     },
 
@@ -38,16 +38,20 @@ export const authService = {
             throw error;
         }
     },
-    forgotPassword: async (email: string) => {
-    const response = await axiosInstance.post('/auth/forgot-password', { email });
-    return response.data;
-  },
 
-  resetPassword: async (resetData: { email: string; otp: string; newPassword: string }) => {
-    // Adjust the URL if your backend endpoint is named differently
-    const response = await axiosInstance.post('/auth/reset-password', resetData);
-    return response.data;
-  },
+    forgotPassword: async (email: string) => {
+        const response = await api.post('/auth/forgot-password', { email });
+        return response.data;
+    },
+
+    resetPassword: async (resetData: {
+        email: string;
+        otp: string;
+        newPassword: string;
+    }) => {
+        const response = await api.post('/auth/reset-password', resetData);
+        return response.data;
+    },
 
     logout: () => {
         localStorage.removeItem('token');
