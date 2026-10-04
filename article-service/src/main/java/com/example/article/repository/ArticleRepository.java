@@ -2,6 +2,8 @@ package com.example.article.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -37,9 +39,25 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
             @Param("status") ArticleStatus status);
 
 
+    // =========================
+    // PAGINATED ARTICLES
+    // =========================
+
+    Page<Article> findByStatus(
+            ArticleStatus status,
+            Pageable pageable
+    );
+
+
+    // =========================
+    // VIEW COUNT
+    // =========================
+
     @Modifying
     @Query("UPDATE Article a " +
            "SET a.viewCount = a.viewCount + 1 " +
            "WHERE a.id = :articleId")
-    int incrementViewCount(@Param("articleId") Long articleId);
+    int incrementViewCount(
+            @Param("articleId") Long articleId
+    );
 }

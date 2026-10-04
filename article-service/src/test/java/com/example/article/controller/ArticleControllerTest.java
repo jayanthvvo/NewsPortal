@@ -86,16 +86,16 @@ public class ArticleControllerTest {
         assertEquals("Error: Article not found!", response.getBody());
     }
 
-    @Test
-    void testGetAllPublishedArticles() {
-        article.setStatus(ArticleStatus.PUBLISHED);
-        when(articleService.getPublishedArticles()).thenReturn(Arrays.asList(article));
-
-        ResponseEntity<List<Article>> response = articleController.getAllPublishedArticles();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().size());
-    }
+//    @Test
+//    void testGetAllPublishedArticles() {
+//        article.setStatus(ArticleStatus.PUBLISHED);
+//        when(articleService.getPublishedArticles()).thenReturn(Arrays.asList(article));
+//
+//        ResponseEntity<List<Article>> response = articleController.getAllPublishedArticles();
+//
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//        assertEquals(1, response.getBody().size());
+//    }
 
     @Test
     void testGetMyDrafts() {

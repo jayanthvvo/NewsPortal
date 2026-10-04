@@ -21,6 +21,8 @@ import com.example.article.DTO.ArticleLikeResponse;
 import com.example.article.model.Article;
 import com.example.article.model.ArticleStatus;
 import com.example.article.service.ArticleService; 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/articles")
@@ -59,8 +61,12 @@ public class ArticleController {
         return ResponseEntity.badRequest().body("Error: Article not found!");
     }
     @GetMapping("/all")
-    public ResponseEntity<List<Article>> getAllPublishedArticles(){
-        return ResponseEntity.ok(articleService.getPublishedArticles());
+    public ResponseEntity<Page<Article>> getAllPublishedArticles(
+            Pageable pageable) {
+
+        return ResponseEntity.ok(
+                articleService.getPublishedArticles(pageable)
+        );
     }
     
     @PostMapping("/{id}/like")

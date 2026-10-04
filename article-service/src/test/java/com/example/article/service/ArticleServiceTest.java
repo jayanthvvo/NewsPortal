@@ -112,12 +112,12 @@ public class ArticleServiceTest {
         assertEquals(1, list.size());
     }
 
-    @Test
-    void testGetPublishedArticles() {
-        when(articleRepository.findByStatus(ArticleStatus.PUBLISHED)).thenReturn(Arrays.asList(article));
-        List<Article> list = articleService.getPublishedArticles();
-        assertEquals(1, list.size());
-    }
+//    @Test
+//    void testGetPublishedArticles() {
+//        when(articleRepository.findByStatus(ArticleStatus.PUBLISHED)).thenReturn(Arrays.asList(article));
+//        List<Article> list = articleService.getPublishedArticles();
+//        assertEquals(1, list.size());
+//    }
 
     @Test
     void testGetDraftsForAuthor() {

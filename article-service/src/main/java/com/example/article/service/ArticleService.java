@@ -19,7 +19,8 @@ import com.example.article.repository.ArticleRepository;
 import com.example.article.client.CommentClient;
 import com.example.article.repository.ArticleLikeRepository;
 import feign.FeignException;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 @Service
 public class ArticleService {
 
@@ -70,8 +71,11 @@ public class ArticleService {
 	}
 
 	// Users
-	public List<Article> getPublishedArticles() {
-		return articleRepository.findByStatus(ArticleStatus.PUBLISHED);
+	public Page<Article> getPublishedArticles(Pageable pageable) {
+	    return articleRepository.findByStatus(
+	            ArticleStatus.PUBLISHED,
+	            pageable
+	    );
 	}
 
 	// Authors
