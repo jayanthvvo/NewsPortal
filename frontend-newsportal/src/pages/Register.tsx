@@ -40,7 +40,11 @@ const Register: React.FC = () => {
             toast.success(backendMessage || "Registration successful!", { id: toastId }); 
             navigate('/login'); 
         } catch (err: any) {
-            const errorMsg = err.response?.data || "Registration failed. Username or email might already be taken.";
+           const errorMsg =
+    typeof err.response?.data === 'string'
+        ? err.response.data
+        : err.response?.data?.message ||
+          "Registration failed. Username or email might already be taken.";
             setError(errorMsg);
             toast.error(errorMsg, { id: toastId }); // <-- Error toast
         } finally {

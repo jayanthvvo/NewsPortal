@@ -10,14 +10,14 @@ export interface Comment {
 
 export const commentService = {
     getCommentsByArticle: async (articleId: number): Promise<Comment[]> => {
-        try {
-            const response = await api.get(`/comments/article/${articleId}`);
-            return response.data;
-        } catch (error) {
-            console.error("Failed to fetch comments", error);
-            return []; 
-        }
-    },
+    try {
+        const response = await api.get(`/comments/article/${articleId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Failed to fetch comments", error);
+        throw error;
+    }
+},
 
     postComment: async (commentData: { articleId: number; content: string }): Promise<Comment> => {
         try {

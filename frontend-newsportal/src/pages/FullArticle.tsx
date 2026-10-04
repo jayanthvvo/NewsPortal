@@ -32,23 +32,37 @@ const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
         fetchArticleAndComments(activeId);
     }, [activeId]);
 
-    const fetchArticleAndComments = async (targetId: number) => {
-        try {
-            setLoading(true);
-            const fetchedArticle = await articleService.getArticleById(targetId);
-            setArticle(fetchedArticle);
+   const fetchArticleAndComments = async (targetId: number) => {
+    try {
+        setLoading(true);
 
+        // Fetch article separately
+        const fetchedArticle = await articleService.getArticleById(targetId);
+        setArticle(fetchedArticle);
+
+        // Fetch comments separately
+        try {
             const fetchedComments = await commentService.getCommentsByArticle(targetId);
             setComments(fetchedComments);
         } catch (error) {
-            toast.error("Article not found!");
-            if (onBack) onBack();
-            else navigate('/articles');
-        } finally {
-            setLoading(false);
+            console.error("Failed to load comments", error);
+            toast.error("Unable to load comments.");
+            setComments([]);
         }
-    };
 
+    } catch (error) {
+        console.error("Failed to load article", error);
+        toast.error("Article not found!");
+
+        if (onBack) {
+            onBack();
+        } else {
+            navigate('/articles');
+        }
+    } finally {
+        setLoading(false);
+    }
+};
     const handlePostComment = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newComment.trim() || !article) return;
