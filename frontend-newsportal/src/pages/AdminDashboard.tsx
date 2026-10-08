@@ -87,7 +87,8 @@ const AdminDashboard: React.FC = () => {
             const data =
                 await articleService.getAllPublishedArticles();
 
-            setPublishedArticles(data.reverse());
+            
+           setPublishedArticles([...data.content].reverse());
 
         } catch (error) {
             console.error(

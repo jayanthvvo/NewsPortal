@@ -100,7 +100,7 @@ const AuthorWorkspace: React.FC = () => {
 
             const data = await articleService.getAllPublishedArticles();
 
-            setPublishedArticles(data.reverse());
+            setPublishedArticles([...data.content].reverse());
         } catch (error) {
             console.error("Error fetching published articles:", error);
             toast.error("Unable to load published articles.");
