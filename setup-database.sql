@@ -1,6 +1,6 @@
 -- ==========================================================
 -- NEWS PORTAL - CURRENT DATABASE SETUP
--- Generated against the current entities in the repository.
+-- Verified against the current JPA entities and datasource names in all six database-backed microservices.
 -- Default password for all seeded users: 123456
 --
 -- IMPORTANT:
