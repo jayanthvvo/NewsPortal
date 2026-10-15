@@ -43,7 +43,6 @@ CREATE TABLE password_reset_tokens (
     used_at DATETIME(6) NULL,
     CONSTRAINT fk_password_reset_user
         FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE
 );
 
 -- ==========================================================
@@ -78,14 +77,16 @@ USE news_user_db;
 
 CREATE TABLE user_profiles (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(255) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     bio VARCHAR(500),
     avatar_url VARCHAR(255),
     created_at DATETIME(6) NOT NULL,
-    updated_at DATETIME(6) NOT NULL
+    updated_at DATETIME(6) NOT NULL,
+    CONSTRAINT uk_user_profile_username UNIQUE (username),
+    CONSTRAINT uk_user_profile_email UNIQUE (email)
 );
 
 INSERT INTO user_profiles
@@ -119,7 +120,7 @@ CREATE TABLE articles (
     content TEXT NOT NULL,
     author_username VARCHAR(255) NOT NULL,
     category_id BIGINT NOT NULL,
-    status ENUM('DRAFT', 'PUBLISHED', 'REVIEW') NOT NULL DEFAULT 'DRAFT',
+    status ENUM('DRAFT', 'REVIEW', 'PUBLISHED') NOT NULL DEFAULT 'DRAFT',
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NOT NULL,
     view_count BIGINT NOT NULL DEFAULT 0
