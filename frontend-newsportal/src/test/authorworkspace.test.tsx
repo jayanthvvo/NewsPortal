@@ -193,4 +193,34 @@ describe('AuthorWorkspace Component', () => {
             expect(screen.getByText('No saved bookmarks')).toBeInTheDocument();
         });
     });
+
+    test('validates title and content minimum length of 5 characters', async () => {
+        renderWorkspace();
+
+        // Switch to Write tab
+        fireEvent.click(screen.getByText('✍️ Write New Article'));
+
+        // Short title (< 5 characters)
+        fireEvent.change(screen.getByPlaceholderText('Breaking News...'), { target: { value: 'Hey' } });
+        fireEvent.change(screen.getByPlaceholderText('Write your full story here...'), { target: { value: 'Valid story content longer than 5 chars' } });
+        
+        // Wait for category to be set
+        await waitFor(() => {
+            fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } });
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: '💾 Save as Draft' }));
+
+        expect(toast.error).toHaveBeenCalledWith('Title must be at least 5 characters long.');
+        expect(articleService.createArticle).not.toHaveBeenCalled();
+
+        // Fix title, but short content (< 5 characters)
+        fireEvent.change(screen.getByPlaceholderText('Breaking News...'), { target: { value: 'Valid Title' } });
+        fireEvent.change(screen.getByPlaceholderText('Write your full story here...'), { target: { value: 'Hey' } });
+
+        fireEvent.click(screen.getByRole('button', { name: '💾 Save as Draft' }));
+
+        expect(toast.error).toHaveBeenCalledWith('Content must be at least 5 characters long.');
+        expect(articleService.createArticle).not.toHaveBeenCalled();
+    });
 });

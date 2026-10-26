@@ -199,13 +199,69 @@ const AuthorWorkspace: React.FC = () => {
         toast.success("Article removed from saved bookmarks.");
     };
 
+    // Helper to extract clear backend validation error messages
+    const extractErrorMessage = (error: any, fallbackMessage: string): string => {
+        if (error?.response?.data) {
+            const data = error.response.data;
+            if (typeof data === 'string' && data.trim()) {
+                return data;
+            }
+            if (typeof data === 'object') {
+                if (data.message && typeof data.message === 'string') {
+                    return data.message;
+                }
+                // Handle Spring validation errors map: { fieldName: "Error message" }
+                const fieldErrors = Object.values(data)
+                    .filter((msg): msg is string => typeof msg === 'string' && msg.trim().length > 0);
+                if (fieldErrors.length > 0) {
+                    return fieldErrors.join(' • ');
+                }
+            }
+        }
+        if (error?.message && typeof error.message === 'string') {
+            return error.message;
+        }
+        return fallbackMessage;
+    };
+
     // --- ACTIONS ---
 
     const handleSaveDraft = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (categoryId === '') {
-            toast.error("Please select a valid category.");
+        const trimmedTitle = title.trim();
+        const trimmedContent = content.trim();
+
+        // Title validation
+        if (!trimmedTitle) {
+            toast.error("Title is required and cannot be empty.");
+            return;
+        }
+
+        if (trimmedTitle.length < 5) {
+            toast.error("Title must be at least 5 characters long.");
+            return;
+        }
+
+        if (trimmedTitle.length > 200) {
+            toast.error("Title cannot exceed 200 characters.");
+            return;
+        }
+
+        // Category validation
+        if (categoryId === '' || categoryId === undefined || categoryId === null) {
+            toast.error("Please select a valid news category.");
+            return;
+        }
+
+        // Content validation
+        if (!trimmedContent) {
+            toast.error("Article content cannot be empty.");
+            return;
+        }
+
+        if (trimmedContent.length < 5) {
+            toast.error("Content must be at least 5 characters long.");
             return;
         }
 
@@ -213,8 +269,8 @@ const AuthorWorkspace: React.FC = () => {
 
         try {
             await articleService.createArticle({
-                title,
-                content,
+                title: trimmedTitle,
+                content: trimmedContent,
                 categoryId: Number(categoryId)
             });
 
@@ -222,9 +278,10 @@ const AuthorWorkspace: React.FC = () => {
             setTitle('');
             setContent('');
             setActiveTab('manage');
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to save draft:", error);
-            toast.error("Failed to save draft. Please try again.");
+            const msg = extractErrorMessage(error, "Failed to save draft. Please check your article details.");
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
@@ -237,9 +294,10 @@ const AuthorWorkspace: React.FC = () => {
             await articleService.submitForReview(confirmSubmitId);
             toast.success("Submitted for review!");
             await fetchMyArticles();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to submit article:", error);
-            toast.error("Failed to submit article for review.");
+            const msg = extractErrorMessage(error, "Failed to submit article for review.");
+            toast.error(msg);
         } finally {
             setConfirmSubmitId(null);
         }
@@ -536,8 +594,14 @@ const AuthorWorkspace: React.FC = () => {
                                             <label className="text-sm font-bold text-neutral-900 dark:text-white">
                                                 Headline
                                             </label>
-                                            <span className="text-xs text-neutral-400">
-                                                {title.length} characters
+                                            <span className={`text-xs ${
+                                                title.trim().length > 0 && title.trim().length < 5
+                                                    ? 'text-rose-500 font-semibold'
+                                                    : title.trim().length > 200
+                                                    ? 'text-rose-500 font-semibold'
+                                                    : 'text-neutral-400'
+                                            }`}>
+                                                {title.trim().length}/200 characters (min 5)
                                             </span>
                                         </div>
                                         <input
@@ -545,9 +609,20 @@ const AuthorWorkspace: React.FC = () => {
                                             value={title}
                                             onChange={e => setTitle(e.target.value)}
                                             required
-                                            className="w-full px-4 py-3 bg-neutral-50 dark:bg-[#18181b] text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-800 rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:ring-neutral-400/30 focus:border-neutral-600 transition-all placeholder:text-neutral-400"
+                                            minLength={5}
+                                            maxLength={200}
+                                            className={`w-full px-4 py-3 bg-neutral-50 dark:bg-[#18181b] text-neutral-900 dark:text-white border ${
+                                                title.trim().length > 0 && title.trim().length < 5
+                                                    ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-400/30'
+                                                    : 'border-neutral-200 dark:border-neutral-800 focus:ring-neutral-400/30'
+                                            } rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:border-neutral-600 transition-all placeholder:text-neutral-400`}
                                             placeholder="Breaking News..."
                                         />
+                                        {title.trim().length > 0 && title.trim().length < 5 && (
+                                            <p className="mt-1.5 text-xs text-rose-500 font-medium">
+                                                Title must be at least 5 characters long.
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* News Category */}
@@ -579,6 +654,14 @@ const AuthorWorkspace: React.FC = () => {
                                                 Article Content
                                             </label>
                                             <div className="flex items-center gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+                                                <span className={
+                                                    content.trim().length > 0 && content.trim().length < 5
+                                                        ? 'text-rose-500 font-semibold'
+                                                        : 'text-neutral-400'
+                                                }>
+                                                    {content.trim().length} characters (min 5)
+                                                </span>
+                                                <span>•</span>
                                                 <span>{wordCount} words</span>
                                                 <span>•</span>
                                                 <span className="flex items-center gap-1">
@@ -591,10 +674,20 @@ const AuthorWorkspace: React.FC = () => {
                                             value={content}
                                             onChange={e => setContent(e.target.value)}
                                             required
+                                            minLength={5}
                                             rows={12}
-                                            className="w-full p-4 bg-neutral-50 dark:bg-[#18181b] text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-neutral-400/30 focus:border-neutral-600 transition-all resize-y placeholder:text-neutral-400"
+                                            className={`w-full p-4 bg-neutral-50 dark:bg-[#18181b] text-neutral-900 dark:text-white border ${
+                                                content.trim().length > 0 && content.trim().length < 5
+                                                    ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-400/30'
+                                                    : 'border-neutral-200 dark:border-neutral-800 focus:ring-neutral-400/30'
+                                            } rounded-xl text-sm leading-relaxed focus:outline-none focus:ring-2 focus:border-neutral-600 transition-all resize-y placeholder:text-neutral-400`}
                                             placeholder="Write your full story here..."
                                         />
+                                        {content.trim().length > 0 && content.trim().length < 5 && (
+                                            <p className="mt-1.5 text-xs text-rose-500 font-medium">
+                                                Content must be at least 5 characters long.
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Form Footer */}
