@@ -8,6 +8,9 @@ export interface Article {
     categoryId: number;
     status: string;
     viewCount?: number;
+    likeCount?: number;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export interface ArticleLikeResponse {

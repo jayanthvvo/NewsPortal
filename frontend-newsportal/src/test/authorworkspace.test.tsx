@@ -24,7 +24,15 @@ vi.mock('../services/authService', () => ({
     }
 }));
 
-vi.mock('../services/articleService', () => ({ articleService: { getAllPublishedArticles: vi.fn(), getMyArticles: vi.fn(), createArticle: vi.fn(), submitForReview: vi.fn() } }));
+vi.mock('../services/articleService', () => ({
+    articleService: {
+        getAllPublishedArticles: vi.fn(),
+        getMyArticles: vi.fn(),
+        createArticle: vi.fn(),
+        submitForReview: vi.fn(),
+        getLikedArticles: vi.fn()
+    }
+}));
 vi.mock('../services/categoryService', () => ({ categoryService: { getAllCategories: vi.fn() } }));
 vi.mock('../services/userService', () => ({ userService: { getProfile: vi.fn(), updateProfile: vi.fn() } }));
 
@@ -50,6 +58,7 @@ describe('AuthorWorkspace Component', () => {
         (categoryService.getAllCategories as ReturnType<typeof vi.fn>).mockResolvedValue([{ id: 1, name: 'Tech', description: '' }]);
         (articleService.getAllPublishedArticles as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         (articleService.getMyArticles as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (articleService.getLikedArticles as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         
         // Mock a valid JWT payload for the profile parsing
         const mockPayload = btoa(JSON.stringify({ sub: 'authorUser' }));
@@ -130,6 +139,58 @@ describe('AuthorWorkspace Component', () => {
         await waitFor(() => {
             expect(userService.updateProfile).toHaveBeenCalledWith({ firstName: 'Jane', lastName: 'Doe', bio: 'Hello' });
             expect(toast.success).toHaveBeenCalledWith('Profile updated successfully!');
+        });
+    });
+
+    test('opens published article when clicked in My Content', async () => {
+        (articleService.getMyArticles as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { id: 42, title: 'Breaking Tech News', author: 'authorUser', content: 'Published story content', categoryId: 1, status: 'PUBLISHED' }
+        ]);
+
+        renderWorkspace();
+
+        // Switch to My Content tab
+        fireEvent.click(screen.getByText('🗂️ My Content'));
+        expect(screen.getByText('My Content Portfolio')).toBeInTheDocument();
+
+        // Wait for articles to load
+        await waitFor(() => {
+            expect(screen.getByText('Breaking Tech News')).toBeInTheDocument();
+        });
+
+        // Click "View Published Article →"
+        const viewBtn = screen.getByRole('button', { name: 'View Published Article →' });
+        expect(viewBtn).toBeInTheDocument();
+        fireEvent.click(viewBtn);
+
+        // Full article view should open
+        expect(screen.getByTestId('full-article-mock')).toBeInTheDocument();
+    });
+
+    test('displays reading activity with liked articles under My Profile tab', async () => {
+        (articleService.getLikedArticles as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { id: 99, title: 'Favorite Science Story', author: 'scienceWriter', content: 'Exploring deep space...', viewCount: 150 }
+        ]);
+
+        renderWorkspace();
+
+        // Switch to My Profile tab
+        fireEvent.click(screen.getByText('👤 My Profile'));
+        expect(screen.getByText('My Profile Settings')).toBeInTheDocument();
+
+        // Check Reading Activity section
+        await waitFor(() => {
+            expect(screen.getByText('Reading Activity')).toBeInTheDocument();
+            expect(screen.getByText('Favorite Science Story')).toBeInTheDocument();
+            expect(screen.getByText('Liked Articles')).toBeInTheDocument();
+        });
+
+        // Switch to Saved Bookmarks sub-tab
+        const savedTabBtn = screen.getByRole('button', { name: /Saved Bookmarks/i });
+        fireEvent.click(savedTabBtn);
+
+        await waitFor(() => {
+            expect(screen.getByText('No saved bookmarks')).toBeInTheDocument();
         });
     });
 });
