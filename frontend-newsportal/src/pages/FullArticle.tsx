@@ -1,1257 +1,523 @@
-
-import React, {
-    useEffect,
-    useRef,
-    useState
-} from 'react';
-
+import React, { useEffect, useRef, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 import {
-    useParams,
-    useNavigate
-} from 'react-router-dom';
+    ArrowLeft,
+    Heart,
+    Eye,
+    MessageSquare,
+    Clock,
+    Trash2,
+    Send,
+    Share2,
+    Bookmark,
+    Check
+} from 'lucide-react';
 
-import toast, {
-    Toaster
-} from 'react-hot-toast';
-
-import {
-    articleService,
-    type Article
-} from '../services/articleService';
-
-import {
-    commentService,
-    type Comment
-} from '../services/commentService';
-
-import {
-    authService
-} from '../services/authService';
-
+import { articleService, type Article } from '../services/articleService';
+import { commentService, type Comment } from '../services/commentService';
+import { categoryService, type Category } from '../services/categoryService';
+import { bookmarkService } from '../services/bookmarkService';
+import { authService } from '../services/authService';
 
 interface FullArticleProps {
     articleId?: number;
     onBack?: () => void;
 }
 
-
-const FullArticle: React.FC<FullArticleProps> = ({
-    articleId,
-    onBack
-}) => {
-
-    const { id } =
-        useParams<{ id: string }>();
-
-    const navigate =
-        useNavigate();
-
-    const activeId =
-        articleId || Number(id);
-
+const FullArticle: React.FC<FullArticleProps> = ({ articleId, onBack }) => {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const activeId = articleId || Number(id);
 
     // =========================
-    // ARTICLE
+    // STATE
     // =========================
+    const [article, setArticle] = useState<Article | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    const [article, setArticle] =
-        useState<Article | null>(null);
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [newComment, setNewComment] = useState('');
 
-    const [loading, setLoading] =
-        useState(true);
+    const [liked, setLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(0);
+    const [likeLoading, setLikeLoading] = useState(false);
 
+    const [commentToDelete, setCommentToDelete] = useState<number | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
 
-    // =========================
-    // COMMENTS
-    // =========================
-
-    const [comments, setComments] =
-        useState<Comment[]>([]);
-
-    const [newComment, setNewComment] =
-        useState('');
-
-
-    // =========================
-    // LIKES
-    // =========================
-
-    const [liked, setLiked] =
-        useState(false);
-
-    const [likeCount, setLikeCount] =
-        useState(0);
-
-    const [likeLoading, setLikeLoading] =
-        useState(false);
-
+    const viewTrackedRef = useRef<number | null>(null);
+    const userRole = authService.getRole();
 
     // =========================
-    // COMMENT DELETE
+    // LOAD CATEGORIES
     // =========================
-
-    const [commentToDelete, setCommentToDelete] =
-        useState<number | null>(null);
-
-
-    // =========================
-    // VIEW TRACKING
-    // =========================
-
-    /*
-     * Prevent React StrictMode from
-     * incrementing the same article twice
-     * during development.
-     */
-    const viewTrackedRef =
-        useRef<number | null>(null);
-
-
-    const userRole =
-        authService.getRole();
-
+    useEffect(() => {
+        categoryService.getAllCategories()
+            .then(data => setCategories(Array.isArray(data) ? data : []))
+            .catch(() => {});
+    }, []);
 
     // =========================
     // LOAD ARTICLE
     // =========================
-
     useEffect(() => {
-
-        if (!activeId) {
-            return;
-        }
-
+        if (!activeId) return;
         fetchArticleAndComments(activeId);
-
     }, [activeId]);
 
+    const fetchArticleAndComments = async (targetId: number) => {
+        try {
+            setLoading(true);
 
-    const fetchArticleAndComments =
-        async (targetId: number) => {
-
-            try {
-
-                setLoading(true);
-
-
-                // =========================
-                // 1. GET ARTICLE
-                // =========================
-
-                const fetchedArticle =
-                    await articleService.getArticleById(
-                        targetId
-                    );
-
-                setArticle(
-                    fetchedArticle
-                );
-
-
-                // =========================
-                // 2. INCREMENT VIEW
-                // =========================
-
-                /*
-                 * Only increment once for this
-                 * article during this component
-                 * lifecycle.
-                 */
-                if (
-                    viewTrackedRef.current !==
-                    targetId
-                ) {
-
-                    viewTrackedRef.current =
-                        targetId;
-
-                    try {
-
-                        const updatedArticle =
-                            await articleService.incrementView(
-                                targetId
-                            );
-
-
-                        setArticle(prev =>
-                            prev
-                                ? {
-                                      ...prev,
-
-                                      viewCount:
-                                          updatedArticle.viewCount ??
-                                          (
-                                              prev.viewCount ||
-                                              0
-                                          ) + 1
-                                  }
-                                : prev
-                        );
-
-                    } catch (error) {
-
-                        /*
-                         * If the API request failed,
-                         * allow it to be retried.
-                         */
-                        viewTrackedRef.current =
-                            null;
-
-                        console.error(
-                            'Failed to increment view count:',
-                            error
-                        );
-                    }
-                }
-
-
-                // =========================
-                // 3. GET LIKE STATUS
-                // =========================
-
-                try {
-
-                    const likeStatus =
-                        await articleService.getLikeStatus(
-                            targetId
-                        );
-
-                    setLiked(
-                        likeStatus.liked
-                    );
-
-                    setLikeCount(
-                        likeStatus.likeCount
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        'Failed to load like status:',
-                        error
-                    );
-                }
-
-
-                // =========================
-                // 4. GET COMMENTS
-                // =========================
-
-                try {
-
-                    const fetchedComments =
-                        await commentService.getCommentsByArticle(
-                            targetId
-                        );
-
-                    setComments(
-                        fetchedComments
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        'Failed to load comments:',
-                        error
-                    );
-
-                    toast.error(
-                        'Unable to load comments.'
-                    );
-
-                    setComments([]);
-                }
-
-            } catch (error) {
-
-                console.error(
-                    'Failed to load article:',
-                    error
-                );
-
-                toast.error(
-                    'Article not found!'
-                );
-
-
-                if (onBack) {
-
-                    onBack();
-
-                } else {
-
-                    navigate('/articles');
-
-                }
-
-            } finally {
-
-                setLoading(false);
-
+            // 1. Get Article
+            const fetchedArticle = await articleService.getArticleById(targetId);
+            setArticle(fetchedArticle);
+            if (fetchedArticle?.id) {
+                setIsSaved(bookmarkService.isSaved(fetchedArticle.id));
             }
-        };
 
+            // 2. Increment View (Only once per targetId)
+            if (viewTrackedRef.current !== targetId) {
+                viewTrackedRef.current = targetId;
+                try {
+                    const updatedArticle = await articleService.incrementView(targetId);
+                    setArticle(prev =>
+                        prev
+                            ? {
+                                  ...prev,
+                                  viewCount:
+                                      updatedArticle.viewCount ??
+                                      (prev.viewCount || 0) + 1
+                              }
+                            : prev
+                    );
+                } catch (error) {
+                    viewTrackedRef.current = null;
+                    console.error('Failed to increment view count:', error);
+                }
+            }
+
+            // 3. Get Like Status
+            try {
+                const likeStatus = await articleService.getLikeStatus(targetId);
+                setLiked(likeStatus.liked);
+                setLikeCount(likeStatus.likeCount);
+            } catch (error) {
+                console.error('Failed to load like status:', error);
+            }
+
+            // 4. Get Comments
+            try {
+                const fetchedComments = await commentService.getCommentsByArticle(targetId);
+                setComments(fetchedComments || []);
+            } catch (error) {
+                console.error('Failed to load comments:', error);
+                setComments([]);
+            }
+        } catch (error) {
+            console.error('Failed to load article:', error);
+            toast.error('Article not found!');
+            if (onBack) {
+                onBack();
+            } else {
+                navigate('/articles');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // =========================
     // LIKE / UNLIKE
     // =========================
+    const handleLike = async () => {
+        if (!article?.id || likeLoading) return;
 
-    const handleLike =
-        async () => {
+        try {
+            setLikeLoading(true);
 
-            if (
-                !article?.id ||
-                likeLoading
-            ) {
-                return;
+            if (liked) {
+                const response = await articleService.unlikeArticle(article.id);
+                setLiked(false);
+                setLikeCount(response.likeCount);
+            } else {
+                const response = await articleService.likeArticle(article.id);
+                setLiked(true);
+                setLikeCount(response.likeCount);
             }
-
-
-            try {
-
-                setLikeLoading(true);
-
-
-                // =========================
-                // UNLIKE
-                // =========================
-
-                if (liked) {
-
-                    const response =
-                        await articleService.unlikeArticle(
-                            article.id
-                        );
-
-                    setLiked(false);
-
-                    setLikeCount(
-                        response.likeCount
-                    );
-
-
-                }
-
-                // =========================
-                // LIKE
-                // =========================
-
-                else {
-
-                    const response =
-                        await articleService.likeArticle(
-                            article.id
-                        );
-
-                    setLiked(true);
-
-                    setLikeCount(
-                        response.likeCount
-                    );
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    'Failed to update like:',
-                    error
-                );
-
-                toast.error(
-                    'Unable to update like. Please try again.'
-                );
-
-            } finally {
-
-                setLikeLoading(false);
-
-            }
-        };
-
+        } catch (error) {
+            console.error('Failed to update like:', error);
+            toast.error('Unable to update like. Please try again.');
+        } finally {
+            setLikeLoading(false);
+        }
+    };
 
     // =========================
     // POST COMMENT
     // =========================
+    const handlePostComment = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-    const handlePostComment =
-        async (
-            e: React.FormEvent
-        ) => {
+        if (!newComment.trim() || !article) return;
 
-            e.preventDefault();
+        const toastId = toast.loading('Posting comment...');
 
+        try {
+            await commentService.postComment({
+                articleId: article.id!,
+                content: newComment
+            });
 
-            if (
-                !newComment.trim() ||
-                !article
-            ) {
-                return;
-            }
-
-
-            const toastId =
-                toast.loading(
-                    'Posting comment...'
-                );
-
+            setNewComment('');
+            toast.success('Comment posted successfully!', { id: toastId });
 
             try {
-
-                await commentService.postComment({
-                    articleId: article.id!,
-                    content: newComment
-                });
-
-
-                setNewComment('');
-
-
-                toast.success(
-                    'Comment posted successfully!',
-                    {
-                        id: toastId
-                    }
-                );
-
-
-                try {
-
-                    const updatedComments =
-                        await commentService.getCommentsByArticle(
-                            article.id!
-                        );
-
-                    setComments(
-                        updatedComments
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        'Comment was posted but refresh failed:',
-                        error
-                    );
-
-                    toast.error(
-                        'Comment posted, but comments could not be refreshed.'
-                    );
-                }
-
+                const updatedComments = await commentService.getCommentsByArticle(article.id!);
+                setComments(updatedComments || []);
             } catch (error) {
-
-                console.error(
-                    'Failed to post comment:',
-                    error
-                );
-
-                toast.error(
-                    'Failed to post comment. Please try again.',
-                    {
-                        id: toastId
-                    }
-                );
+                console.error('Comment refresh failed:', error);
             }
-        };
-
+        } catch (error) {
+            console.error('Failed to post comment:', error);
+            toast.error('Failed to post comment. Please try again.', { id: toastId });
+        }
+    };
 
     // =========================
     // DELETE COMMENT
     // =========================
+    const confirmDeleteComment = async () => {
+        if (!commentToDelete) return;
 
-    const confirmDeleteComment =
-        async () => {
+        const toastId = toast.loading('Deleting comment...');
 
-            if (!commentToDelete) {
-                return;
-            }
+        try {
+            await commentService.deleteComment(commentToDelete);
+            setComments(prev => prev.filter(c => c.id !== commentToDelete));
+            toast.success('Comment deleted permanently.', { id: toastId });
+        } catch (error) {
+            console.error('Failed to delete comment:', error);
+            toast.error('Failed to delete comment.', { id: toastId });
+        } finally {
+            setCommentToDelete(null);
+        }
+    };
 
+    const handleBackClick = () => {
+        if (onBack) {
+            onBack();
+        } else {
+            navigate('/articles');
+        }
+    };
 
-            const toastId =
-                toast.loading(
-                    'Deleting comment...'
-                );
+    const handleShare = () => {
+        navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        toast.success('Article link copied to clipboard!');
+        setTimeout(() => setCopied(false), 2500);
+    };
 
+    const handleToggleSave = () => {
+        if (!article) return;
+        const nowSaved = bookmarkService.toggleSave(article);
+        setIsSaved(nowSaved);
+        if (nowSaved) {
+            toast.success('Article saved to your bookmarks!');
+        } else {
+            toast.success('Article removed from your bookmarks.');
+        }
+    };
 
-            try {
-
-                await commentService.deleteComment(
-                    commentToDelete
-                );
-
-
-                setComments(
-                    prevComments =>
-                        prevComments.filter(
-                            comment =>
-                                comment.id !==
-                                commentToDelete
-                        )
-                );
-
-
-                toast.success(
-                    'Comment deleted permanently.',
-                    {
-                        id: toastId
-                    }
-                );
-
-            } catch (error) {
-
-                console.error(
-                    'Failed to delete comment:',
-                    error
-                );
-
-                toast.error(
-                    'Failed to delete comment.',
-                    {
-                        id: toastId
-                    }
-                );
-
-            } finally {
-
-                setCommentToDelete(null);
-
-            }
-        };
-
+    const words = article?.content ? article.content.trim().split(/\s+/).length : 0;
+    const estTime = Math.max(1, Math.ceil(words / 180));
+    const categoryName = categories.find(c => c.id === article?.categoryId)?.name;
 
     // =========================
-    // BACK
+    // LOADING & ERROR
     // =========================
-
-    const handleBackClick =
-        () => {
-
-            if (onBack) {
-
-                onBack();
-
-            } else {
-
-                navigate('/articles');
-
-            }
-        };
-
-
-    // =========================
-    // LOADING
-    // =========================
-
     if (loading) {
-
         return (
-
-            <div
-                className={`
-                    flex
-                    items-center
-                    justify-center
-                    bg-[var(--bg)]
-                    text-[var(--text)]
-                    ${
-                        !onBack
-                            ? 'min-h-screen'
-                            : 'py-20'
-                    }
-                `}
-            >
-
-                <div className="text-xl animate-pulse font-sans">
+            <div className={`flex flex-col items-center justify-center bg-transparent ${!onBack ? 'min-h-screen' : 'py-20'}`}>
+                <div className="w-9 h-9 border-2 border-neutral-900 dark:border-white border-t-transparent rounded-full animate-spin mb-4" />
+                <div className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">
                     Loading Story...
                 </div>
-
             </div>
         );
     }
 
-
-    // =========================
-    // ARTICLE NOT FOUND
-    // =========================
-
-    if (!article) {
-        return null;
-    }
-
+    if (!article) return null;
 
     return (
+        <div className={`w-full bg-transparent text-neutral-900 dark:text-neutral-100 font-sans relative ${!onBack ? 'min-h-screen pb-16' : 'pb-6'}`}>
+            <Toaster position="top-right" reverseOrder={false} />
 
-        <div
-            className={`
-                bg-[var(--bg)]
-                font-sans
-                relative
-                ${
-                    !onBack
-                        ? 'min-h-screen pb-16'
-                        : 'pb-6'
-                }
-            `}
-        >
-
-            <Toaster
-                position="top-right"
-                reverseOrder={false}
-            />
-
-
-            {/* =========================
-                HEADER
-            ========================= */}
-
+            {/* TOP NAVIGATION / BACK BUTTON */}
             {!onBack ? (
-
-                <header
-                    className="
-                        px-6
-                        py-5
-                        md:px-10
-                        border-b
-                        border-[var(--border)]
-                        flex
-                        justify-between
-                        items-center
-                        sticky
-                        top-0
-                        bg-[var(--bg)]
-                        z-10
-                        shadow-sm
-                    "
-                >
-
-                    <h2
-                        className="
-                            m-0
-                            text-lg
-                            font-semibold
-                            text-[var(--text-h)]
-                            cursor-pointer
-                            hover:text-[var(--accent)]
-                            transition-colors
-                        "
-                        onClick={
-                            handleBackClick
-                        }
-                    >
-                        ← Back to News Feed
-                    </h2>
-
-
-                    <div
-                        className="
-                            text-sm
-                            text-[var(--text)]
-                            font-medium
-                        "
-                    >
-                        Logged in as{' '}
-
-                        <span
-                            className="
-                                text-[var(--accent)]
-                            "
-                        >
-                            {userRole}
-                        </span>
-                    </div>
-
-                </header>
-
-            ) : (
-
-                <div className="mb-8">
-
-                    <button
-                        onClick={
-                            handleBackClick
-                        }
-                        className="
-                            px-4
-                            py-2
-                            bg-[var(--code-bg)]
-                            border
-                            border-[var(--border)]
-                            rounded-lg
-                            text-[var(--text-h)]
-                            font-semibold
-                            hover:bg-[var(--accent-bg)]
-                            transition-colors
-                            shadow-sm
-                        "
-                    >
-                        ← Back to List
-                    </button>
-
-                </div>
-
-            )}
-
-
-            <main
-                className={`
-                    max-w-3xl
-                    mx-auto
-                    ${
-                        !onBack
-                            ? 'mt-10 px-6 md:px-0'
-                            : ''
-                    }
-                `}
-            >
-
-
-                {/* =========================
-                    ARTICLE
-                ========================= */}
-
-                <article>
-
-                    <h1
-                        className="
-                            text-4xl
-                            md:text-5xl
-                            font-bold
-                            leading-tight
-                            text-[var(--text-h)]
-                            mb-6
-                            font-serif
-                        "
-                    >
-                        {article.title}
-                    </h1>
-
-
-                    <div
-                        className="
-                            text-base
-                            text-[var(--text)]
-                            border-b-2
-                            border-[var(--border)]
-                            pb-5
-                            mb-6
-                            italic
-                        "
-                    >
-
-                        Written by{' '}
-
-                        <strong
-                            className="
-                                text-[var(--text-h)]
-                            "
-                        >
-                            {article.author}
-                        </strong>
-
-                        {' | Status: '}
-
-                        <span
-                            className="
-                                uppercase
-                                tracking-wide
-                                text-xs
-                                font-bold
-                                px-2
-                                py-1
-                                bg-[var(--code-bg)]
-                                rounded
-                                border
-                                border-[var(--border)]
-                                ml-1
-                                not-italic
-                            "
-                        >
-                            {article.status}
-                        </span>
-
-                    </div>
-
-
-                    {/* =========================
-                        ARTICLE STATS
-                    ========================= */}
-
-                    <div
-                        className="
-                            flex
-                            flex-wrap
-                            items-center
-                            gap-6
-                            mb-8
-                            text-sm
-                            text-[var(--text)]
-                            font-sans
-                        "
-                    >
-
-                        {/* VIEWS */}
-
-                        <div
-                            className="
-                                flex
-                                items-center
-                                gap-2
-                            "
-                        >
-
-                            <span className="text-lg">
-                                👁️
-                            </span>
-
-                            <span
-                                className="
-                                    font-semibold
-                                "
-                            >
-                                {article.viewCount || 0}
-                            </span>
-
-                            <span>
-                                {
-                                    article.viewCount === 1
-                                        ? 'view'
-                                        : 'views'
-                                }
-                            </span>
-
-                        </div>
-
-
-                        {/* LIKES */}
-
+                <header className="sticky top-0 z-20 backdrop-blur-md bg-white/90 dark:bg-black/90 border-b border-neutral-200 dark:border-neutral-800 px-4 sm:px-8 py-3 shadow-2xs mb-6">
+                    <div className="max-w-6xl mx-auto flex items-center justify-between">
                         <button
-                            onClick={handleLike}
-                            disabled={likeLoading}
-                            className={`
-                                flex
-                                items-center
-                                gap-2
-                                font-semibold
-                                transition-all
-                                ${
-                                    liked
-                                        ? 'text-red-500'
-                                        : 'text-[var(--text)] hover:text-red-500'
-                                }
-                                ${
-                                    likeLoading
-                                        ? 'opacity-50 cursor-not-allowed'
-                                        : 'cursor-pointer'
-                                }
-                            `}
+                            onClick={handleBackClick}
+                            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-200 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
                         >
-
-                            <span className="text-xl">
-
-                                {liked
-                                    ? '❤️'
-                                    : '♡'}
-
-                            </span>
-
-                            <span>
-
-                                {likeCount}{' '}
-
-                                {
-                                    likeCount === 1
-                                        ? 'like'
-                                        : 'likes'
-                                }
-
-                            </span>
-
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>← Back to News Feed</span>
                         </button>
 
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                            Logged in as <span className="font-semibold text-neutral-900 dark:text-white">{userRole}</span>
+                        </div>
+                    </div>
+                </header>
+            ) : (
+                <div className="mb-5 max-w-6xl mx-auto">
+                    <button
+                        onClick={handleBackClick}
+                        className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#121214] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-zinc-800 transition-all cursor-pointer shadow-2xs"
+                    >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>← Back to List</span>
+                    </button>
+                </div>
+            )}
+
+            {/* WIDE MODERN ARTICLE CONTAINER (max-w-6xl) */}
+            <main className={`max-w-6xl mx-auto ${!onBack ? 'px-4 sm:px-6' : ''}`}>
+                {/* SHARP MAIN ARTICLE BOX */}
+                <article className="bg-white dark:bg-[#101012] rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 sm:p-9 shadow-xs">
+                    {/* Header meta & sharp controls */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-neutral-200 dark:border-neutral-800/80 mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-neutral-900 dark:bg-zinc-800 border border-neutral-700 text-white font-bold text-sm flex items-center justify-center shadow-2xs shrink-0">
+                                {(article.author || 'A').charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div className="text-sm font-bold text-neutral-900 dark:text-white">
+                                    {article.author}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                                    <span className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {estTime} min read
+                                    </span>
+                                    <span>•</span>
+                                    <span className="uppercase font-semibold text-[10px] px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-zinc-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-zinc-700">
+                                        {article.status}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Top quick actions */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleLike}
+                                disabled={likeLoading}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                                    liked
+                                        ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 border-rose-200 dark:border-rose-900/60'
+                                        : 'bg-white dark:bg-[#141416] text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50'
+                                }`}
+                            >
+                                <Heart className={`w-3.5 h-3.5 ${liked ? 'fill-current text-rose-600' : ''}`} />
+                                <span>{likeCount}</span>
+                            </button>
+
+                            <button
+                                onClick={handleShare}
+                                className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                                title="Share Story"
+                            >
+                                {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
+                            </button>
+                            <button
+                                onClick={handleToggleSave}
+                                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                    isSaved
+                                        ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 border-amber-200 dark:border-amber-900/60 shadow-2xs'
+                                        : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-zinc-800'
+                                }`}
+                                title={isSaved ? 'Remove from bookmarks' : 'Save to bookmarks'}
+                            >
+                                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current text-amber-600' : ''}`} />
+                            </button>
+                        </div>
                     </div>
 
+                    {/* Category Badge & Headline */}
+                    <div className="mb-5">
+                        {categoryName && (
+                            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-neutral-100 dark:bg-zinc-800 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-zinc-700 mb-3">
+                                {categoryName}
+                            </div>
+                        )}
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-[1.18] tracking-tight text-black dark:text-white">
+                            {article.title}
+                        </h1>
+                    </div>
 
-                    {/* =========================
-                        ARTICLE CONTENT
-                    ========================= */}
+                    {/* Stats Strip */}
+                    <div className="flex items-center gap-5 pb-5 mb-7 border-b border-neutral-100 dark:border-neutral-800/60 text-xs text-neutral-500 dark:text-neutral-400">
+                        <div className="flex items-center gap-1.5">
+                            <Eye className="w-3.5 h-3.5 text-neutral-400" />
+                            <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                {article.viewCount || 0}
+                            </span>
+                            <span>{article.viewCount === 1 ? 'view' : 'views'}</span>
+                        </div>
+                        <span>•</span>
+                        <div className="flex items-center gap-1.5">
+                            <MessageSquare className="w-3.5 h-3.5 text-neutral-400" />
+                            <span>{comments.length} comments</span>
+                        </div>
+                    </div>
 
-                    <div
-                        className="
-                            text-lg
-                            md:text-xl
-                            leading-relaxed
-                            text-[var(--text-h)]
-                            whitespace-pre-wrap
-                            font-serif
-                        "
-                    >
+                    {/* Full Article Content */}
+                    <div className="text-base sm:text-lg leading-relaxed text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap font-sans">
                         {article.content}
                     </div>
 
+                    {/* Bottom Like Callout */}
+                    <div className="mt-10 pt-5 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+                        <div className="text-xs sm:text-sm font-semibold text-neutral-600 dark:text-neutral-400">
+                            Enjoyed this report?
+                        </div>
+                        <button
+                            onClick={handleLike}
+                            disabled={likeLoading}
+                            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                                liked
+                                    ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 border-rose-200 dark:border-rose-900/60'
+                                    : 'bg-white dark:bg-[#141416] text-neutral-800 dark:text-neutral-200 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50'
+                            }`}
+                        >
+                            <Heart className={`w-3.5 h-3.5 ${liked ? 'fill-current text-rose-600' : ''}`} />
+                            <span>{liked ? 'Liked Story' : 'Like Story'}</span>
+                        </button>
+                    </div>
                 </article>
 
-
                 {/* =========================
-                    COMMENTS
+                    SHARP COMPACT COMMENTS BOX
                 ========================= */}
+                <section className="mt-6 bg-white dark:bg-[#101012] rounded-xl border border-neutral-200 dark:border-neutral-800 p-5 sm:p-7 shadow-xs">
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-4 mb-5 border-b border-neutral-200 dark:border-neutral-800">
+                        <h3 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white m-0 flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                            <span>Discussion ({comments.length})</span>
+                        </h3>
+                        <span className="text-xs text-neutral-400 font-medium">
+                            Join the conversation
+                        </span>
+                    </div>
 
-                <section
-                    className="
-                        mt-16
-                        border-t
-                        border-[var(--border)]
-                        pt-10
-                        font-sans
-                    "
-                >
-
-                    <h3
-                        className="
-                            text-2xl
-                            font-bold
-                            mb-6
-                            text-[var(--text-h)]
-                        "
-                    >
-                        Discussion ({comments.length})
-                    </h3>
-
-
-                    {/* POST COMMENT */}
-
-                    <div
-                        className="
-                            bg-[var(--code-bg)]
-                            p-6
-                            rounded-xl
-                            mb-10
-                            border
-                            border-[var(--border)]
-                            shadow-sm
-                        "
-                    >
-
-                        <form
-                            onSubmit={
-                                handlePostComment
-                            }
-                            className="
-                                flex
-                                flex-col
-                                gap-4
-                            "
-                        >
-
+                    {/* Compact Sharp Comment Input Form */}
+                    <form onSubmit={handlePostComment} className="mb-6">
+                        <div className="flex flex-col gap-2">
                             <textarea
                                 value={newComment}
-                                onChange={
-                                    e =>
-                                        setNewComment(
-                                            e.target.value
-                                        )
-                                }
-                                placeholder="Share your thoughts on this story..."
+                                onChange={e => setNewComment(e.target.value)}
+                                placeholder="Write your thoughts on this story..."
                                 required
-                                className="
-                                    w-full
-                                    p-4
-                                    rounded-lg
-                                    border
-                                    border-[var(--border)]
-                                    bg-[var(--bg)]
-                                    text-[var(--text-h)]
-                                    min-h-[120px]
-                                    text-base
-                                    focus:ring-2
-                                    focus:ring-[var(--accent)]
-                                    outline-none
-                                    transition-all
-                                    resize-y
-                                "
+                                rows={2}
+                                className="w-full p-3 text-sm bg-neutral-50 dark:bg-[#161618] text-neutral-900 dark:text-white rounded-lg border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-600 transition-all resize-y placeholder:text-neutral-400"
                             />
-
-
-                            <div
-                                className="
-                                    flex
-                                    justify-end
-                                "
-                            >
-
+                            <div className="flex justify-end">
                                 <button
                                     type="submit"
-                                    className="
-                                        px-6
-                                        py-2.5
-                                        bg-[var(--accent)]
-                                        text-white
-                                        font-bold
-                                        rounded-lg
-                                        hover:opacity-90
-                                        transition-opacity
-                                        shadow-sm
-                                    "
+                                    className="px-4 py-2 bg-neutral-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-bold text-xs rounded-lg shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
                                 >
-                                    Post Comment
+                                    <Send className="w-3 h-3" />
+                                    <span>Post Comment</span>
                                 </button>
-
                             </div>
+                        </div>
+                    </form>
 
-                        </form>
-
-                    </div>
-
-
-                    {/* COMMENTS LIST */}
-
-                    <div
-                        className="
-                            flex
-                            flex-col
-                            gap-5
-                        "
-                    >
-
+                    {/* Sharp Comment Stream */}
+                    <div className="flex flex-col gap-3">
                         {comments.length === 0 ? (
-
-                            <p
-                                className="
-                                    text-[var(--text)]
-                                    italic
-                                    text-center
-                                    py-8
-                                "
-                            >
-                                No comments yet. Be the first
-                                to start the conversation!
-                            </p>
-
+                            <div className="py-6 text-center text-xs text-neutral-500 dark:text-neutral-400 italic">
+                                No comments yet. Be the first to start the conversation!
+                            </div>
                         ) : (
-
-                            comments.map(
-                                (
-                                    comment,
-                                    index
-                                ) => (
-
-                                    <div
-                                        key={
-                                            comment.id ||
-                                            index
-                                        }
-                                        className="
-                                            p-6
-                                            border
-                                            border-[var(--border)]
-                                            rounded-xl
-                                            bg-[var(--bg)]
-                                            shadow-sm
-                                            hover:border-[var(--accent-border)]
-                                            transition-colors
-                                            relative
-                                        "
-                                    >
-
-                                        <div
-                                            className="
-                                                flex
-                                                justify-between
-                                                items-start
-                                                mb-3
-                                            "
-                                        >
-
-                                            <div
-                                                className="
-                                                    font-bold
-                                                    text-[var(--accent)]
-                                                    text-lg
-                                                "
-                                            >
-                                                {
-                                                    comment.authorUsername ||
-                                                    'Anonymous'
-                                                }
-                                            </div>
-
-
-                                            {/* ADMIN DELETE */}
-
-                                            {userRole ===
-                                                'ROLE_ADMIN' &&
-                                                comment.id && (
-
-                                                    <button
-                                                        onClick={() =>
-                                                            setCommentToDelete(
-                                                                comment.id!
-                                                            )
-                                                        }
-                                                        className="
-                                                            text-xs
-                                                            font-bold
-                                                            text-red-600
-                                                            bg-red-100
-                                                            hover:bg-red-200
-                                                            dark:text-red-400
-                                                            dark:bg-red-900/30
-                                                            dark:hover:bg-red-900/50
-                                                            px-3
-                                                            py-1.5
-                                                            rounded
-                                                            transition-colors
-                                                        "
-                                                    >
-                                                        🗑 Delete
-                                                    </button>
-
+                            comments.map((comment, index) => (
+                                <div
+                                    key={comment.id || index}
+                                    className="p-3.5 rounded-lg bg-neutral-50/70 dark:bg-[#141416]/80 border border-neutral-100 dark:border-neutral-800/80 flex items-start justify-between gap-3"
+                                >
+                                    <div className="flex items-start gap-2.5 flex-1">
+                                        <div className="w-7 h-7 rounded-md bg-neutral-900 dark:bg-zinc-800 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                            {(comment.authorUsername || 'U').charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="font-bold text-xs text-neutral-900 dark:text-white">
+                                                    {comment.authorUsername || 'Reader'}
+                                                </span>
+                                                {comment.createdAt && (
+                                                    <span className="text-[10px] text-neutral-400">
+                                                        {new Date(comment.createdAt).toLocaleDateString()}
+                                                    </span>
                                                 )}
-
+                                            </div>
+                                            <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
+                                                {comment.content}
+                                            </p>
                                         </div>
-
-
-                                        <div
-                                            className="
-                                                text-[var(--text-h)]
-                                                leading-relaxed
-                                                text-base
-                                            "
-                                        >
-                                            {comment.content}
-                                        </div>
-
                                     </div>
 
-                                )
-                            )
-
+                                    {(userRole === 'ROLE_ADMIN' || userRole === 'ROLE_EDITOR') && comment.id && (
+                                        <button
+                                            onClick={() => setCommentToDelete(comment.id!)}
+                                            className="text-neutral-400 hover:text-red-500 p-1 rounded-md transition-colors cursor-pointer shrink-0"
+                                            title="Delete Comment"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    )}
+                                </div>
+                            ))
                         )}
-
                     </div>
-
                 </section>
-
             </main>
 
-
-            {/* =========================
-                DELETE COMMENT MODAL
-            ========================= */}
-
+            {/* CONFIRM COMMENT DELETE MODAL */}
             {commentToDelete && (
-
-                <div
-                    className="
-                        fixed
-                        inset-0
-                        bg-black/50
-                        flex
-                        items-center
-                        justify-center
-                        z-50
-                    "
-                >
-
-                    <div
-                        className="
-                            bg-[var(--code-bg)]
-                            p-6
-                            rounded-xl
-                            shadow-xl
-                            max-w-md
-                            w-full
-                            mx-4
-                            border
-                            border-[var(--border)]
-                        "
-                    >
-
-                        <h3
-                            className="
-                                text-xl
-                                font-bold
-                                text-[var(--text-h)]
-                                mb-2
-                            "
-                        >
-                            Delete Comment
-                        </h3>
-
-
-                        <p
-                            className="
-                                text-[var(--text)]
-                                mb-6
-                                opacity-90
-                            "
-                        >
-                            Admin Action: Are you sure you
-                            want to permanently delete this
-                            comment?
+                <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white dark:bg-[#141416] rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-xl max-w-sm w-full p-5">
+                        <h4 className="text-base font-bold text-neutral-900 dark:text-white mb-1.5">
+                            Delete Comment?
+                        </h4>
+                        <p className="text-xs text-neutral-600 dark:text-neutral-300 mb-5">
+                            Are you sure you want to remove this reader comment permanently?
                         </p>
-
-
-                        <div
-                            className="
-                                flex
-                                justify-end
-                                gap-3
-                            "
-                        >
-
+                        <div className="flex items-center justify-end gap-2.5">
                             <button
-                                onClick={() =>
-                                    setCommentToDelete(
-                                        null
-                                    )
-                                }
-                                className="
-                                    px-4
-                                    py-2
-                                    rounded-lg
-                                    font-semibold
-                                    bg-[var(--bg)]
-                                    border
-                                    border-[var(--border)]
-                                    hover:bg-gray-100
-                                    dark:hover:bg-gray-800
-                                    transition-colors
-                                "
+                                onClick={() => setCommentToDelete(null)}
+                                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                             >
                                 Cancel
                             </button>
-
-
                             <button
-                                onClick={
-                                    confirmDeleteComment
-                                }
-                                className="
-                                    px-4
-                                    py-2
-                                    rounded-lg
-                                    font-semibold
-                                    bg-red-600
-                                    text-white
-                                    hover:bg-red-700
-                                    transition-colors
-                                    shadow-sm
-                                "
+                                onClick={confirmDeleteComment}
+                                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-2xs transition-colors cursor-pointer"
                             >
-                                Delete Permanently
+                                Delete
                             </button>
-
                         </div>
-
                     </div>
-
                 </div>
-
             )}
-
         </div>
     );
 };
-
 
 export default FullArticle;

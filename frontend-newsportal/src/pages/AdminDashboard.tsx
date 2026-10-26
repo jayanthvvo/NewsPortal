@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
+import {
+    ShieldCheck,
+    Users,
+    FolderPlus,
+    FileCheck2,
+    Megaphone,
+    BookOpen,
+    Trash2,
+    CheckCircle2,
+    AlertTriangle,
+    XCircle,
+    LogOut,
+    Send,
+    Plus
+} from 'lucide-react';
+
 import { adminService, type User } from '../services/adminService';
 import { categoryService, type Category } from '../services/categoryService';
 import { articleService, type Article } from '../services/articleService';
 import { alertService } from '../services/alertService';
 import { authService } from '../services/authService';
 import FullArticle from './FullArticle';
+import HorizontalArticlesCarousel from '../components/HorizontalArticlesCarousel';
 
 const AdminDashboard: React.FC = () => {
     // Shared State
@@ -27,7 +44,7 @@ const AdminDashboard: React.FC = () => {
         title: '',
         message: '',
         confirmText: 'Confirm',
-        confirmColor: 'bg-[var(--accent)]',
+        confirmColor: 'bg-neutral-900 dark:bg-zinc-800',
         onConfirm: () => {}
     });
 
@@ -39,21 +56,20 @@ const AdminDashboard: React.FC = () => {
 
     // Tab: Read Articles State
     const [publishedArticles, setPublishedArticles] = useState<Article[]>([]);
-    const [viewingArticleId, setViewingArticleId] =
-        useState<number | null>(null);
+    const [viewingArticleId, setViewingArticleId] = useState<number | null>(null);
 
-    // Tab 1 State
+    // Tab: Approvals State
     const [users, setUsers] = useState<User[]>([]);
 
-    // Tab 2 State
+    // Tab: Categories State
     const [categories, setCategories] = useState<Category[]>([]);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newCategoryDesc, setNewCategoryDesc] = useState('');
 
-    // Tab 3 State
+    // Tab: Articles Review State
     const [pendingArticles, setPendingArticles] = useState<Article[]>([]);
 
-    // Tab 4 State
+    // Tab: Breaking News Alerts State
     const [alertMessage, setAlertMessage] = useState('');
     const [sendingAlert, setSendingAlert] = useState(false);
 
@@ -83,22 +99,13 @@ const AdminDashboard: React.FC = () => {
     const fetchPublishedArticles = async () => {
         try {
             setLoading(true);
-
-            const data =
-                await articleService.getAllPublishedArticles();
-
-            
-           setPublishedArticles([...data.content].reverse());
-
+            const data = await articleService.getAllPublishedArticles();
+            const content = Array.isArray(data) ? data : (data?.content || []);
+            setPublishedArticles([...content].reverse());
         } catch (error) {
-            console.error(
-                "Error fetching published articles:",
-                error
-            );
-
-            toast.error(
-                "Unable to load published articles."
-            );
+            console.error("Error fetching published articles:", error);
+            toast.error("Unable to load published articles.");
+            setPublishedArticles([]);
         } finally {
             setLoading(false);
         }
@@ -107,20 +114,12 @@ const AdminDashboard: React.FC = () => {
     const fetchPendingUsers = async () => {
         try {
             setLoading(true);
-
             const data = await adminService.getAllUsers();
-
-            setUsers(data);
-
+            setUsers(data || []);
         } catch (error) {
-            console.error(
-                "Error fetching pending requests:",
-                error
-            );
-
-            toast.error(
-                "Unable to load approval requests."
-            );
+            console.error("Error fetching pending requests:", error);
+            toast.error("Unable to load approval requests.");
+            setUsers([]);
         } finally {
             setLoading(false);
         }
@@ -128,235 +127,114 @@ const AdminDashboard: React.FC = () => {
 
     const fetchCategories = async () => {
         try {
-            const data =
-                await categoryService.getAllCategories();
-
-            setCategories(data);
-
+            const data = await categoryService.getAllCategories();
+            setCategories(data || []);
         } catch (error) {
-            console.error(
-                "Error loading categories:",
-                error
-            );
-
-            toast.error(
-                "Unable to load categories."
-            );
+            console.error("Error loading categories:", error);
+            toast.error("Unable to load categories.");
         }
     };
 
     const fetchPendingArticles = async () => {
         try {
             setLoading(true);
-
-            const data =
-                await articleService.getPendingReviews();
-
-            setPendingArticles(data);
-
+            const data = await articleService.getPendingReviews();
+            setPendingArticles(data || []);
         } catch (error) {
-            console.error(
-                "Error fetching pending articles:",
-                error
-            );
-
-            toast.error(
-                "Unable to load pending articles."
-            );
+            console.error("Error fetching pending articles:", error);
+            toast.error("Unable to load pending articles.");
+            setPendingArticles([]);
         } finally {
             setLoading(false);
         }
     };
 
     const getCategoryName = (id: number) => {
-        const category = categories.find(
-            c => c.id === id
-        );
-
-        return category
-            ? category.name
-            : 'Unknown Category';
+        const category = categories.find(c => c.id === id);
+        return category ? category.name : 'Unknown Category';
     };
 
-    // --- TAB 1: APPROVALS ---
+    // --- ACTIONS ---
 
-    const confirmApproveUser = (
-        userId: number,
-        username: string
-    ) => {
+    const confirmApproveUser = (userId: number, username: string) => {
         setConfirmDialog({
             isOpen: true,
             title: 'Approve User',
             message: `Are you sure you want to approve ${username}?`,
             confirmText: 'Approve User',
-            confirmColor:
-                'bg-green-600 hover:bg-green-700',
-
+            confirmColor: 'bg-emerald-600 hover:bg-emerald-700',
             onConfirm: async () => {
                 closeConfirm();
-
-                const toastId =
-                    toast.loading(
-                        `Approving ${username}...`
-                    );
-
+                const toastId = toast.loading(`Approving ${username}...`);
                 try {
-                    await adminService.approveUser(
-                        userId
-                    );
-
-                    toast.success(
-                        `${username} has been approved!`,
-                        { id: toastId }
-                    );
-
+                    await adminService.approveUser(userId);
+                    toast.success(`${username} has been approved!`, { id: toastId });
                     await fetchPendingUsers();
-
                 } catch (error) {
-                    console.error(
-                        "Failed to approve user:",
-                        error
-                    );
-
-                    toast.error(
-                        "Failed to approve user.",
-                        { id: toastId }
-                    );
+                    console.error("Failed to approve user:", error);
+                    toast.error("Failed to approve user.", { id: toastId });
                 }
             }
         });
     };
 
-    // --- TAB 2: CATEGORIES ---
-
-    const handleCreateCategory = async (
-        e: React.FormEvent
-    ) => {
+    const handleCreateCategory = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        const toastId =
-            toast.loading("Creating category...");
-
+        const toastId = toast.loading("Creating category...");
         try {
             await categoryService.createCategory({
                 name: newCategoryName,
                 description: newCategoryDesc
             });
-
             setNewCategoryName('');
             setNewCategoryDesc('');
-
             await fetchCategories();
-
-            toast.success(
-                "Category created successfully!",
-                { id: toastId }
-            );
-
+            toast.success("Category created successfully!", { id: toastId });
         } catch (error) {
-            console.error(
-                "Failed to create category:",
-                error
-            );
-
-            toast.error(
-                "Failed to create category.",
-                { id: toastId }
-            );
+            console.error("Failed to create category:", error);
+            toast.error("Failed to create category.", { id: toastId });
         }
     };
 
-    const confirmDeleteCategory = (
-        id: number,
-        name: string
-    ) => {
+    const confirmDeleteCategory = (id: number, name: string) => {
         setConfirmDialog({
             isOpen: true,
             title: 'Delete Category',
-            message:
-                `Are you sure you want to delete the category "${name}"?`,
+            message: `Are you sure you want to delete the category "${name}"?`,
             confirmText: 'Delete Category',
-            confirmColor:
-                'bg-red-600 hover:bg-red-700',
-
+            confirmColor: 'bg-red-600 hover:bg-red-700',
             onConfirm: async () => {
                 closeConfirm();
-
-                const toastId =
-                    toast.loading(
-                        "Deleting category..."
-                    );
-
+                const toastId = toast.loading("Deleting category...");
                 try {
-                    await categoryService.deleteCategory(
-                        id
-                    );
-
-                    toast.success(
-                        "Category deleted successfully!",
-                        { id: toastId }
-                    );
-
+                    await categoryService.deleteCategory(id);
+                    toast.success("Category deleted successfully!", { id: toastId });
                     await fetchCategories();
-
                 } catch (error) {
-                    console.error(
-                        "Failed to delete category:",
-                        error
-                    );
-
-                    toast.error(
-                        "Failed to delete category.",
-                        { id: toastId }
-                    );
+                    console.error("Failed to delete category:", error);
+                    toast.error("Failed to delete category.", { id: toastId });
                 }
             }
         });
     };
 
-    // --- TAB 3: ARTICLES ---
-
     const confirmPublishArticle = (id: number) => {
         setConfirmDialog({
             isOpen: true,
             title: 'Publish Article',
-            message:
-                'Approve this article for public viewing?',
+            message: 'Approve this article for public viewing?',
             confirmText: 'Publish',
-            confirmColor:
-                'bg-green-600 hover:bg-green-700',
-
+            confirmColor: 'bg-emerald-600 hover:bg-emerald-700',
             onConfirm: async () => {
                 closeConfirm();
-
-                const toastId =
-                    toast.loading(
-                        "Publishing article..."
-                    );
-
+                const toastId = toast.loading("Publishing article...");
                 try {
-                    await articleService.updateArticleStatus(
-                        id,
-                        "PUBLISHED"
-                    );
-
-                    toast.success(
-                        "Article is now live!",
-                        { id: toastId }
-                    );
-
+                    await articleService.updateArticleStatus(id, "PUBLISHED");
+                    toast.success("Article is now live!", { id: toastId });
                     await fetchPendingArticles();
-
                 } catch (error) {
-                    console.error(
-                        "Failed to publish article:",
-                        error
-                    );
-
-                    toast.error(
-                        "Failed to publish article.",
-                        { id: toastId }
-                    );
+                    console.error("Failed to publish article:", error);
+                    toast.error("Failed to publish article.", { id: toastId });
                 }
             }
         });
@@ -366,43 +244,19 @@ const AdminDashboard: React.FC = () => {
         setConfirmDialog({
             isOpen: true,
             title: 'Reject Article',
-            message:
-                'Send this article back to the author as a Draft?',
+            message: 'Send this article back to the author as a Draft?',
             confirmText: 'Reject to Draft',
-            confirmColor:
-                'bg-yellow-500 hover:bg-yellow-600',
-
+            confirmColor: 'bg-amber-600 hover:bg-amber-700',
             onConfirm: async () => {
                 closeConfirm();
-
-                const toastId =
-                    toast.loading(
-                        "Rejecting article..."
-                    );
-
+                const toastId = toast.loading("Rejecting article...");
                 try {
-                    await articleService.updateArticleStatus(
-                        id,
-                        "DRAFT"
-                    );
-
-                    toast.success(
-                        "Article sent back to drafts.",
-                        { id: toastId }
-                    );
-
+                    await articleService.updateArticleStatus(id, "DRAFT");
+                    toast.success("Article sent back to drafts.", { id: toastId });
                     await fetchPendingArticles();
-
                 } catch (error) {
-                    console.error(
-                        "Failed to reject article:",
-                        error
-                    );
-
-                    toast.error(
-                        "Failed to reject article.",
-                        { id: toastId }
-                    );
+                    console.error("Failed to reject article:", error);
+                    toast.error("Failed to reject article.", { id: toastId });
                 }
             }
         });
@@ -411,106 +265,51 @@ const AdminDashboard: React.FC = () => {
     const confirmDeleteArticle = (id: number) => {
         setConfirmDialog({
             isOpen: true,
-            title: 'Delete Article',
-            message:
-                'CRITICAL: Permanently delete this article? This action cannot be undone.',
+            title: 'Delete Story',
+            message: 'Are you sure you want to permanently delete this published story?',
             confirmText: 'Delete Permanently',
-            confirmColor:
-                'bg-red-600 hover:bg-red-700',
-
+            confirmColor: 'bg-red-600 hover:bg-red-700',
             onConfirm: async () => {
                 closeConfirm();
-
-                const toastId =
-                    toast.loading(
-                        "Deleting article..."
-                    );
-
+                const toastId = toast.loading("Deleting article...");
                 try {
-                    await articleService.deleteArticle(
-                        id
-                    );
-
-                    toast.success(
-                        "Article deleted.",
-                        { id: toastId }
-                    );
-
-                    if (activeTab === 'read') {
-                        await fetchPublishedArticles();
-                    } else {
-                        await fetchPendingArticles();
-                    }
-
+                    await articleService.deleteArticle(id);
+                    toast.success("Article deleted successfully!", { id: toastId });
+                    await fetchPublishedArticles();
                 } catch (error) {
-                    console.error(
-                        "Failed to delete article:",
-                        error
-                    );
-
-                    toast.error(
-                        "Failed to delete article.",
-                        { id: toastId }
-                    );
+                    console.error("Failed to delete article:", error);
+                    toast.error("Failed to delete article.", { id: toastId });
                 }
             }
         });
     };
 
-    // --- TAB 4: ALERTS ---
-
-    const confirmSendAlert = (
-        e: React.FormEvent
-    ) => {
+    const handleSendAlert = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!alertMessage.trim()) {
+            toast.error("Please enter an alert message.");
+            return;
+        }
 
         setConfirmDialog({
             isOpen: true,
-            title: 'Broadcast Emergency Alert',
-            message:
-                'WARNING: This will send an email to EVERY registered user in the database. Proceed?',
+            title: 'Broadcast Breaking News',
+            message: 'This will instantly trigger an emergency alert email broadcast to all registered readers. Continue?',
             confirmText: 'Broadcast Alert',
-            confirmColor:
-                'bg-red-600 hover:bg-red-700',
-
+            confirmColor: 'bg-red-600 hover:bg-red-700',
             onConfirm: async () => {
                 closeConfirm();
-
                 setSendingAlert(true);
-
-                const toastId =
-                    toast.loading(
-                        "Broadcasting email to all users..."
-                    );
-
+                const toastId = toast.loading("Broadcasting breaking news alert...");
                 try {
-                    const responseMsg =
-                        await alertService.sendBreakingNews(
-                            alertMessage
-                        );
-
-                    toast.success(
-                        `Success! ${responseMsg}`,
-                        {
-                            id: toastId,
-                            duration: 5000
-                        }
-                    );
-
+                    await alertService.sendBreakingNews(alertMessage);
+                    toast.success("Breaking news alert dispatched successfully!", { id: toastId });
                     setAlertMessage('');
-
                 } catch (error) {
-                    console.error(
-                        "Failed to send breaking news:",
-                        error
-                    );
-
+                    console.error("Failed to send breaking news:", error);
                     toast.error(
                         "Failed to send breaking news. Ensure your alert-service is running and SMTP is configured.",
-                        {
-                            id: toastId,
-                            duration: 6000
-                        }
+                        { id: toastId, duration: 6000 }
                     );
                 } finally {
                     setSendingAlert(false);
@@ -519,675 +318,640 @@ const AdminDashboard: React.FC = () => {
         });
     };
 
-    // --- SHARED ---
-
     const handleLogout = () => {
         authService.logout();
         navigate('/login');
     };
 
     return (
-        <div className="flex h-screen font-sans bg-[var(--bg)] text-[var(--text)] relative">
+        <div className="flex h-screen font-sans bg-[#f8f8fa] dark:bg-black text-neutral-900 dark:text-neutral-100 relative overflow-hidden">
+            <Toaster position="top-right" reverseOrder={false} />
 
-            <Toaster
-                position="top-right"
-                reverseOrder={false}
-            />
-
-            {/* SIDEBAR */}
-            <div className="w-64 bg-[var(--code-bg)] border-r border-[var(--border)] flex flex-col shrink-0">
-
-                <div className="p-6 border-b border-[var(--border)]">
-                    <h2 className="text-xl font-bold text-[var(--text-h)] m-0">
-                        Admin Console
-                    </h2>
-
-                    <span className="text-sm font-medium opacity-70">
-                        System Oversight
-                    </span>
+            {/* =========================
+                LIGHT BLACK / BLACK SIDEBAR
+            ========================= */}
+            <aside className="w-64 sm:w-72 bg-white dark:bg-[#0c0c0e] border-r border-neutral-200 dark:border-neutral-800 flex flex-col shrink-0 shadow-sm z-20">
+                {/* Brand Header */}
+                <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-neutral-900 dark:bg-zinc-800 border border-neutral-800 dark:border-zinc-700 text-white flex items-center justify-center shadow-sm">
+                            <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-neutral-900 dark:text-white m-0 tracking-tight">
+                                Admin Console
+                            </h2>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+                                    System Oversight
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <nav className="flex-1 py-6 px-4">
-                    <ul className="flex flex-col gap-2">
-
+                {/* Navigation Items */}
+                <nav className="flex-1 py-6 px-3.5 overflow-y-auto">
+                    <ul className="flex flex-col gap-1.5 list-none p-0 m-0">
+                        {/* Tab 1: Read */}
                         <li>
                             <button
-                                onClick={() =>
-                                    setActiveTab('read')
-                                }
-                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
+                                onClick={() => setActiveTab('read')}
+                                className={`w-full px-3.5 py-3 text-left rounded-xl font-semibold text-sm transition-all flex items-center gap-3 cursor-pointer ${
                                     activeTab === 'read'
-                                        ? 'bg-[var(--accent)] text-white shadow-md'
-                                        : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                        ? 'bg-neutral-900 text-white dark:bg-zinc-800 dark:text-white shadow-xs'
+                                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-zinc-900'
                                 }`}
                             >
-                                📰 Read Articles
+                                <BookOpen className="w-4 h-4" />
+                                <span>📰 Read Articles</span>
                             </button>
                         </li>
 
+                        {/* Tab 2: Approvals */}
                         <li>
                             <button
-                                onClick={() =>
-                                    setActiveTab('approvals')
-                                }
-                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors flex justify-between items-center ${
+                                onClick={() => setActiveTab('approvals')}
+                                className={`w-full px-3.5 py-3 text-left rounded-xl font-semibold text-sm transition-all flex justify-between items-center cursor-pointer ${
                                     activeTab === 'approvals'
-                                        ? 'bg-[var(--accent)] text-white shadow-md'
-                                        : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                        ? 'bg-neutral-900 text-white dark:bg-zinc-800 dark:text-white shadow-xs'
+                                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-zinc-900'
                                 }`}
                             >
-                                <span>
-                                    👤 Approvals
-                                </span>
-
-                                {users.length > 0 &&
-                                    activeTab !==
-                                        'approvals' && (
-                                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                            !
-                                        </span>
-                                    )}
+                                <div className="flex items-center gap-3">
+                                    <Users className="w-4 h-4" />
+                                    <span>👤 Approvals</span>
+                                </div>
+                                {users.length > 0 && activeTab !== 'approvals' && (
+                                    <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
+                                        {users.length}
+                                    </span>
+                                )}
                             </button>
                         </li>
 
+                        {/* Tab 3: Categories */}
                         <li>
                             <button
-                                onClick={() =>
-                                    setActiveTab(
-                                        'categories'
-                                    )
-                                }
-                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab ===
-                                    'categories'
-                                        ? 'bg-[var(--accent)] text-white shadow-md'
-                                        : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                onClick={() => setActiveTab('categories')}
+                                className={`w-full px-3.5 py-3 text-left rounded-xl font-semibold text-sm transition-all flex items-center gap-3 cursor-pointer ${
+                                    activeTab === 'categories'
+                                        ? 'bg-neutral-900 text-white dark:bg-zinc-800 dark:text-white shadow-xs'
+                                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-zinc-900'
                                 }`}
                             >
-                                📁 Categories
+                                <FolderPlus className="w-4 h-4" />
+                                <span>📁 Categories</span>
                             </button>
                         </li>
 
+                        {/* Tab 4: Article Reviews */}
                         <li>
                             <button
-                                onClick={() =>
-                                    setActiveTab(
-                                        'articles'
-                                    )
-                                }
-                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
-                                    activeTab ===
-                                    'articles'
-                                        ? 'bg-[var(--accent)] text-white shadow-md'
-                                        : 'text-[var(--text-h)] hover:bg-[var(--accent-bg)]'
+                                onClick={() => setActiveTab('articles')}
+                                className={`w-full px-3.5 py-3 text-left rounded-xl font-semibold text-sm transition-all flex justify-between items-center cursor-pointer ${
+                                    activeTab === 'articles'
+                                        ? 'bg-neutral-900 text-white dark:bg-zinc-800 dark:text-white shadow-xs'
+                                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-zinc-900'
                                 }`}
                             >
-                                📰 Article Reviews
+                                <div className="flex items-center gap-3">
+                                    <FileCheck2 className="w-4 h-4" />
+                                    <span>📰 Article Reviews</span>
+                                </div>
+                                {pendingArticles.length > 0 && activeTab !== 'articles' && (
+                                    <span className="bg-amber-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
+                                        {pendingArticles.length}
+                                    </span>
+                                )}
                             </button>
                         </li>
 
+                        {/* Tab 5: Breaking News Alerts */}
                         <li>
                             <button
-                                onClick={() =>
-                                    setActiveTab(
-                                        'alerts'
-                                    )
-                                }
-                                className={`w-full p-3 text-left rounded-lg font-medium transition-colors ${
+                                onClick={() => setActiveTab('alerts')}
+                                className={`w-full px-3.5 py-3 text-left rounded-xl font-semibold text-sm transition-all flex items-center gap-3 cursor-pointer ${
                                     activeTab === 'alerts'
-                                        ? 'bg-red-600 text-white shadow-md'
-                                        : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                        ? 'bg-red-600 text-white shadow-xs'
+                                        : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20'
                                 }`}
                             >
-                                🚨 Breaking News Alert
+                                <Megaphone className="w-4 h-4" />
+                                <span>🚨 Breaking News Alert</span>
                             </button>
                         </li>
-
                     </ul>
                 </nav>
 
-                <div className="p-6 border-t border-[var(--border)]">
+                {/* Sidebar Footer */}
+                <div className="p-4 border-t border-neutral-200 dark:border-neutral-800">
                     <button
                         onClick={handleLogout}
-                        className="w-full p-3 bg-slate-500 hover:bg-slate-600 text-white font-bold rounded-lg transition-colors shadow-sm"
+                        className="w-full py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-neutral-700 dark:text-neutral-200 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                        Logout
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
                     </button>
                 </div>
-            </div>
+            </aside>
 
-            {/* MAIN CONTENT */}
-            <div className="flex-1 p-10 overflow-y-auto">
-
-                {/* READ ARTICLES */}
-                {activeTab === 'read' && (
-                    <div className="max-w-6xl mx-auto">
-
-                        {viewingArticleId ? (
-                            <div className="bg-[var(--code-bg)] border border-[var(--border)] p-8 rounded-xl shadow-[var(--shadow)]">
-
-                                <FullArticle
-                                    articleId={viewingArticleId}
-                                    onBack={() =>
-                                        setViewingArticleId(
-                                            null
-                                        )
-                                    }
-                                />
-
+            {/* =========================
+                MAIN CONTENT AREA
+            ========================= */}
+            <main className="flex-1 p-6 sm:p-10 overflow-y-auto">
+                <div className="max-w-6xl mx-auto">
+                    {/* STATS OVERVIEW ROW (LIGHT BLACK / BLACK) */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div className="bg-white dark:bg-[#111113] p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-zinc-900 text-neutral-800 dark:text-neutral-200 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-zinc-800">
+                                <Users className="w-5 h-5" />
                             </div>
-                        ) : (
-                            <>
-                                <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">
-                                    Latest Headlines
-                                </h2>
+                            <div>
+                                <div className="text-xl font-black text-neutral-900 dark:text-white">
+                                    {users.length}
+                                </div>
+                                <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                                    Pending Approvals
+                                </div>
+                            </div>
+                        </div>
 
-                                {loading ? (
-                                    <div className="p-8 text-center animate-pulse text-[var(--text)]">
-                                        Loading today's stories...
-                                    </div>
-                                ) : publishedArticles.length === 0 ? (
-                                    <div className="p-6 bg-[var(--code-bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] text-center shadow-sm">
-                                        No stories published yet.
-                                        Check back later!
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div className="bg-white dark:bg-[#111113] p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-zinc-900 text-neutral-800 dark:text-neutral-200 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-zinc-800">
+                                <FileCheck2 className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <div className="text-xl font-black text-neutral-900 dark:text-white">
+                                    {pendingArticles.length}
+                                </div>
+                                <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                                    In Review Queue
+                                </div>
+                            </div>
+                        </div>
 
-                                        {publishedArticles.map(
-                                            article => (
+                        <div className="bg-white dark:bg-[#111113] p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-zinc-900 text-neutral-800 dark:text-neutral-200 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-zinc-800">
+                                <FolderPlus className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <div className="text-xl font-black text-neutral-900 dark:text-white">
+                                    {categories.length}
+                                </div>
+                                <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                                    News Categories
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-[#111113] p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-zinc-900 text-neutral-800 dark:text-neutral-200 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-zinc-800">
+                                <BookOpen className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <div className="text-xl font-black text-neutral-900 dark:text-white">
+                                    {publishedArticles.length}
+                                </div>
+                                <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                                    Live Stories
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* =========================
+                        TAB 1: READ ARTICLES
+                    ========================= */}
+                    {activeTab === 'read' && (
+                        <div className="animate-fade-in">
+                            {viewingArticleId ? (
+                                <div className="w-full">
+                                    <FullArticle
+                                        articleId={viewingArticleId}
+                                        onBack={() => setViewingArticleId(null)}
+                                    />
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-center justify-between pb-4 mb-6 border-b border-neutral-200 dark:border-neutral-800">
+                                        <div>
+                                            <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white m-0">
+                                                Latest Headlines
+                                            </h2>
+                                            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                                                Review and moderate published stories across all categories
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {loading ? (
+                                        <div className="p-12 text-center animate-pulse text-neutral-500 font-medium">
+                                            Loading today's stories...
+                                        </div>
+                                    ) : publishedArticles.length === 0 ? (
+                                        <div className="p-8 bg-white dark:bg-[#111113] border border-neutral-200 dark:border-neutral-800 rounded-2xl text-neutral-600 dark:text-neutral-300 text-center shadow-xs">
+                                            No stories published yet. Check back later!
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* HORIZONTALLY SCROLLABLE HIGHLIGHTS */}
+                                            {publishedArticles.length > 0 && (
+                                                <HorizontalArticlesCarousel
+                                                    articles={publishedArticles}
+                                                    categories={categories}
+                                                    onSelectArticle={id => setViewingArticleId(id)}
+                                                    title="Editorial Highlights"
+                                                    description="Horizontally scroll through most viewed, most liked, and recent stories"
+                                                />
+                                            )}
+
+                                            {/* ALL STORIES GRID HEADER */}
+                                            {publishedArticles.length > 0 && (
+                                                <div className="flex items-center justify-between pb-3 mb-6 border-b border-neutral-200 dark:border-neutral-800">
+                                                    <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white m-0">
+                                                        All Published Stories
+                                                    </h3>
+                                                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                                        Complete article catalog
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                            {publishedArticles.map(article => (
                                                 <article
                                                     key={article.id}
-                                                    className="bg-[var(--code-bg)] rounded-xl overflow-hidden shadow-[var(--shadow)] border border-[var(--border)] border-t-4 border-t-[var(--accent)] flex flex-col hover:shadow-lg transition-shadow"
+                                                    className="bg-white dark:bg-[#111113] rounded-2xl border border-neutral-200 dark:border-neutral-800/90 overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col"
                                                 >
                                                     <div className="p-6 flex-1 flex flex-col">
-
-                                                        <div className="text-[var(--accent)] text-xs font-bold uppercase tracking-widest mb-3 font-sans">
-                                                            {getCategoryName(
-                                                                article.categoryId
-                                                            )}
+                                                        <div className="inline-flex items-center self-start px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-neutral-100 dark:bg-zinc-800 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-zinc-700 mb-3">
+                                                            {getCategoryName(article.categoryId)}
                                                         </div>
 
-                                                        <h3 className="m-0 mb-4 text-xl leading-snug text-[var(--text-h)] font-bold">
+                                                        <h3 className="m-0 mb-2 text-xl font-bold leading-snug text-black dark:text-white">
                                                             {article.title}
                                                         </h3>
 
-                                                        <div className="text-sm text-[var(--text)] mb-4 italic">
+                                                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-3 italic">
                                                             By{' '}
-                                                            <span className="font-semibold">
+                                                            <span className="font-semibold text-neutral-700 dark:text-neutral-300">
                                                                 {article.author}
                                                             </span>
                                                         </div>
 
-                                                        <p className="text-[var(--text-h)] opacity-80 leading-relaxed text-sm m-0">
-                                                            {article.content.length >
-                                                            150
-                                                                ? article.content.substring(
-                                                                      0,
-                                                                      150
-                                                                  ) + "..."
+                                                        <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed m-0 line-clamp-3">
+                                                            {article.content && article.content.length > 150
+                                                                ? article.content.substring(0, 150) + "..."
                                                                 : article.content}
                                                         </p>
-
                                                     </div>
 
-                                                    <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)] flex justify-between items-center mt-auto">
-
+                                                    <div className="p-4 bg-neutral-50/80 dark:bg-[#0c0c0e]/80 border-t border-neutral-100 dark:border-neutral-800/80 flex justify-between items-center mt-auto">
                                                         <button
-                                                            onClick={() =>
-                                                                setViewingArticleId(
-                                                                    article.id!
-                                                                )
-                                                            }
-                                                            className="bg-transparent border-none text-[var(--accent)] font-bold cursor-pointer font-sans text-sm hover:underline"
+                                                            onClick={() => setViewingArticleId(article.id!)}
+                                                            className="text-sm font-bold text-neutral-900 dark:text-white hover:opacity-80 cursor-pointer"
                                                         >
                                                             Read Full Story →
                                                         </button>
 
                                                         <button
-                                                            onClick={() =>
-                                                                confirmDeleteArticle(
-                                                                    article.id!
-                                                                )
-                                                            }
-                                                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
+                                                            onClick={() => confirmDeleteArticle(article.id!)}
+                                                            className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
                                                         >
-                                                            🗑 Delete
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                            <span>Delete</span>
                                                         </button>
-
                                                     </div>
                                                 </article>
-                                            )
-                                        )}
+                                            ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
 
+                    {/* =========================
+                        TAB 2: APPROVALS
+                    ========================= */}
+                    {activeTab === 'approvals' && (
+                        <div className="animate-fade-in">
+                            <div className="pb-4 mb-6 border-b border-neutral-200 dark:border-neutral-800">
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white m-0">
+                                    Review Account Requests
+                                </h2>
+                                <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                                    Manage author and journalist access requests waiting for moderation
+                                </p>
+                            </div>
+
+                            {loading ? (
+                                <div className="p-12 text-center animate-pulse text-neutral-500 font-medium">
+                                    Loading approval requests...
+                                </div>
+                            ) : users.length === 0 ? (
+                                <div className="p-10 bg-white dark:bg-[#111113] border border-neutral-200 dark:border-neutral-800 rounded-2xl text-center shadow-xs">
+                                    <div className="w-12 h-12 rounded-full bg-neutral-100 dark:bg-zinc-800 text-neutral-800 dark:text-neutral-200 flex items-center justify-center mx-auto mb-3">
+                                        <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                                     </div>
-                                )}
-                            </>
-                        )}
-                    </div>
-                )}
+                                    <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-1">
+                                        All requests cleared!
+                                    </h3>
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                        There are currently no new accounts waiting for administrative approval.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {users.map(user => (
+                                        <div
+                                            key={user.id}
+                                            className="bg-white dark:bg-[#111113] p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs flex items-center justify-between gap-4"
+                                        >
+                                            <div className="flex items-center gap-3.5">
+                                                <div className="w-11 h-11 rounded-xl bg-neutral-900 dark:bg-zinc-800 border border-neutral-700 dark:border-zinc-700 text-white font-bold text-base flex items-center justify-center shadow-xs">
+                                                    {(user.username || 'U').charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-neutral-900 dark:text-white text-base">
+                                                        {user.username}
+                                                    </div>
+                                                    <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                                                        {user.email}
+                                                    </div>
+                                                    <div className="mt-1">
+                                                        <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-neutral-100 dark:bg-zinc-800 text-neutral-800 dark:text-zinc-200 border border-neutral-200 dark:border-zinc-700">
+                                                            {user.role || 'ROLE_AUTHOR'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                {/* APPROVALS */}
-                {activeTab === 'approvals' && (
-                    <div className="max-w-5xl mx-auto">
-
-                        <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">
-                            Review Account Requests
-                        </h2>
-
-                        {loading ? (
-                            <p className="animate-pulse">
-                                Loading users...
-                            </p>
-                        ) : users.length === 0 ? (
-                            <div className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 p-4 rounded-lg font-medium border border-green-200 dark:border-green-800">
-                                ✅ No pending approval requests at this
-                                time. You're all caught up!
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto bg-[var(--code-bg)] border border-[var(--border)] rounded-xl shadow-[var(--shadow)]">
-
-                                <table className="w-full text-left border-collapse">
-
-                                    <thead className="bg-[var(--bg)] border-b border-[var(--border)]">
-                                        <tr>
-                                            <th className="p-4 font-bold text-[var(--text-h)]">
-                                                Username
-                                            </th>
-                                            <th className="p-4 font-bold text-[var(--text-h)]">
-                                                Email
-                                            </th>
-                                            <th className="p-4 font-bold text-[var(--text-h)]">
-                                                Requested Role
-                                            </th>
-                                            <th className="p-4 font-bold text-[var(--text-h)]">
-                                                Action
-                                            </th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody className="divide-y divide-[var(--border)]">
-
-                                        {users.map(user => (
-                                            <tr
-                                                key={user.id}
-                                                className="hover:bg-[var(--bg)] transition-colors"
+                                            <button
+                                                onClick={() => confirmApproveUser(user.id, user.username)}
+                                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
                                             >
-                                                <td className="p-4 font-semibold text-[var(--text-h)]">
-                                                    {user.username}
-                                                </td>
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                <span>Approve User</span>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
-                                                <td className="p-4">
-                                                    {user.email}
-                                                </td>
-
-                                                <td className="p-4">
-                                                    <span className="px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 rounded-full text-xs font-bold tracking-wide">
-                                                        {user.role}
-                                                    </span>
-                                                </td>
-
-                                                <td className="p-4">
-                                                    <button
-                                                        onClick={() =>
-                                                            confirmApproveUser(
-                                                                user.id,
-                                                                user.username
-                                                            )
-                                                        }
-                                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
-                                                    >
-                                                        ✓ Approve
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-
-                                    </tbody>
-                                </table>
+                    {/* =========================
+                        TAB 3: CATEGORIES
+                    ========================= */}
+                    {activeTab === 'categories' && (
+                        <div className="animate-fade-in">
+                            <div className="pb-4 mb-6 border-b border-neutral-200 dark:border-neutral-800">
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white m-0">
+                                    Manage News Categories
+                                </h2>
+                                <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                                    Create and configure news sections for editorial organization
+                                </p>
                             </div>
-                        )}
-                    </div>
-                )}
 
-                {/* CATEGORIES */}
-                {activeTab === 'categories' && (
-                    <div className="max-w-6xl mx-auto">
-
-                        <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">
-                            Manage News Categories
-                        </h2>
-
-                        <div className="flex flex-col lg:flex-row gap-8">
-
-                            <div className="flex-1 bg-[var(--code-bg)] p-6 md:p-8 rounded-xl shadow-[var(--shadow)] border border-[var(--border)] h-fit">
-
-                                <h3 className="text-lg font-bold text-[var(--text-h)] mb-6 mt-0">
-                                    Create New Category
+                            {/* Create Category Card */}
+                            <div className="bg-white dark:bg-[#111113] p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs mb-8">
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <Plus className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+                                    Add New Category
                                 </h3>
 
-                                <form
-                                    onSubmit={handleCreateCategory}
-                                    className="flex flex-col gap-5"
-                                >
-
-                                    <div>
-                                        <label className="block mb-2 text-sm font-semibold text-[var(--text-h)]">
-                                            Category Name
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            value={newCategoryName}
-                                            onChange={e =>
-                                                setNewCategoryName(
-                                                    e.target.value
-                                                )
-                                            }
-                                            required
-                                            className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all"
-                                            placeholder="e.g. Technology"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block mb-2 text-sm font-semibold text-[var(--text-h)]">
-                                            Description
-                                        </label>
-
-                                        <textarea
-                                            value={newCategoryDesc}
-                                            onChange={e =>
-                                                setNewCategoryDesc(
-                                                    e.target.value
-                                                )
-                                            }
-                                            required
-                                            className="w-full p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all min-h-[100px] resize-y"
-                                        />
-                                    </div>
-
+                                <form onSubmit={handleCreateCategory} className="flex flex-col sm:flex-row gap-3">
+                                    <input
+                                        type="text"
+                                        placeholder="Category Name (e.g., Technology)"
+                                        value={newCategoryName}
+                                        onChange={e => setNewCategoryName(e.target.value)}
+                                        required
+                                        className="flex-1 px-4 py-2.5 text-sm bg-neutral-50 dark:bg-[#18181b] text-neutral-900 dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-400/30 focus:border-neutral-600"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Description (Optional)"
+                                        value={newCategoryDesc}
+                                        onChange={e => setNewCategoryDesc(e.target.value)}
+                                        className="flex-1 px-4 py-2.5 text-sm bg-neutral-50 dark:bg-[#18181b] text-neutral-900 dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-400/30 focus:border-neutral-600"
+                                    />
                                     <button
                                         type="submit"
-                                        className="py-3 bg-[var(--accent)] text-white font-bold rounded-lg shadow-sm hover:opacity-90 transition-opacity mt-2"
+                                        className="px-5 py-2.5 bg-neutral-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-semibold text-sm rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
                                     >
-                                        + Add Category
+                                        Create Category
                                     </button>
-
                                 </form>
                             </div>
 
-                            <div className="flex-[2] bg-[var(--code-bg)] p-6 md:p-8 rounded-xl shadow-[var(--shadow)] border border-[var(--border)]">
-
-                                <h3 className="text-lg font-bold text-[var(--text-h)] mb-6 mt-0">
-                                    Existing Categories
-                                </h3>
-
-                                {categories.length === 0 ? (
-                                    <p className="italic opacity-70">
-                                        No categories found in the database.
-                                    </p>
-                                ) : (
-                                    <div className="overflow-x-auto border border-[var(--border)] rounded-lg">
-
-                                        <table className="w-full text-left border-collapse">
-
-                                            <thead className="bg-[var(--bg)] border-b border-[var(--border)]">
-                                                <tr>
-                                                    <th className="p-4 font-bold text-[var(--text-h)]">
-                                                        Name
-                                                    </th>
-
-                                                    <th className="p-4 font-bold text-[var(--text-h)]">
-                                                        Description
-                                                    </th>
-
-                                                    <th className="p-4 font-bold text-[var(--text-h)]">
-                                                        Action
-                                                    </th>
-                                                </tr>
-                                            </thead>
-
-                                            <tbody className="divide-y divide-[var(--border)]">
-
-                                                {categories.map(
-                                                    category => (
-                                                        <tr
-                                                            key={category.id}
-                                                            className="hover:bg-[var(--bg)] transition-colors"
-                                                        >
-                                                            <td className="p-4 font-bold text-[var(--text-h)] whitespace-nowrap">
-                                                                {
-                                                                    category.name
-                                                                }
-                                                            </td>
-
-                                                            <td className="p-4 opacity-80">
-                                                                {
-                                                                    category.description
-                                                                }
-                                                            </td>
-
-                                                            <td className="p-4">
-                                                                <button
-                                                                    onClick={() =>
-                                                                        confirmDeleteCategory(
-                                                                            category.id,
-                                                                            category.name
-                                                                        )
-                                                                    }
-                                                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
-                                                                >
-                                                                    🗑 Delete
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    )
-                                                )}
-
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* ARTICLE REVIEWS */}
-                {activeTab === 'articles' && (
-                    <div className="max-w-5xl mx-auto">
-
-                        <h2 className="text-2xl font-bold border-b-2 border-[var(--accent)] pb-3 mb-6 text-[var(--text-h)]">
-                            Article Publishing Queue
-                        </h2>
-
-                        {loading ? (
-                            <p className="animate-pulse">
-                                Loading pending articles...
-                            </p>
-                        ) : pendingArticles.length === 0 ? (
-                            <div className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 p-4 rounded-lg font-medium border border-green-200 dark:border-green-800">
-                                ✅ Inbox Zero! There are no articles currently
-                                waiting for review.
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-6">
-
-                                {pendingArticles.map(article => (
+                            {/* Categories Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {categories.map(category => (
                                     <div
-                                        key={article.id}
-                                        className="bg-[var(--code-bg)] border border-[var(--border)] border-l-4 border-l-yellow-500 rounded-xl shadow-[var(--shadow)] overflow-hidden"
+                                        key={category.id}
+                                        className="bg-white dark:bg-[#111113] p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs flex flex-col justify-between"
                                     >
-
-                                        <div className="p-6">
-
-                                            <h3 className="m-0 mb-2 text-xl font-bold text-[var(--text-h)]">
-                                                {article.title}
-                                            </h3>
-
-                                            <div className="text-sm opacity-80 mb-4">
-                                                Written by{' '}
-                                                <strong className="text-[var(--text-h)]">
-                                                    {article.author}
-                                                </strong>{' '}
-                                                | Status:{' '}
-                                                <span className="text-yellow-600 dark:text-yellow-400 font-bold">
-                                                    {article.status}
+                                        <div>
+                                            <div className="flex items-center justify-between gap-2 mb-2">
+                                                <h4 className="font-bold text-neutral-900 dark:text-white text-base m-0">
+                                                    {category.name}
+                                                </h4>
+                                                <span className="text-xs text-neutral-400 font-mono">
+                                                    #{category.id}
                                                 </span>
                                             </div>
+                                            <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                                                {category.description || 'No description provided.'}
+                                            </p>
+                                        </div>
 
-                                            <div className="bg-[var(--bg)] p-4 rounded-lg border border-[var(--border)] italic opacity-90 mb-6">
-                                                {article.content.length >
-                                                200
-                                                    ? article.content.substring(
-                                                          0,
-                                                          200
-                                                      ) + "..."
-                                                    : article.content}
-                                            </div>
-
-                                            <div className="flex flex-wrap gap-3 pt-5 border-t border-[var(--border)]">
-
-                                                <button
-                                                    onClick={() =>
-                                                        confirmPublishArticle(
-                                                            article.id!
-                                                        )
-                                                    }
-                                                    className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
-                                                >
-                                                    ✓ Publish
-                                                </button>
-
-                                                <button
-                                                    onClick={() =>
-                                                        confirmRejectArticle(
-                                                            article.id!
-                                                        )
-                                                    }
-                                                    className="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold rounded shadow-sm transition-colors text-sm"
-                                                >
-                                                    ↩ Reject (Draft)
-                                                </button>
-
-                                                <div className="flex-1"></div>
-
-                                                <button
-                                                    onClick={() =>
-                                                        confirmDeleteArticle(
-                                                            article.id!
-                                                        )
-                                                    }
-                                                    className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow-sm transition-colors text-sm"
-                                                >
-                                                    🗑 Delete
-                                                </button>
-
-                                            </div>
+                                        <div className="pt-4 mt-4 border-t border-neutral-100 dark:border-neutral-800/80 flex justify-end">
+                                            <button
+                                                onClick={() => confirmDeleteCategory(category.id, category.name)}
+                                                className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                                <span>Delete</span>
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
-
                             </div>
-                        )}
-                    </div>
-                )}
-
-                {/* BREAKING NEWS ALERTS */}
-                {activeTab === 'alerts' && (
-                    <div className="max-w-4xl mx-auto">
-
-                        <h2 className="text-2xl font-bold border-b-2 border-red-500 pb-3 mb-4 text-red-600 dark:text-red-500">
-                            Emergency Alert System
-                        </h2>
-
-                        <p className="mb-8 opacity-80">
-                            Use this console to send an immediate Breaking News
-                            email blast to every registered reader in the database.
-                        </p>
-
-                        <div className="bg-[var(--code-bg)] p-8 rounded-xl shadow-[var(--shadow)] border-2 border-red-200 dark:border-red-900/50">
-
-                            <form
-                                onSubmit={confirmSendAlert}
-                                className="flex flex-col gap-5"
-                            >
-
-                                <div>
-                                    <label className="block mb-3 font-bold text-red-700 dark:text-red-400">
-                                        Breaking News Message
-                                    </label>
-
-                                    <textarea
-                                        value={alertMessage}
-                                        onChange={e =>
-                                            setAlertMessage(
-                                                e.target.value
-                                            )
-                                        }
-                                        required
-                                        placeholder="Type the emergency alert or breaking news here..."
-                                        className="w-full p-4 bg-[var(--bg)] border-2 border-red-400 dark:border-red-500 rounded-lg text-[var(--text-h)] focus:ring-4 focus:ring-red-500/20 outline-none transition-all min-h-[150px] resize-y"
-                                    />
-                                </div>
-
-                                <div className="flex justify-end mt-2">
-
-                                    <button
-                                        type="submit"
-                                        disabled={sendingAlert}
-                                        className="py-3 px-6 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-bold rounded-lg shadow-md transition-colors disabled:cursor-not-allowed"
-                                    >
-                                        {sendingAlert
-                                            ? '🚨 Broadcasting Alert to all Users...'
-                                            : '🚨 Broadcast Breaking News'}
-                                    </button>
-
-                                </div>
-
-                            </form>
                         </div>
-                    </div>
-                )}
+                    )}
 
-            </div>
+                    {/* =========================
+                        TAB 4: ARTICLE REVIEWS
+                    ========================= */}
+                    {activeTab === 'articles' && (
+                        <div className="animate-fade-in">
+                            <div className="pb-4 mb-6 border-b border-neutral-200 dark:border-neutral-800">
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white m-0">
+                                    Pending Article Reviews
+                                </h2>
+                                <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                                    Evaluate submissions from writers and approve stories for publication
+                                </p>
+                            </div>
 
-            {/* SHARED CONFIRMATION MODAL */}
+                            {loading ? (
+                                <div className="p-12 text-center animate-pulse text-neutral-500 font-medium">
+                                    Loading pending articles...
+                                </div>
+                            ) : pendingArticles.length === 0 ? (
+                                <div className="p-10 bg-white dark:bg-[#111113] border border-neutral-200 dark:border-neutral-800 rounded-2xl text-center shadow-xs">
+                                    <div className="w-12 h-12 rounded-full bg-neutral-100 dark:bg-zinc-800 text-neutral-800 dark:text-neutral-200 flex items-center justify-center mx-auto mb-3">
+                                        <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-1">
+                                        Review queue empty!
+                                    </h3>
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                        All submitted articles have been reviewed. Great work!
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-4">
+                                    {pendingArticles.map(article => (
+                                        <div
+                                            key={article.id}
+                                            className="bg-white dark:bg-[#111113] p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6"
+                                        >
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase bg-neutral-100 text-neutral-800 dark:bg-zinc-800 dark:text-zinc-200 border border-neutral-200 dark:border-zinc-700">
+                                                        {getCategoryName(article.categoryId)}
+                                                    </span>
+                                                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                                        By <strong className="text-neutral-800 dark:text-neutral-200">{article.author}</strong>
+                                                    </span>
+                                                </div>
+
+                                                <h3 className="text-xl font-bold text-black dark:text-white mb-2">
+                                                    {article.title}
+                                                </h3>
+
+                                                <p className="text-sm text-neutral-600 dark:text-neutral-300 line-clamp-2">
+                                                    {article.content}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex items-center gap-2.5 shrink-0">
+                                                <button
+                                                    onClick={() => confirmRejectArticle(article.id!)}
+                                                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                                                >
+                                                    <XCircle className="w-4 h-4" />
+                                                    <span>Reject to Draft</span>
+                                                </button>
+
+                                                <button
+                                                    onClick={() => confirmPublishArticle(article.id!)}
+                                                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    <span>Publish</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* =========================
+                        TAB 5: BREAKING NEWS ALERTS
+                    ========================= */}
+                    {activeTab === 'alerts' && (
+                        <div className="animate-fade-in max-w-3xl">
+                            <div className="pb-4 mb-6 border-b border-neutral-200 dark:border-neutral-800">
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white m-0">
+                                    Emergency Alert System
+                                </h2>
+                                <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                                    Dispatch high-priority breaking news broadcasts to all subscribers
+                                </p>
+                            </div>
+
+                            <div className="bg-white dark:bg-[#111113] p-6 sm:p-8 rounded-2xl border border-neutral-300 dark:border-neutral-800 shadow-xs relative overflow-hidden">
+                                <div className="flex items-center gap-3 mb-6 p-3.5 rounded-xl bg-neutral-100 dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 text-neutral-800 dark:text-neutral-200 text-xs sm:text-sm font-medium">
+                                    <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+                                    <span>
+                                        Caution: Broadcasting will immediately notify all registered portal users via email.
+                                    </span>
+                                </div>
+
+                                <form onSubmit={handleSendAlert} className="flex flex-col gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-neutral-900 dark:text-white mb-2">
+                                            Breaking Alert Message
+                                        </label>
+                                        <textarea
+                                            rows={5}
+                                            value={alertMessage}
+                                            onChange={e => setAlertMessage(e.target.value)}
+                                            placeholder="Write urgent bulletin or breaking story alert..."
+                                            required
+                                            className="w-full p-4 text-sm bg-neutral-50 dark:bg-[#18181b] text-neutral-900 dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-400/30 focus:border-neutral-600 resize-y"
+                                        />
+                                        <div className="text-right text-xs text-neutral-400 mt-1">
+                                            {alertMessage.length} characters
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end pt-3">
+                                        <button
+                                            type="submit"
+                                            disabled={sendingAlert}
+                                            className="px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                            <span>{sendingAlert ? 'Broadcasting...' : 'Broadcast Alert'}</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </main>
+
+            {/* =========================
+                CUSTOM CONFIRMATION MODAL
+            ========================= */}
             {confirmDialog.isOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
-
-                    <div className="bg-[var(--code-bg)] p-6 rounded-xl shadow-xl max-w-md w-full mx-4 border border-[var(--border)]">
-
-                        <h3 className="text-xl font-bold text-[var(--text-h)] mb-2">
+                <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white dark:bg-[#141416] rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xl max-w-md w-full p-6">
+                        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
                             {confirmDialog.title}
                         </h3>
-
-                        <p className="text-[var(--text)] mb-6 opacity-90">
+                        <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed">
                             {confirmDialog.message}
                         </p>
-
-                        <div className="flex justify-end gap-3">
-
+                        <div className="flex items-center justify-end gap-3">
                             <button
                                 onClick={closeConfirm}
-                                className="px-4 py-2 rounded-lg font-semibold bg-[var(--bg)] border border-[var(--border)] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                className="px-4 py-2 text-sm font-semibold rounded-xl border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                             >
                                 Cancel
                             </button>
-
                             <button
                                 onClick={confirmDialog.onConfirm}
-                                className={`px-4 py-2 rounded-lg font-semibold text-white transition-opacity shadow-sm ${confirmDialog.confirmColor}`}
+                                className={`px-4 py-2 text-sm font-semibold rounded-xl text-white shadow-xs transition-all cursor-pointer ${confirmDialog.confirmColor}`}
                             >
                                 {confirmDialog.confirmText}
                             </button>
-
                         </div>
                     </div>
                 </div>
             )}
-
         </div>
     );
 };

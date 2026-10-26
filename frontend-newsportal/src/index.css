@@ -1,32 +1,29 @@
 @import "tailwindcss";
 
 /* --------------------------------------
-   1. YOUR CUSTOM THEME VARIABLES
---------------------------------------- */
-/* --------------------------------------
-   1. YOUR CUSTOM THEME VARIABLES
+   1. LIGHT BLACK & BLACK THEME VARIABLES
 --------------------------------------- */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
+  --text: #52525b;
+  --text-h: #09090b;
+  --bg: #f8f8fa;
+  --border: #e4e4e7;
+  --code-bg: #ffffff;
   
-  /* LIGHT MODE: Light Black buttons, Beige hovers */
-  --accent: #2c2c2c; 
-  --accent-bg: #f5f5dc; 
-  --accent-border: rgba(44, 44, 44, 0.5); 
+  /* LIGHT MODE: Light Black / Charcoal accents */
+  --accent: #18181b; 
+  --accent-bg: #f4f4f5; 
+  --accent-border: rgba(24, 24, 27, 0.2); 
   
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --social-bg: rgba(244, 244, 245, 0.7);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
+  font: 16px/150% var(--sans);
+  letter-spacing: -0.01em;
   color-scheme: light dark;
   color: var(--text);
   background: var(--bg);
@@ -36,42 +33,37 @@
   -moz-osx-font-smoothing: grayscale;
 
   @media (max-width: 1024px) {
-    font-size: 16px;
+    font-size: 15px;
   }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
+    --text: #a1a1aa;
+    --text-h: #fafafa;
+    --bg: #000000;
+    --border: #27272a;
+    --code-bg: #121214;
     
-    /* DARK MODE: Warm Taupe buttons (white text pops nicely), subtle Beige hovers */
-    --accent: #8b7e66; 
-    --accent-bg: rgba(245, 245, 220, 0.15); 
-    --accent-border: rgba(139, 126, 102, 0.5); 
+    /* DARK MODE: Light Black / Charcoal on Deep Black */
+    --accent: #27272a; 
+    --accent-bg: #18181b; 
+    --accent-border: rgba(255, 255, 255, 0.12); 
     
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+    --social-bg: rgba(24, 24, 27, 0.6);
+    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.7);
   }
 }
 
-
-
 /* --------------------------------------
-   2. FULL-SCREEN LAYOUT FIX
+   2. FULL-SCREEN LAYOUT FIX (NO HORIZONTAL SCROLL)
 --------------------------------------- */
 html, body, #root {
   margin: 0;
   padding: 0;
-  width: 100vw;
-  min-height: 100svh;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
   box-sizing: border-box;
 }
 
@@ -85,52 +77,57 @@ html, body, #root {
 }
 
 /* --------------------------------------
-   3. YOUR TYPOGRAPHY
+   3. MODERN TYPOGRAPHY & SMOOTH SCROLLING
 --------------------------------------- */
-h1, h2 {
+html {
+  scroll-behavior: smooth;
+}
+
+h1, h2, h3, h4, h5, h6 {
   font-family: var(--heading);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+  letter-spacing: -0.025em;
 }
 
 p {
   margin: 0;
 }
 
-code, .counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* Custom modern scrollbar in monochrome */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
+::-webkit-scrollbar-thumb {
+  background: rgba(113, 113, 122, 0.3);
+  border-radius: 9999px;
+}
 
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(113, 113, 122, 0.6);
+}
 
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
