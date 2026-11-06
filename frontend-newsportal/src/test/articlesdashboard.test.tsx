@@ -5,6 +5,7 @@ import ArticlesDashboard from '../pages/ArticlesDashboard';
 import { authService } from '../services/authService';
 import { articleService } from '../services/articleService';
 import { categoryService } from '../services/categoryService';
+import { alertService } from '../services/alertService';
 
 // --- Mocks ---
 const mockNavigate = vi.fn();
@@ -31,6 +32,13 @@ vi.mock('../services/articleService', () => ({
 vi.mock('../services/categoryService', () => ({
     categoryService: {
         getAllCategories: vi.fn(),
+    }
+}));
+
+vi.mock('../services/alertService', () => ({
+    alertService: {
+        getLatestBreakingNews: vi.fn(),
+        sendBreakingNews: vi.fn(),
     }
 }));
 
@@ -67,6 +75,7 @@ describe('ArticlesDashboard Component', () => {
         // Default API responses
         (categoryService.getAllCategories as ReturnType<typeof vi.fn>).mockResolvedValue(mockCategories);
         (articleService.getAllPublishedArticles as ReturnType<typeof vi.fn>).mockResolvedValue(mockArticles);
+        (alertService.getLatestBreakingNews as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     });
 
     const renderDashboard = () => {
@@ -130,6 +139,8 @@ describe('ArticlesDashboard Component', () => {
 
     test('logs out successfully', async () => {
         renderDashboard();
+        // Open Settings dropdown then click Sign Out
+        fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
         fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));
         expect(authService.logout).toHaveBeenCalled();
         expect(mockNavigate).toHaveBeenCalledWith('/login');
@@ -140,6 +151,8 @@ describe('ArticlesDashboard Component', () => {
 
     test('navigates to profile page', async () => {
         renderDashboard();
+        // Open Settings dropdown then click My Profile
+        fireEvent.click(screen.getByRole('button', { name: /Settings/i }));
         fireEvent.click(screen.getByRole('button', { name: 'My Profile' }));
         expect(mockNavigate).toHaveBeenCalledWith('/profile');
 
@@ -204,5 +217,38 @@ describe('ArticlesDashboard Component', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Go Back' }));
         expect(screen.queryByTestId('full-article-mock')).not.toBeInTheDocument();
         expect(screen.getByText('Latest Headlines')).toBeInTheDocument();
+    });
+
+    test('renders breaking news alert banner and supports reading and dismissing', async () => {
+        (alertService.getLatestBreakingNews as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: 99,
+            headline: 'Major Global Tech Summit Announced',
+            message: 'World leaders gather to discuss open source protocols.',
+            articleId: 101,
+            priority: 'CRITICAL',
+            category: 'Technology'
+        });
+
+        renderDashboard();
+
+        await waitFor(() => {
+            expect(screen.getByText('CRITICAL')).toBeInTheDocument();
+            expect(screen.getByText('Major Global Tech Summit Announced')).toBeInTheDocument();
+            expect(screen.getByText('[Technology]')).toBeInTheDocument();
+        });
+
+        // Clicking "Read Story" opens FullArticle
+        const readStoryBtn = screen.getByRole('button', { name: /Read Story/i });
+        fireEvent.click(readStoryBtn);
+        expect(screen.getByTestId('full-article-mock')).toBeInTheDocument();
+
+        // Return to dashboard
+        fireEvent.click(screen.getByRole('button', { name: 'Go Back' }));
+        expect(screen.getByText('Major Global Tech Summit Announced')).toBeInTheDocument();
+
+        // Dismiss the banner
+        const dismissBtn = screen.getByTitle('Dismiss alert');
+        fireEvent.click(dismissBtn);
+        expect(screen.queryByText('Major Global Tech Summit Announced')).not.toBeInTheDocument();
     });
 });

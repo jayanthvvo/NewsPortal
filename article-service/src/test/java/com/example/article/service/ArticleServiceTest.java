@@ -33,6 +33,12 @@ public class ArticleServiceTest {
     @Mock
     private CategoryClient categoryClient;
 
+    @Mock
+    private com.example.article.client.CommentClient commentClient;
+
+    @Mock
+    private com.example.article.repository.ArticleLikeRepository articleLikeRepository;
+
     private Article article;
 
     @BeforeEach

@@ -100,7 +100,7 @@ export const HorizontalArticlesCarousel: React.FC<HorizontalArticlesCarouselProp
         {
             key: 'viewed',
             label: 'Most Viewed',
-            icon: <TrendingUp className="w-4 h-4 text-neutral-800 dark:text-zinc-200" />,
+            icon: <TrendingUp className="w-4 h-4 text-slate-800 dark:text-zinc-200" />,
             subtitle: 'Ranked by reader traffic & high engagement',
             items: mostViewedArticles
         },
@@ -126,24 +126,24 @@ export const HorizontalArticlesCarousel: React.FC<HorizontalArticlesCarouselProp
     }
 
     return (
-        <section className="mb-10 p-5 sm:p-7 bg-neutral-50/80 dark:bg-[#0d0d0f] rounded-2xl border border-neutral-200 dark:border-neutral-800/80 shadow-xs">
+        <section className="mb-10 p-5 sm:p-7 bg-white/80 dark:bg-[#0d0d0f] rounded-2xl border border-slate-200/80 dark:border-neutral-800/80 shadow-[0_2px_12px_-4px_rgba(15,23,42,0.04)]">
             {/* Top Carousel Navigation Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-neutral-200 dark:border-neutral-800/80">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-200/80 dark:border-neutral-800/80">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-neutral-900 text-white dark:bg-zinc-800 dark:text-zinc-200 border border-neutral-700 dark:border-zinc-700">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-200 border border-slate-700 dark:border-zinc-700">
                             <Layers className="w-3 h-3" />
                             Curated Feed
                         </span>
-                        <span className="text-xs text-neutral-400">•</span>
-                        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
+                        <span className="text-xs text-slate-400">•</span>
+                        <span className="text-xs text-slate-500 dark:text-neutral-400 font-medium">
                             {articles.length} Published {articles.length === 1 ? 'Story' : 'Stories'}
                         </span>
                     </div>
-                    <h3 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight m-0">
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight m-0">
                         {title}
                     </h3>
-                    <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-0.5">
                         {description}
                     </p>
                 </div>
@@ -158,16 +158,16 @@ export const HorizontalArticlesCarousel: React.FC<HorizontalArticlesCarouselProp
                                 onClick={() => setActiveTab(shelf.key)}
                                 className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                                     isActive
-                                        ? 'bg-black text-white dark:bg-white dark:text-black shadow-2xs border border-transparent'
-                                        : 'bg-white dark:bg-[#151518] text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-zinc-800'
+                                        ? 'bg-slate-900 text-white dark:bg-white dark:text-black shadow-xs border border-transparent'
+                                        : 'bg-white dark:bg-[#151518] text-slate-600 dark:text-neutral-400 border border-slate-200/90 dark:border-neutral-800 hover:bg-slate-100 dark:hover:bg-zinc-800'
                                 }`}
                             >
                                 {shelf.icon}
                                 <span>{shelf.label}</span>
                                 <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${
                                     isActive
-                                        ? 'bg-neutral-800 text-neutral-200 dark:bg-neutral-200 dark:text-neutral-800'
-                                        : 'bg-neutral-100 dark:bg-zinc-800 text-neutral-500 dark:text-neutral-400'
+                                        ? 'bg-slate-800 text-slate-200 dark:bg-neutral-200 dark:text-neutral-800'
+                                        : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-neutral-400'
                                 }`}>
                                     {shelf.items.length}
                                 </span>
@@ -180,8 +180,8 @@ export const HorizontalArticlesCarousel: React.FC<HorizontalArticlesCarouselProp
                         onClick={() => setActiveTab(activeTab === 'all' ? 'viewed' : 'all')}
                         className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             activeTab === 'all'
-                                ? 'bg-black text-white dark:bg-white dark:text-black shadow-2xs border border-transparent'
-                                : 'bg-white dark:bg-[#151518] text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-zinc-800'
+                                ? 'bg-slate-900 text-white dark:bg-white dark:text-black shadow-xs border border-transparent'
+                                : 'bg-white dark:bg-[#151518] text-slate-600 dark:text-neutral-400 border border-slate-200/90 dark:border-neutral-800 hover:bg-slate-100 dark:hover:bg-zinc-800'
                         }`}
                         title="View all 3 collections at once"
                     >
@@ -240,14 +240,14 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
             {/* Shelf Sub-header */}
             <div className="flex items-center justify-between mb-3.5">
                 <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-white dark:bg-[#141416] border border-neutral-200 dark:border-neutral-800 flex items-center justify-center shadow-2xs">
+                    <div className="w-7 h-7 rounded-lg bg-white dark:bg-[#141416] border border-slate-200 dark:border-neutral-800 flex items-center justify-center shadow-2xs">
                         {shelf.icon}
                     </div>
                     <div>
-                        <h4 className="text-sm sm:text-base font-extrabold text-black dark:text-white m-0">
+                        <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white m-0">
                             {shelf.label}
                         </h4>
-                        <span className="text-[11px] text-neutral-500 dark:text-neutral-400 hidden sm:inline">
+                        <span className="text-[11px] text-slate-500 dark:text-neutral-400 hidden sm:inline">
                             {shelf.subtitle}
                         </span>
                     </div>
@@ -258,7 +258,7 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
                     <button
                         onClick={() => handleScroll('left')}
                         aria-label={`Scroll ${shelf.label} left`}
-                        className="w-8 h-8 rounded-xl bg-white dark:bg-[#141416] border border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-black active:scale-95 flex items-center justify-center transition-all shadow-2xs cursor-pointer"
+                        className="w-8 h-8 rounded-xl bg-white dark:bg-[#141416] border border-slate-200/90 dark:border-neutral-800 text-slate-700 dark:text-neutral-200 hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black active:scale-95 flex items-center justify-center transition-all shadow-2xs cursor-pointer"
                         title="Navigate left"
                     >
                         <ChevronLeft className="w-4 h-4" />
@@ -266,7 +266,7 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
                     <button
                         onClick={() => handleScroll('right')}
                         aria-label={`Scroll ${shelf.label} right`}
-                        className="w-8 h-8 rounded-xl bg-white dark:bg-[#141416] border border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-black active:scale-95 flex items-center justify-center transition-all shadow-2xs cursor-pointer"
+                        className="w-8 h-8 rounded-xl bg-white dark:bg-[#141416] border border-slate-200/90 dark:border-neutral-800 text-slate-700 dark:text-neutral-200 hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black active:scale-95 flex items-center justify-center transition-all shadow-2xs cursor-pointer"
                         title="Navigate right"
                     >
                         <ChevronRight className="w-4 h-4" />
@@ -296,7 +296,7 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
                         <div
                             key={`${shelf.key}-${article.id || index}`}
                             onClick={() => article.id && onSelectArticle(article.id)}
-                            className="w-72 sm:w-80 shrink-0 snap-start bg-white dark:bg-[#111113] rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5 shadow-2xs hover:shadow-md hover:border-neutral-400 dark:hover:border-zinc-700 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
+                            className="w-72 sm:w-80 shrink-0 snap-start bg-white dark:bg-[#111113] rounded-2xl border border-slate-200/80 dark:border-neutral-800 p-5 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05),0_1px_3px_-1px_rgba(15,23,42,0.03)] hover:shadow-[0_10px_25px_-5px_rgba(15,23,42,0.09)] hover:border-slate-300 dark:hover:border-zinc-700 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
                         >
                             <div>
                                 {/* Badges Row */}
@@ -306,27 +306,27 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
                                         <span
                                             className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-[11px] font-black border ${
                                                 isTop1
-                                                    ? 'bg-neutral-900 text-white border-neutral-800 dark:bg-zinc-100 dark:text-black dark:border-white shadow-2xs'
+                                                    ? 'bg-slate-900 text-white border-slate-800 dark:bg-zinc-100 dark:text-black dark:border-white shadow-2xs'
                                                     : isTop2
-                                                    ? 'bg-neutral-200 text-neutral-800 border-neutral-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+                                                    ? 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
                                                     : isTop3
-                                                    ? 'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800'
-                                                    : 'bg-transparent text-neutral-500 border-neutral-200 dark:border-neutral-800'
+                                                    ? 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-zinc-900 dark:text-zinc-300 dark:border-zinc-800'
+                                                    : 'bg-transparent text-slate-500 border-slate-200 dark:border-neutral-800'
                                             }`}
                                         >
                                             #{rank}
                                         </span>
 
                                         {/* Category Badge */}
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-neutral-100 dark:bg-zinc-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-zinc-700">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-neutral-300 border border-slate-200 dark:border-zinc-700">
                                             {`🏷️ ${catName}`}
                                         </span>
                                     </div>
 
                                     {/* Metric Highlight Badge based on shelf */}
                                     {shelf.key === 'viewed' && (
-                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-neutral-800 dark:text-zinc-200 bg-neutral-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md border border-neutral-200 dark:border-zinc-700">
-                                            <Eye className="w-3 h-3 text-neutral-500" />
+                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-800 dark:text-zinc-200 bg-slate-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-zinc-700">
+                                            <Eye className="w-3 h-3 text-slate-500" />
                                             {article.viewCount || 0}
                                         </span>
                                     )}
@@ -337,20 +337,20 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
                                         </span>
                                     )}
                                     {shelf.key === 'recent' && (
-                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-neutral-700 dark:text-zinc-300 bg-neutral-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md border border-neutral-200 dark:border-zinc-700">
-                                            <Calendar className="w-3 h-3 text-neutral-400" />
+                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-zinc-300 bg-slate-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-zinc-700">
+                                            <Calendar className="w-3 h-3 text-slate-400" />
                                             {formatArticleDate(article.createdAt, article.id)}
                                         </span>
                                     )}
                                 </div>
 
                                 {/* Headline (Single string with rank prefix to ensure exact uniqueness) */}
-                                <h5 className="text-base font-bold text-black dark:text-white leading-snug group-hover:text-neutral-700 dark:group-hover:text-zinc-200 transition-colors mb-2 line-clamp-2 m-0">
+                                <h5 className="text-base font-bold text-slate-900 dark:text-white leading-snug group-hover:text-indigo-600 dark:group-hover:text-zinc-200 transition-colors mb-2 line-clamp-2 m-0">
                                     {`#${rank} • ${article.title}`}
                                 </h5>
 
                                 {/* Excerpt */}
-                                <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed line-clamp-2 mb-4 m-0">
+                                <p className="text-xs text-slate-600 dark:text-neutral-400 leading-relaxed line-clamp-2 mb-4 m-0">
                                     {article.content && article.content.length > 110
                                         ? article.content.substring(0, 110) + '...'
                                         : article.content}
@@ -358,12 +358,12 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
                             </div>
 
                             {/* Card Bottom Meta & CTA */}
-                            <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800/70 flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+                            <div className="pt-3 border-t border-slate-100 dark:border-neutral-800/70 flex items-center justify-between text-xs text-slate-500 dark:text-neutral-400">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-5 h-5 rounded-full bg-neutral-900 dark:bg-zinc-800 text-white flex items-center justify-center font-bold text-[9px]">
+                                    <div className="w-5 h-5 rounded-full bg-slate-900 dark:bg-zinc-800 text-white flex items-center justify-center font-bold text-[9px]">
                                         {authorInitial}
                                     </div>
-                                    <span className="font-semibold text-neutral-800 dark:text-neutral-200 truncate max-w-[100px]">
+                                    <span className="font-semibold text-slate-800 dark:text-neutral-200 truncate max-w-[100px]">
                                         {article.author}
                                     </span>
                                     <span>•</span>
@@ -373,7 +373,7 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
                                     </span>
                                 </div>
 
-                                <div className="inline-flex items-center gap-0.5 font-bold text-[11px] text-neutral-900 dark:text-white group-hover:translate-x-0.5 transition-transform">
+                                <div className="inline-flex items-center gap-0.5 font-bold text-[11px] text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-transform">
                                     <span>Read</span>
                                     <ArrowUpRight className="w-3.5 h-3.5" />
                                 </div>

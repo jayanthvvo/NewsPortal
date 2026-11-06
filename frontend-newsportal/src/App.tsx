@@ -9,6 +9,7 @@ import UserProfilePage from './pages/UserProfilePage';
 import ForgotPassword from './pages/ForgotPassword';
 import LandingPage from './pages/LandingFile';
 import { authService } from './services/authService';
+import { ThemeProvider } from './context/ThemeContext';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -37,68 +38,70 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
 function App() {
     return (
-        <Router>
-            <Routes>
+        <ThemeProvider>
+            <Router>
+                <Routes>
 
-                {/* Public routes */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
+                    {/* Public routes */}
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
 
-                {/* Logged-in users */}
-                <Route
-                    path="/articles"
-                    element={
-                        <ProtectedRoute>
-                            <ArticlesDashboard />
-                        </ProtectedRoute>
-                    }
-                />
+                    {/* Logged-in users */}
+                    <Route
+                        path="/articles"
+                        element={
+                            <ProtectedRoute>
+                                <ArticlesDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                <Route
-                    path="/article/:id"
-                    element={
-                        <ProtectedRoute>
-                            <FullArticle />
-                        </ProtectedRoute>
-                    }
-                />
+                    <Route
+                        path="/article/:id"
+                        element={
+                            <ProtectedRoute>
+                                <FullArticle />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                <Route
-                    path="/profile"
-                    element={
-                        <ProtectedRoute>
-                            <UserProfilePage />
-                        </ProtectedRoute>
-                    }
-                />
+                    <Route
+                        path="/profile"
+                        element={
+                            <ProtectedRoute>
+                                <UserProfilePage />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                {/* Editor only */}
-                <Route
-                    path="/author"
-                    element={
-                        <ProtectedRoute allowedRoles={['ROLE_EDITOR', 'ROLE_AUTHOR']}>
-                            <AuthorWorkspace />
-                        </ProtectedRoute>
-                    }
-                />
+                    {/* Editor only */}
+                    <Route
+                        path="/author"
+                        element={
+                            <ProtectedRoute allowedRoles={['ROLE_EDITOR', 'ROLE_AUTHOR']}>
+                                <AuthorWorkspace />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                {/* Admin only */}
-                <Route
-                    path="/admin"
-                    element={
-                        <ProtectedRoute allowedRoles={['ROLE_ADMIN']}>
-                            <AdminDashboard />
-                        </ProtectedRoute>
-                    }
-                />
+                    {/* Admin only */}
+                    <Route
+                        path="/admin"
+                        element={
+                            <ProtectedRoute allowedRoles={['ROLE_ADMIN']}>
+                                <AdminDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                {/* Unknown route */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                    {/* Unknown route */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
 
-            </Routes>
-        </Router>
+                </Routes>
+            </Router>
+        </ThemeProvider>
     );
 }
 

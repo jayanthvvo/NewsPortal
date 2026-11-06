@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import ThemeToggle from '../components/ThemeToggle';
 
 const LandingPage: React.FC = () => {
     const navigate = useNavigate();
@@ -13,16 +14,17 @@ const LandingPage: React.FC = () => {
                     <span className="bg-[var(--accent)] text-white w-8 h-8 flex items-center justify-center rounded-lg">N</span>
                     NewsPortal
                 </div>
-                <div className="flex gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
+                    <ThemeToggle />
                     <button 
                         onClick={() => navigate('/login')}
-                        className="px-5 py-2.5 text-sm font-semibold text-[var(--text-h)] hover:bg-[var(--code-bg)] rounded-xl transition-colors"
+                        className="px-4 sm:px-5 py-2 text-sm font-semibold text-[var(--text-h)] hover:bg-[var(--code-bg)] rounded-xl transition-colors cursor-pointer"
                     >
                         Sign In
                     </button>
                     <button 
                         onClick={() => navigate('/register')}
-                        className="px-5 py-2.5 text-sm font-semibold bg-[var(--accent)] text-white rounded-xl hover:opacity-90 shadow-sm transition-opacity"
+                        className="px-4 sm:px-5 py-2 text-sm font-semibold bg-[var(--accent)] text-white rounded-xl hover:opacity-90 shadow-sm transition-opacity cursor-pointer"
                     >
                         Get Started
                     </button>
@@ -46,7 +48,6 @@ const LandingPage: React.FC = () => {
                 <p className="text-lg sm:text-xl text-[var(--text)] max-w-2xl mb-12 leading-relaxed">
                     Discover breaking news, deep-dive editorials, and real-time alerts tailored to your interests. Join thousands of readers who start their day with NewsPortal.
                 </p>
-                
                 
             </main>
 
@@ -79,5 +80,3 @@ const LandingPage: React.FC = () => {
 };
 
 export default LandingPage;
-
-

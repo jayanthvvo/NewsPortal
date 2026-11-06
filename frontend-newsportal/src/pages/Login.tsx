@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks'; // <-- 1. Import Redux hooks
 import { loginUser, clearError } from '../store/slices/authSlice'; // <-- 2. Import Redux actions
+import ThemeToggle from '../components/ThemeToggle';
 
 const Login: React.FC = () => {
     // We keep username and password as local state because only this form needs to know what the user is typing right now.
@@ -41,7 +42,12 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen font-sans">
+        <div className="flex justify-center items-center min-h-screen font-sans relative p-4 bg-[var(--bg)]">
+            {/* Top Right Theme Toggle */}
+            <div className="absolute top-6 right-6">
+                <ThemeToggle />
+            </div>
+
             {/* Form Container using your custom theme background and borders */}
             <div className="w-full max-w-md p-8 rounded-xl border border-[var(--border)] bg-[var(--code-bg)] shadow-[var(--shadow)]">
 
@@ -100,7 +106,7 @@ const Login: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full mt-2 py-3 px-4 bg-[var(--accent)] text-white font-semibold rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full mt-2 py-3 px-4 bg-[var(--accent)] text-white font-semibold rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                         {loading ? 'Signing In...' : 'Sign In'}
                     </button>

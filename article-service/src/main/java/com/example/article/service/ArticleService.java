@@ -85,6 +85,13 @@ public class ArticleService {
             );
         }
 
+        if (article.getCreatedAt() == null) {
+            article.setCreatedAt(java.time.LocalDateTime.now());
+        }
+        if (article.getUpdatedAt() == null) {
+            article.setUpdatedAt(java.time.LocalDateTime.now());
+        }
+
 
         return articleRepository.save(article);
     }
@@ -191,7 +198,15 @@ public class ArticleService {
             ArticleStatus newStatus,
             String username,
             Collection<? extends GrantedAuthority> authorities) {
+        return updateArticle(id, newStatus, null, username, authorities);
+    }
 
+    public Article updateArticle(
+            Long id,
+            ArticleStatus newStatus,
+            String rejectionReason,
+            String username,
+            Collection<? extends GrantedAuthority> authorities) {
 
         Article article =
                 articleRepository
@@ -202,7 +217,6 @@ public class ArticleService {
                                 )
                         );
 
-
         boolean isAdmin =
                 authorities.stream()
                         .anyMatch(
@@ -210,18 +224,15 @@ public class ArticleService {
                                         .equals("ROLE_ADMIN")
                         );
 
-
-        boolean isEditor =
+        boolean isEditorOrAuthor =
                 authorities.stream()
                         .anyMatch(
-                                a -> a.getAuthority()
-                                        .equals("ROLE_EDITOR")
+                                a -> a.getAuthority().equals("ROLE_EDITOR")
+                                  || a.getAuthority().equals("ROLE_AUTHOR")
                         );
-
 
         ArticleStatus currentStatus =
                 article.getStatus();
-
 
         // =========================
         // ADMIN
@@ -241,18 +252,24 @@ public class ArticleService {
                 );
             }
 
-
             article.setStatus(newStatus);
+
+            if (newStatus == ArticleStatus.DRAFT) {
+                if (rejectionReason != null && !rejectionReason.trim().isEmpty()) {
+                    article.setRejectionReason(rejectionReason.trim());
+                }
+            } else if (newStatus == ArticleStatus.PUBLISHED) {
+                article.setRejectionReason(null);
+            }
 
             return articleRepository.save(article);
         }
 
-
         // =========================
-        // EDITOR
+        // EDITOR / AUTHOR
         // =========================
 
-        if (isEditor) {
+        if (isEditorOrAuthor) {
 
             if (!article
                     .getAuthorUsername()
@@ -262,7 +279,6 @@ public class ArticleService {
                         "You are not authorized to modify this article"
                 );
             }
-
 
             if (
                 currentStatus == ArticleStatus.DRAFT
@@ -277,16 +293,59 @@ public class ArticleService {
                 return articleRepository.save(article);
             }
 
-
             throw new RuntimeException(
-                    "Editors can only submit draft articles for review"
+                    "Authors/Editors can only submit draft articles for review"
             );
         }
-
 
         throw new RuntimeException(
                 "You are not authorized to change article status"
         );
+    }
+
+
+    // =========================
+    // EDIT & UPDATE ARTICLE CONTENT
+    // =========================
+
+    public Article updateArticleContent(
+            Long id,
+            Article updatedData,
+            String username,
+            Collection<? extends GrantedAuthority> authorities) {
+
+        Article existing = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        boolean isAdmin = authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwner = existing.getAuthorUsername().equals(username);
+
+        if (!isAdmin && !isOwner) {
+            throw new RuntimeException("You are not authorized to edit this article");
+        }
+
+        if (existing.getStatus() == ArticleStatus.PUBLISHED && !isAdmin) {
+            throw new RuntimeException("Published articles cannot be edited directly by authors");
+        }
+
+        if (updatedData.getCategoryId() != null) {
+            try {
+                categoryClient.getCategoryById(updatedData.getCategoryId());
+            } catch (Exception e) {
+                throw new RuntimeException("Invalid Category ID");
+            }
+            existing.setCategoryId(updatedData.getCategoryId());
+        }
+
+        if (updatedData.getTitle() != null && !updatedData.getTitle().trim().isEmpty()) {
+            existing.setTitle(updatedData.getTitle().trim());
+        }
+
+        if (updatedData.getContent() != null && !updatedData.getContent().trim().isEmpty()) {
+            existing.setContent(updatedData.getContent().trim());
+        }
+
+        return articleRepository.save(existing);
     }
 
 
@@ -298,7 +357,6 @@ public class ArticleService {
             ArticleStatus currentStatus,
             ArticleStatus newStatus) {
 
-
         if (
             currentStatus == ArticleStatus.DRAFT
             &&
@@ -307,7 +365,6 @@ public class ArticleService {
 
             return true;
         }
-
 
         if (
             currentStatus == ArticleStatus.REVIEW
@@ -318,6 +375,25 @@ public class ArticleService {
             return true;
         }
 
+        // Allow Admin to reject a REVIEW article back to DRAFT
+        if (
+            currentStatus == ArticleStatus.REVIEW
+            &&
+            newStatus == ArticleStatus.DRAFT
+        ) {
+
+            return true;
+        }
+
+        // Allow Admin to unpublish a PUBLISHED article
+        if (
+            currentStatus == ArticleStatus.PUBLISHED
+            &&
+            (newStatus == ArticleStatus.DRAFT || newStatus == ArticleStatus.REVIEW)
+        ) {
+
+            return true;
+        }
 
         return false;
     }

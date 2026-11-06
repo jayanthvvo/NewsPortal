@@ -1,22 +1,24 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* --------------------------------------
    1. LIGHT BLACK & BLACK THEME VARIABLES
 --------------------------------------- */
 :root {
-  --text: #52525b;
-  --text-h: #09090b;
-  --bg: #f8f8fa;
-  --border: #e4e4e7;
+  --text: #475569;
+  --text-h: #0f172a;
+  --bg: #f8f9fc;
+  --border: #e2e8f0;
   --code-bg: #ffffff;
   
-  /* LIGHT MODE: Light Black / Charcoal accents */
-  --accent: #18181b; 
-  --accent-bg: #f4f4f5; 
-  --accent-border: rgba(24, 24, 27, 0.2); 
+  /* LIGHT MODE: Modern UI refined Slate & Charcoal palette */
+  --accent: #0f172a; 
+  --accent-bg: #f1f5f9; 
+  --accent-border: rgba(15, 23, 42, 0.12); 
   
-  --social-bg: rgba(244, 244, 245, 0.7);
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --social-bg: rgba(241, 245, 249, 0.85);
+  --shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
 
   --sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --heading: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -24,7 +26,7 @@
 
   font: 16px/150% var(--sans);
   letter-spacing: -0.01em;
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -37,21 +39,42 @@
   }
 }
 
+:root.dark, .dark {
+  color-scheme: dark;
+  --text: #a1a1aa;
+  --text-h: #fafafa;
+  --bg: #000000;
+  --border: #27272a;
+  --code-bg: #121214;
+  
+  /* DARK MODE: Light Black / Charcoal on Deep Black */
+  --accent: #27272a; 
+  --accent-bg: #18181b; 
+  --accent-border: rgba(255, 255, 255, 0.12); 
+  
+  --social-bg: rgba(24, 24, 27, 0.6);
+  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.7);
+  color: var(--text);
+  background: var(--bg);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
+    color-scheme: dark;
     --text: #a1a1aa;
     --text-h: #fafafa;
     --bg: #000000;
     --border: #27272a;
     --code-bg: #121214;
     
-    /* DARK MODE: Light Black / Charcoal on Deep Black */
     --accent: #27272a; 
     --accent-bg: #18181b; 
     --accent-border: rgba(255, 255, 255, 0.12); 
     
     --social-bg: rgba(24, 24, 27, 0.6);
     --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.7);
+    color: var(--text);
+    background: var(--bg);
   }
 }
 

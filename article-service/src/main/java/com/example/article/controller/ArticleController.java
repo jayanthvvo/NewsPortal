@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,7 +37,7 @@ public class ArticleController {
 	// =========================
 
 	@PostMapping("/create")
-	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')")
+	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR', 'ROLE_AUTHOR')")
 	public ResponseEntity<Article> create(@Valid @RequestBody Article article, Authentication authentication) {
 
 		String username = authentication.getName();
@@ -44,6 +45,24 @@ public class ArticleController {
 		Article savedArticle = articleService.createArticle(article, username);
 
 		return ResponseEntity.ok(savedArticle);
+	}
+
+	// =========================
+	// UPDATE ARTICLE CONTENT
+	// =========================
+
+	@PutMapping({ "/{id}", "/update/{id}" })
+	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR', 'ROLE_AUTHOR')")
+	public ResponseEntity<Article> updateArticleContent(
+			@PathVariable Long id,
+			@RequestBody Article article,
+			Authentication authentication) {
+
+		String username = authentication.getName();
+
+		Article updated = articleService.updateArticleContent(id, article, username, authentication.getAuthorities());
+
+		return ResponseEntity.ok(updated);
 	}
 
 	// =========================
@@ -129,7 +148,7 @@ public class ArticleController {
 	// =========================
 
 	@GetMapping("/my-drafts")
-	@PreAuthorize("hasAnyAuthority('ROLE_EDITOR')")
+	@PreAuthorize("hasAnyAuthority('ROLE_EDITOR', 'ROLE_AUTHOR')")
 	public ResponseEntity<List<Article>> getMyDrafts(Authentication authentication) {
 
 		String username = authentication.getName();
@@ -165,15 +184,18 @@ public class ArticleController {
 	// =========================
 
 	@PostMapping("/{id}/status")
-	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR')")
-	public ResponseEntity<Article> updateStatus(@PathVariable Long id, @RequestParam String status,
+	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EDITOR', 'ROLE_AUTHOR')")
+	public ResponseEntity<Article> updateStatus(
+			@PathVariable Long id,
+			@RequestParam String status,
+			@RequestParam(required = false) String rejectionReason,
 			Authentication authentication) {
 
 		ArticleStatus newStatus = ArticleStatus.valueOf(status.toUpperCase());
 
 		String username = authentication.getName();
 
-		Article updatedArticle = articleService.updateArticle(id, newStatus, username, authentication.getAuthorities());
+		Article updatedArticle = articleService.updateArticle(id, newStatus, rejectionReason, username, authentication.getAuthorities());
 
 		return ResponseEntity.ok(updatedArticle);
 	}
@@ -197,7 +219,6 @@ public class ArticleController {
 
 	@GetMapping("/filter")
 	public ResponseEntity<Page<Article>> filterArticles(@RequestParam(required = false) Long categoryId,
-
 			@RequestParam(required = false) String author,
 
 			Pageable pageable) {

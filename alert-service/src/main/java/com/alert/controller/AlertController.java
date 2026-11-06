@@ -31,21 +31,39 @@ public class AlertController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<String> sendBreakingNewsEmail(@RequestBody Alert alertRequest) {
         
-       
         List<UserDto> allUsers = userClient.getAllUsers();
+
+        String headline = (alertRequest.getHeadline() != null && !alertRequest.getHeadline().isBlank())
+                ? alertRequest.getHeadline()
+                : (alertRequest.getArticleTitle() != null && !alertRequest.getArticleTitle().isBlank() 
+                    ? alertRequest.getArticleTitle() 
+                    : "Breaking News Alert");
         
-       
         for (UserDto user : allUsers) {
             
-           
             if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-                emailService.sendBreakingNews(user.getEmail(), "Breaking News Alert", alertRequest.getMessage());
+                if (alertRequest.getArticleId() != null || alertRequest.getArticleTitle() != null) {
+                    emailService.sendBreakingNews(
+                        user.getEmail(),
+                        headline,
+                        alertRequest.getMessage(),
+                        alertRequest.getArticleId(),
+                        alertRequest.getArticleTitle(),
+                        alertRequest.getPriority()
+                    );
+                } else {
+                    emailService.sendBreakingNews(user.getEmail(), headline, alertRequest.getMessage());
+                }
             }
             
-           
             Alert userAlert = new Alert();
             userAlert.setTargetUsername(user.getUsername());
+            userAlert.setHeadline(headline);
             userAlert.setMessage(alertRequest.getMessage());
+            userAlert.setArticleId(alertRequest.getArticleId());
+            userAlert.setArticleTitle(alertRequest.getArticleTitle());
+            userAlert.setPriority(alertRequest.getPriority() != null ? alertRequest.getPriority() : "BREAKING");
+            userAlert.setCategory(alertRequest.getCategory());
             userAlert.setCreatedAt(LocalDateTime.now());
             userAlert.setRead(false);
             
@@ -55,6 +73,12 @@ public class AlertController {
         return ResponseEntity.ok("Breaking news sent to " + allUsers.size() + " users successfully.");
     }
     
+    @GetMapping("/latest-breaking")
+    public ResponseEntity<Alert> getLatestBreakingNews() {
+        return alertRepository.findTopByOrderByCreatedAtDesc()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
+    }
     
     @PostMapping("/send-email")
     public ResponseEntity<String> sendSingleEmail(@RequestBody Map<String, String> request) {
@@ -63,7 +87,6 @@ public class AlertController {
             String subject = request.get("subject");
             String message = request.get("message");
             
-            // Calls your existing EmailService to send the actual email
             emailService.sendEmail(to, subject, message); 
             
             return ResponseEntity.ok("Email sent successfully to " + to);

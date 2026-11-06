@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast'; // <-- Imported toast library
 import { authService } from '../services/authService';
+import ThemeToggle from '../components/ThemeToggle';
 
 const Register: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -53,8 +54,13 @@ const Register: React.FC = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen font-sans relative">
+        <div className="flex justify-center items-center min-h-screen font-sans relative p-4 bg-[var(--bg)]">
             
+            {/* Top Right Theme Toggle */}
+            <div className="absolute top-6 right-6">
+                <ThemeToggle />
+            </div>
+
             {/* Global Toaster for notifications */}
             <Toaster position="top-right" reverseOrder={false} />
 
@@ -149,7 +155,7 @@ const Register: React.FC = () => {
                     <button 
                         type="submit" 
                         disabled={loading} 
-                        className="w-full mt-4 py-3 px-4 bg-[var(--accent)] text-white font-semibold rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full mt-4 py-3 px-4 bg-[var(--accent)] text-white font-semibold rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                         {loading ? 'Processing...' : 'Register'}
                     </button>
