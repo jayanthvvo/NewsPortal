@@ -29,6 +29,7 @@ vi.mock('../services/articleService', () => ({
         getAllPublishedArticles: vi.fn(),
         getMyArticles: vi.fn(),
         createArticle: vi.fn(),
+        updateArticle: vi.fn(),
         submitForReview: vi.fn(),
         getLikedArticles: vi.fn()
     }
@@ -222,5 +223,85 @@ describe('AuthorWorkspace Component', () => {
 
         expect(toast.error).toHaveBeenCalledWith('Content must be at least 5 characters long.');
         expect(articleService.createArticle).not.toHaveBeenCalled();
+    });
+
+    test('displays rejection note and allows revising rejected draft', async () => {
+        (articleService.getMyArticles as ReturnType<typeof vi.fn>).mockResolvedValue([
+            {
+                id: 55,
+                title: 'Needs Citations Story',
+                author: 'authorUser',
+                content: 'Initial rough content draft',
+                categoryId: 1,
+                status: 'DRAFT',
+                rejectionReason: 'Please provide primary data sources.'
+            }
+        ]);
+
+        renderWorkspace();
+
+        // Switch to My Content tab
+        fireEvent.click(screen.getByText('🗂️ My Content'));
+
+        await waitFor(() => {
+            expect(screen.getByText('Needs Citations Story')).toBeInTheDocument();
+            expect(screen.getByText('Needs Revision')).toBeInTheDocument();
+            expect(screen.getByText(/"Please provide primary data sources."/i)).toBeInTheDocument();
+        });
+
+        // Click "Revise Draft"
+        fireEvent.click(screen.getByRole('button', { name: /Revise Draft/i }));
+
+        // Switched to write tab in edit mode
+        expect(screen.getByText('Revise News Story')).toBeInTheDocument();
+        expect(screen.getByText('Editing Draft #55')).toBeInTheDocument();
+        expect(screen.getByText(/"Please provide primary data sources."/i)).toBeInTheDocument();
+
+        // Update content
+        fireEvent.change(screen.getByPlaceholderText('Write your full story here...'), { target: { value: 'Updated content with full data sources.' } });
+
+        // Save updated draft
+        fireEvent.click(screen.getByRole('button', { name: '💾 Update Draft' }));
+
+        await waitFor(() => {
+            expect(articleService.updateArticle).toHaveBeenCalledWith(55, {
+                title: 'Needs Citations Story',
+                content: 'Updated content with full data sources.',
+                categoryId: 1
+            });
+            expect(toast.success).toHaveBeenCalledWith('Draft updated successfully!');
+        });
+    });
+
+    test('paginates published articles in Read tab and switches pages', async () => {
+        (articleService.getAllPublishedArticles as ReturnType<typeof vi.fn>).mockImplementation((page = 0) => {
+            return Promise.resolve({
+                content: [
+                    { id: 301 + page, title: `Author View Page ${page + 1}`, author: 'Bob', content: 'Content text', categoryId: 1, status: 'PUBLISHED' }
+                ],
+                number: page,
+                totalPages: 3,
+                totalElements: 25,
+                size: 10,
+                first: page === 0,
+                last: page === 2
+            });
+        });
+
+        renderWorkspace();
+
+        await waitFor(() => {
+            expect(screen.getByText('Author View Page 1')).toBeInTheDocument();
+            expect(screen.getByText(/Showing page 1 of 3/i)).toBeInTheDocument();
+        });
+
+        // Click Page 2 button
+        const page2Btn = screen.getByRole('button', { name: '2' });
+        fireEvent.click(page2Btn);
+
+        await waitFor(() => {
+            expect(articleService.getAllPublishedArticles).toHaveBeenCalledWith(1, 10);
+            expect(screen.getByText('Author View Page 2')).toBeInTheDocument();
+        });
     });
 });

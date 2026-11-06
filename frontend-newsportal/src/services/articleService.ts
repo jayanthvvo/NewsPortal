@@ -7,6 +7,7 @@ export interface Article {
     author: string;
     categoryId: number;
     status: string;
+    rejectionReason?: string;
     viewCount?: number;
     likeCount?: number;
     createdAt?: string;
@@ -213,7 +214,8 @@ export const articleService = {
 
     updateArticleStatus: async (
         id: number,
-        status: string
+        status: string,
+        rejectionReason?: string
     ): Promise<Article> => {
 
         const response =
@@ -222,9 +224,28 @@ export const articleService = {
                 null,
                 {
                     params: {
-                        status
+                        status,
+                        ...(rejectionReason ? { rejectionReason } : {})
                     }
                 }
+            );
+
+        return response.data;
+    },
+
+    updateArticle: async (
+        id: number,
+        articleData: {
+            title?: string;
+            content?: string;
+            categoryId?: number;
+        }
+    ): Promise<Article> => {
+
+        const response =
+            await api.put(
+                `/articles/${id}`,
+                articleData
             );
 
         return response.data;

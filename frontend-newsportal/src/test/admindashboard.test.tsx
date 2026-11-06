@@ -89,6 +89,10 @@ describe('AdminDashboard Component', () => {
         // Switch to Alerts
         fireEvent.click(screen.getByText('🚨 Breaking News Alert'));
         expect(screen.getByText('Emergency Alert System')).toBeInTheDocument();
+
+        // Switch to Analytics
+        fireEvent.click(screen.getByText('📊 Analytics'));
+        expect(screen.getByText('Platform & Editorial Analytics')).toBeInTheDocument();
     });
 
     test('logs out successfully', () => {
@@ -96,5 +100,106 @@ describe('AdminDashboard Component', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Logout' }));
         expect(authService.logout).toHaveBeenCalled();
         expect(mockNavigate).toHaveBeenCalledWith('/login');
+    });
+
+    test('allows reviewing full pending article in modal and approving it', async () => {
+        (articleService.getPendingReviews as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { id: 201, title: 'Quantum Breakthrough 2026', author: 'Dr. Alice', content: 'Full extensive quantum research paper content details...', categoryId: 1, status: 'PENDING_REVIEW' }
+        ]);
+
+        renderAdminDashboard();
+
+        // Switch to Article Reviews tab
+        fireEvent.click(screen.getByText('📰 Article Reviews'));
+
+        await waitFor(() => {
+            expect(screen.getByText('Quantum Breakthrough 2026')).toBeInTheDocument();
+        });
+
+        // Click "Review Full Story"
+        const reviewBtn = screen.getByRole('button', { name: /Review Full Story/i });
+        fireEvent.click(reviewBtn);
+
+        // Modal should appear with full title and content
+        expect(screen.getByText('⏳ Pending Review')).toBeInTheDocument();
+        expect(screen.getAllByText('Full extensive quantum research paper content details...').length).toBe(2);
+
+        // Click "Approve & Publish Story" inside modal
+        const publishModalBtn = screen.getByRole('button', { name: /Approve & Publish Story/i });
+        fireEvent.click(publishModalBtn);
+
+        // Confirm dialog appears
+        expect(screen.getByText('Publish Article')).toBeInTheDocument();
+        const publishBtns = screen.getAllByRole('button', { name: 'Publish' });
+        fireEvent.click(publishBtns[publishBtns.length - 1]);
+
+        expect(articleService.updateArticleStatus).toHaveBeenCalledWith(201, 'PUBLISHED');
+    });
+
+    test('allows rejecting pending article with editorial feedback note', async () => {
+        (articleService.getPendingReviews as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { id: 202, title: 'Draft Needs Work', author: 'Author Bob', content: 'Incomplete content', categoryId: 1, status: 'PENDING_REVIEW' }
+        ]);
+
+        renderAdminDashboard();
+
+        // Switch to Article Reviews tab
+        fireEvent.click(screen.getByText('📰 Article Reviews'));
+
+        await waitFor(() => {
+            expect(screen.getByText('Draft Needs Work')).toBeInTheDocument();
+        });
+
+        // Click "Reject to Draft"
+        const rejectBtn = screen.getByRole('button', { name: /Reject to Draft/i });
+        fireEvent.click(rejectBtn);
+
+        // Rejection modal appears
+        expect(screen.getByText('Reject Article to Draft')).toBeInTheDocument();
+        const textarea = screen.getByPlaceholderText(/Explain why this article is being rejected/i);
+        fireEvent.change(textarea, { target: { value: 'Please cite the research studies mentioned.' } });
+
+        // Click "Confirm Rejection"
+        const confirmRejectBtn = screen.getByRole('button', { name: /Confirm Rejection/i });
+        fireEvent.click(confirmRejectBtn);
+
+        await waitFor(() => {
+            expect(articleService.updateArticleStatus).toHaveBeenCalledWith(202, 'DRAFT', 'Please cite the research studies mentioned.');
+        });
+    });
+
+    test('paginates published articles in Read tab and changes page', async () => {
+        (articleService.getAllPublishedArticles as ReturnType<typeof vi.fn>).mockImplementation((page = 0) => {
+            return Promise.resolve({
+                content: [
+                    { id: 101 + page, title: `Admin Story Page ${page + 1}`, author: 'Alice', content: 'Story text', categoryId: 1, status: 'PUBLISHED' }
+                ],
+                number: page,
+                totalPages: 2,
+                totalElements: 20,
+                size: 10,
+                first: page === 0,
+                last: page === 1
+            });
+        });
+
+        renderAdminDashboard();
+
+        // Switch to Read Articles tab
+        fireEvent.click(screen.getByText(/Read Articles/i));
+
+        await waitFor(() => {
+            expect(screen.getByText('Admin Story Page 1')).toBeInTheDocument();
+            expect(screen.getByText(/Showing page 1 of 2/i)).toBeInTheDocument();
+        });
+
+        // Click Next page button
+        const nextBtn = screen.getByRole('button', { name: /Next/i });
+        fireEvent.click(nextBtn);
+
+        await waitFor(() => {
+            expect(articleService.getAllPublishedArticles).toHaveBeenCalledWith(1, 10);
+            expect(screen.getByText('Admin Story Page 2')).toBeInTheDocument();
+        });
     });
 });
